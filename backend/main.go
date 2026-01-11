@@ -13,7 +13,8 @@ func main() {
 		Upgrader: websocket.Upgrader{},
 	}
 
-	http.Handle("/", webSocketHandler)
+	http.HandleFunc("/ws", webSocketHandler.ServeWS)
+
 	log.Print("Starting server...")
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
