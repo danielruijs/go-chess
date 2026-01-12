@@ -37,16 +37,38 @@ function Game() {
     };
   }, []);
 
-  return <div>
-    Game
-    <button onClick={() => {
-      socket.current?.send("Requesting new position");
-    }}
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+      }}
     >
-      New Position
-    </button>
-    <Board position={position} />
-  </div>
+      <div>Game</div>
+
+      <div>
+        <button
+          onClick={() => {
+            socket.current?.send("Requesting new position");
+          }}
+        >
+          New Position
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexGrow: 1, // take remaining vertical space
+        }}
+      >
+        <Board position={position} />
+      </div>
+    </div>
+  );
 }
 
 export default Game;

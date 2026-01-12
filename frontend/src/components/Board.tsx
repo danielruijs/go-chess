@@ -8,21 +8,20 @@ function Board({ position }: { position: Position | null }) {
     return <div>
         {position.board.map((row, i) => (
             <div key={i} style={{ display: "flex" }}>
-                {row.map((piece, j) => {
-                    const imgPath = `/pieces/${piece.type}_${piece.color}.png`;
+                {row.map(piece => {
+                    const imgPath = `/pieces/${piece.color}-${piece.type}.png`;
                     return (
                         <div
-                            key={j}
                             style={{
-                                width: 60,
-                                height: 60,
+                                width: 80,
+                                height: 80,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 border: "1px solid #000000",
                             }}
                         >
-                            {imgPath && <img src={imgPath} alt={`${piece.color} ${piece.type}`} style={{ width: "80%" }} />}
+                            {imgPath && <img src={imgPath} alt={`${piece.color} ${piece.type}`} style={{ width: "80px", height: "80px" }} />}
                         </div>
                     );
                 })}
