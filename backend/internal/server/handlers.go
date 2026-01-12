@@ -1,7 +1,9 @@
 package server
 
 import (
+	"go-chess/internal/chess"
 	"log"
+	"math/rand/v2"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -26,16 +28,31 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		// Read message from client
-		mt, message, err := conn.ReadMessage()
+		messageType, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Read error:", err)
 			break
 		}
 
-		log.Printf("Received message: %s", message)
+		log.Printf("Received message: %s. Message type: %d", message, messageType)
 
-		// Echo back to client for now
-		if err := conn.WriteMessage(mt, append([]byte("Server: "), message...)); err != nil {
+		randomPosition := chess.Position{}
+		for i := range chess.BoardSize{
+			for j := range chess.BoardSize{
+				colors := []chess.Color{chess.White, chess.Black}
+				color := colors[rand.IntN(len(colors))]
+				randomPosition.Board[i][j] = chess.Piece{
+					Type:  "pawn",
+					Color: color,
+				}
+			}
+		}
+
+		err = conn.WriteJSON(chess.WSMessage{
+			Type: chess.MessageTypePosition,
+			Data: randomPosition,
+		})
+		if err != nil {
 			log.Println("Write error:", err)
 			break
 		}
