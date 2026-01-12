@@ -22,13 +22,14 @@ jobs:
             - name: Build
               run: cd backend && go build -v ./...
 
-            - name: Test with the Go CLI
+            - name: Test
               run: cd backend && go test -v ./...
 
             - name: Go vet
               run: cd backend && go vet ./...
 
-            - name: Lint with golangci-lint
+            - name: Lint
               uses: golangci/golangci-lint-action@v9
               with:
                 version: latest
+                working-directory: backend
