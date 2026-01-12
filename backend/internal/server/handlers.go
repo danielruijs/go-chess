@@ -22,7 +22,7 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error when upgrading connection to websocket: %s", err)
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	log.Println("New WebSocket connection established")
 

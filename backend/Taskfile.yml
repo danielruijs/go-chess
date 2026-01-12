@@ -1,0 +1,36 @@
+version: '3'
+
+tasks:
+  deps:
+    desc: "Download Go module dependencies"
+    cmds:
+      - go mod download
+
+  build:
+    desc: "Build"
+    cmds:
+      - go build -v ./...
+
+  test:
+    desc: "Run Go tests"
+    cmds:
+      - go test -v ./...
+
+  vet:
+    desc: "Run go vet"
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - golangci-lint run
+
+  ci:
+    desc: "Run full backend ci"
+    deps: [deps, build, test, vet, lint]
+
+  run:
+    desc: "Run the backend"
+    cmds:
+      - go run .

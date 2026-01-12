@@ -1,6 +1,8 @@
+import type { Position } from "./chess";
+
 interface WSMessage {
     type: string;
-    data: any;
+    data: Position;
 }
 
 export type { WSMessage };

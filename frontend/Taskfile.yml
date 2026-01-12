@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  deps:
+    desc: "Download npm dependencies"
+    cmds:
+      - npm install
+
+  lint:
+    desc: "Run linter"
+    cmds:
+      - npm run lint
+
+  ci:
+    desc: "Run full frontend ci"
+    deps: [deps, lint]
+
+  run:
+    desc: "Run the frontend"
+    cmds:
+      - npm install
+      - npm run dev

@@ -1,0 +1,16 @@
+version: '3'
+
+tasks:
+  backend-ci:
+    desc: "Run backend ci"
+    cmds:
+      - cd backend && task ci
+
+  frontend-ci:
+    desc: "Run frontend ci"
+    cmds:
+      - cd frontend && task ci
+
+  ci:
+    desc: "Run backend and frontend ci"
+    deps: [backend-ci, frontend-ci]

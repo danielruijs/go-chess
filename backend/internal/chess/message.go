@@ -7,9 +7,9 @@ const (
 	MessageTypePosition messageType = "position"
 )
 
-var messageDataMap = map[messageType]messageData{
-	MessageTypePosition: Position{},
-}
+// var messageDataMap = map[messageType]messageData{
+// 	MessageTypePosition: Position{},
+// }
 
 type WSMessage struct {
 	Type messageType `json:"type"`
