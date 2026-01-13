@@ -1,8 +1,14 @@
 import type { Position } from "./chess";
 
-interface WSMessage {
-    type: string;
-    data: Position;
-}
+export type WSMessage =
+  | {
+      type: typeof MessageTypePosition;
+      data: Position;
+    }
+  | {
+      type: typeof MessageTypeJoinMatch;
+      data: {};
+    };
 
-export type { WSMessage };
+export const MessageTypePosition = "position";
+export const MessageTypeJoinMatch = "join_match";

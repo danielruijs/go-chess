@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { WSMessage } from "../interfaces/message";
+import { type WSMessage, MessageTypePosition } from "../interfaces/message";
 import type { Position } from "../interfaces/chess";
 import Board from "../components/Board";
 
@@ -15,7 +15,6 @@ function Game() {
 
     socket.current.addEventListener("open", () => {
       console.log("WebSocket connected");
-      socket.current?.send("Client connection established");
     });
 
     socket.current.addEventListener("error", (e) => {
@@ -25,7 +24,7 @@ function Game() {
     socket.current.addEventListener("message", (event) => {
       const message: WSMessage = JSON.parse(event.data);
 
-      if (message.type === "position") {
+      if (message.type === MessageTypePosition) {
         const newPosition: Position = message.data;
         setPosition(newPosition);
       }
@@ -50,10 +49,14 @@ function Game() {
       <div>
         <button
           onClick={() => {
-            socket.current?.send("Requesting new position");
+            const message: WSMessage = {
+              type: "join_match",
+              data: {},
+            };
+            socket.current?.send(JSON.stringify(message));
           }}
         >
-          New Position
+          Join Matchmaking Queue
         </button>
       </div>
 
