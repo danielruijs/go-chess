@@ -7,7 +7,7 @@ type WSMessage =
     }
   | {
       type: typeof MessageTypeJoinMatch;
-      data: {}
+      data: string
     }
     | {
         type: typeof MessageTypeMovePiece

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { type WSMessage, MessageTypePosition } from "../interfaces/message";
+import { type WSMessage, MessageTypeJoinMatch, MessageTypePosition } from "../interfaces/message";
 import type { Position } from "../interfaces/chess";
 import { Button, Stack, TextField } from "@mui/material";
 import Board from "../components/Board";
@@ -48,7 +48,7 @@ function Game() {
           disabled={!playerName}
           onClick={() => {
             const message: WSMessage = {
-              type: "join_match",
+              type: MessageTypeJoinMatch,
               data: playerName,
             };
             socket.current?.send(JSON.stringify(message));

@@ -22,4 +22,21 @@ jobs:
             - name: Test
               run: cd backend && go test -v ./...
 
-            
+    frontend:
+        name: Frontend test
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                node-version: '24'
+
+            - name: Install dependencies
+              run: cd frontend && npm install
+
+            - name: Test
+              run: cd frontend && npm test

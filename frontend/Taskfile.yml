@@ -5,6 +5,11 @@ tasks:
     desc: "Download npm dependencies"
     cmds:
       - npm install
+    
+  test:
+    desc: "Run tests"
+    cmds:
+      - npm test
 
   lint:
     desc: "Run linter"
@@ -13,7 +18,7 @@ tasks:
 
   ci:
     desc: "Run full frontend ci"
-    deps: [deps, lint]
+    deps: [deps, test, lint]
 
   run:
     desc: "Run the frontend"
