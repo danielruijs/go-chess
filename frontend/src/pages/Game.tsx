@@ -65,7 +65,7 @@ function Game() {
           flexGrow: 1,
         }}
       >
-        <Board position={position} socket={socket.current} />
+        <Board position={position} socketRef={socket} />
       </div>
     </div >
   );

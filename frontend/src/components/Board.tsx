@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import type { Move, Position } from "../interfaces/chess";
 import { MessageTypeMovePiece, type WSMessage } from "../interfaces/message";
 import { coordsToSquare } from "../utils/chess";
 
-function Board({ position, socket }: { position: Position | null, socket: WebSocket | null }) {
+function Board({ position, socketRef }: { position: Position | null, socketRef: RefObject<WebSocket | null> }) {
     const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
 
     if (!position) {
@@ -35,7 +35,7 @@ function Board({ position, socket }: { position: Position | null, socket: WebSoc
             type: MessageTypeMovePiece,
             data: move,
         };
-        socket?.send(JSON.stringify(message));
+        socketRef.current?.send(JSON.stringify(message));
 
         setSelected(null);
     }
