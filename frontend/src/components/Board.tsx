@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Position } from "../interfaces/chess";
+import type { Move, Position } from "../interfaces/chess";
+import { MessageTypeMovePiece, type WSMessage } from "../interfaces/message";
 
 function Board({ position, socket }: { position: Position | null, socket: WebSocket | null }) {
     const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
@@ -8,7 +9,7 @@ function Board({ position, socket }: { position: Position | null, socket: WebSoc
         return <div>Loading board...</div>;
     }
 
-    function handleClick(i: number, j: number, piece: any) {
+    function handleClick(i: number, j: number) {
         // Nothing selected
         if (!selected) {
             setSelected({ row: i, col: j });
@@ -25,6 +26,14 @@ function Board({ position, socket }: { position: Position | null, socket: WebSoc
         const from = { row: selected.row, col: selected.col };
         const to = { row: i, col: j };
         console.log(`${from.row},${from.col} -> ${to.row},${to.col}`);
+        const move: Move = {
+            from: "a1", to: "b2"
+        };
+        const message: WSMessage = {
+            type: MessageTypeMovePiece,
+            data: move,
+        };
+        socket?.send(JSON.stringify(message));
 
         setSelected(null);
     }
@@ -37,7 +46,7 @@ function Board({ position, socket }: { position: Position | null, socket: WebSoc
                     const isSelected = selected?.row === i && selected?.col === j;
                     return (
                         <div
-                            onClick={() => imgPath && handleClick(i, j, piece)}
+                            onClick={() => imgPath && handleClick(i, j)}
                             style={{
                                 width: 80,
                                 height: 80,

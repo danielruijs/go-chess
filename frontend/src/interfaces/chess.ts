@@ -7,4 +7,11 @@ interface Position {
     board: Piece[][];
 }
 
-export type { Position };
+type Square = string
+
+interface Move {
+    from: Square;
+    to: Square;
+}
+
+export type { Position, Move };
