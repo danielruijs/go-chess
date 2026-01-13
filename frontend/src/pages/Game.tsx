@@ -65,7 +65,7 @@ function Game() {
           flexGrow: 1, // take remaining vertical space
         }}
       >
-        <Board position={position} />
+        <Board position={position} socket={socket.current} />
       </div>
     </div>
   );
