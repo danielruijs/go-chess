@@ -1,70 +1,36 @@
 package server
 
 import (
+	"fmt"
 	"go-chess/internal/chess"
-	"log"
-	"math/rand/v2"
-	"net/http"
-
-	"github.com/gorilla/websocket"
+	"go-chess/internal/matchmaker"
 )
 
-type WebSocketHandler struct {
-	Upgrader websocket.Upgrader
+func (c Client) handleMove(message chess.WSMessage) error {
+	if c.Player.Match == nil {
+		return fmt.Errorf("player is not in a match")
+	}
+
+	move, ok := message.Data.(chess.Move)
+	if !ok {
+		return fmt.Errorf("invalid move data format")
+	}
+
+	c.Player.Match.EventChan <- chess.Event{
+		Player: c.Player,
+		Type:   chess.EventTypeMove,
+		Data:   move,
+	}
+
+	return nil
 }
 
-func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
-	wsh.Upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-	conn, err := wsh.Upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("error when upgrading connection to websocket: %s", err)
-		return
+func (c Client) handleJoinMatch(matchmaker *matchmaker.Matchmaker) error {
+	if c.Player.Match != nil {
+		return fmt.Errorf("player is already in a match")
 	}
-	defer func() { _ = conn.Close() }()
 
-	log.Println("New WebSocket connection established")
+	matchmaker.JoinQueue(c.Player)
 
-	for {
-		// Read message from client
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("Read error:", err)
-			break
-		}
-
-		log.Printf("Received message: %s. Message type: %d", message, messageType)
-
-		rnd := rand.IntN(2)
-		randomPosition := chess.Position{}
-		switch rnd {
-		case 0:
-			randomPosition, err = chess.StartingPositionFEN.ToPosition()
-			if err != nil {
-				log.Println("Error generating starting position:", err)
-				continue
-			}
-		case 1:
-			randomPosition = chess.Position{}
-			for i := range chess.BoardSize {
-				for j := range chess.BoardSize {
-					colors := []chess.Color{chess.White, chess.Black}
-					color := colors[rand.IntN(len(colors))]
-					randomPosition.Board[i][j] = chess.Piece{
-						Type:  chess.Pawn,
-						Color: color,
-					}
-				}
-			}
-		}
-
-		err = conn.WriteJSON(chess.WSMessage{
-			Type: chess.MessageTypePosition,
-			Data: randomPosition,
-		})
-		if err != nil {
-			log.Println("Write error:", err)
-			break
-		}
-	}
+	return nil
 }
