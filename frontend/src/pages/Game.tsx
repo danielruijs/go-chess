@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { type WSMessage, MessageTypePosition } from "../interfaces/message";
 import type { Position } from "../interfaces/chess";
+import { Button, Stack, TextField } from "@mui/material";
 import Board from "../components/Board";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
@@ -8,6 +9,7 @@ const WS_URL = import.meta.env.VITE_WS_URL;
 function Game() {
   const socket = useRef<WebSocket | null>(null);
   const [position, setPosition] = useState<Position | null>(null)
+  const [playerName, setPlayerName] = useState<string>("");
 
   useEffect(() => {
     // Initialize WebSocket once
@@ -37,40 +39,35 @@ function Game() {
   }, []);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-      }}
-    >
-      <div>Game</div>
+    <div>
+      <Stack spacing={2} padding={2} width={"300px"}>
+        <TextField label="Name" variant="outlined" onChange={(e) => { setPlayerName(e.target.value) }} />
 
-      <div>
-        <button
+        <Button
+          variant="contained"
+          disabled={!playerName}
           onClick={() => {
             const message: WSMessage = {
               type: "join_match",
-              data: {},
+              data: playerName,
             };
             socket.current?.send(JSON.stringify(message));
-          }}
-        >
+          }}>
           Join Matchmaking Queue
-        </button>
-      </div>
+        </Button>
+      </Stack>
 
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          flexGrow: 1, // take remaining vertical space
+          flexGrow: 1,
         }}
       >
         <Board position={position} socket={socket.current} />
       </div>
-    </div>
+    </div >
   );
 }
 
