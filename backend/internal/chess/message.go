@@ -4,12 +4,10 @@ type messageType string
 type messageData any
 
 const (
-	MessageTypePosition messageType = "position"
+	MessageTypePosition  messageType = "position"
+	MessageTypeMove      messageType = "move"
+	MessageTypeJoinMatch messageType = "join_match"
 )
-
-// var messageDataMap = map[messageType]messageData{
-// 	MessageTypePosition: Position{},
-// }
 
 type WSMessage struct {
 	Type messageType `json:"type"`

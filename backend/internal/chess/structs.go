@@ -40,3 +40,8 @@ type Position struct {
 	Halfmove       uint           `json:"halfmove"`        // Halfmove clock, number of halfmoves since last capture or pawn move, for fifty-move rule
 	Fullmove       uint           `json:"fullmove"`        // Fullmove number
 }
+
+type Move struct {
+	From Square `json:"from"`
+	To   Square `json:"to"`
+}
