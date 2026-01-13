@@ -1,6 +1,9 @@
 package chess
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Player struct {
 	Name     string
@@ -41,23 +44,33 @@ func (m *Match) Run() {
 			}
 			m.Moves = append(m.Moves, move)
 
+			positionData, err := json.Marshal(m.Position)
+			if err != nil {
+				fmt.Println("failed to marshal position:", err)
+				continue
+			}
 			m.White.SendChan <- WSMessage{
 				Type: MessageTypePosition,
-				Data: *m.Position,
+				Data: positionData,
 			}
 			m.Black.SendChan <- WSMessage{
 				Type: MessageTypePosition,
-				Data: *m.Position,
+				Data: positionData,
 			}
 		case EventTypeGameStarted:
+			positionData, err := json.Marshal(m.Position)
+			if err != nil {
+				fmt.Println("failed to marshal position:", err)
+				continue
+			}
 			fmt.Println("Started match")
 			m.White.SendChan <- WSMessage{
 				Type: MessageTypePosition,
-				Data: *m.Position,
+				Data: positionData,
 			}
 			m.Black.SendChan <- WSMessage{
 				Type: MessageTypePosition,
-				Data: *m.Position,
+				Data: positionData,
 			}
 		}
 		fmt.Println(event.Player, event.Type)

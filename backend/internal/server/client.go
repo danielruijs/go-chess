@@ -31,7 +31,7 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	client := Client{
 		Conn: conn,
 		Player: &chess.Player{
-			Name:     "test",
+			Name:     "",
 			SendChan: make(chan chess.WSMessage),
 		},
 	}
@@ -54,7 +54,7 @@ func (c Client) ReceiveMessages(matchmaker *matchmaker.Matchmaker) {
 
 		switch message.Type {
 		case chess.MessageTypeJoinMatch:
-			err := c.handleJoinMatch(matchmaker)
+			err := c.handleJoinMatch(message, matchmaker)
 			if err != nil {
 				log.Println("Error handling join match:", err)
 			}
@@ -63,10 +63,8 @@ func (c Client) ReceiveMessages(matchmaker *matchmaker.Matchmaker) {
 			if err != nil {
 				log.Println("Error handling move:", err)
 			}
-			continue
 		default:
 			log.Println("Unsupported message type:", message.Type)
-			return
 		}
 	}
 }

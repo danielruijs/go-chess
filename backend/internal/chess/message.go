@@ -1,15 +1,16 @@
 package chess
 
-type messageType string
-type messageData any
+import "encoding/json"
+
+type MessageType string
 
 const (
-	MessageTypePosition  messageType = "position"
-	MessageTypeMove      messageType = "move"
-	MessageTypeJoinMatch messageType = "join_match"
+	MessageTypePosition  MessageType = "position"
+	MessageTypeMove      MessageType = "move"
+	MessageTypeJoinMatch MessageType = "join_match"
 )
 
 type WSMessage struct {
-	Type messageType `json:"type"`
-	Data messageData `json:"data"`
+	Type MessageType     `json:"type"`
+	Data json.RawMessage `json:"data"`
 }
