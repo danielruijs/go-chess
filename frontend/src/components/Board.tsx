@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Move, Position } from "../interfaces/chess";
 import { MessageTypeMovePiece, type WSMessage } from "../interfaces/message";
+import { coordsToSquare } from "../utils/chess";
 
 function Board({ position, socket }: { position: Position | null, socket: WebSocket | null }) {
     const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
@@ -23,11 +24,12 @@ function Board({ position, socket }: { position: Position | null, socket: WebSoc
         }
 
         // Move piece
-        const from = { row: selected.row, col: selected.col };
-        const to = { row: i, col: j };
-        console.log(`${from.row},${from.col} -> ${to.row},${to.col}`);
+        const from = coordsToSquare(selected.row, selected.col)
+        const to = coordsToSquare(i, j)
+        console.log(`${from} -> ${to}`);
         const move: Move = {
-            from: "a1", to: "b2"
+            from: from,
+            to: to
         };
         const message: WSMessage = {
             type: MessageTypeMovePiece,

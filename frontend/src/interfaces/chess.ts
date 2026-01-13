@@ -14,4 +14,4 @@ interface Move {
     to: Square;
 }
 
-export type { Position, Move };
+export type { Position, Move, Square };
