@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-chess/internal/matchmaker"
 	"go-chess/internal/server"
 	"log"
 	"net/http"
@@ -9,8 +10,12 @@ import (
 )
 
 func main() {
+	matchmaker := matchmaker.NewMatchmaker()
+	go matchmaker.Run()
+
 	webSocketHandler := server.WebSocketHandler{
-		Upgrader: websocket.Upgrader{},
+		Upgrader:   websocket.Upgrader{},
+		Matchmaker: matchmaker,
 	}
 
 	http.HandleFunc("/ws", webSocketHandler.ServeWS)
