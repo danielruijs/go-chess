@@ -43,36 +43,28 @@ func (m *Match) Run() {
 				continue
 			}
 			m.Moves = append(m.Moves, move)
-
-			positionData, err := json.Marshal(m.Position)
-			if err != nil {
-				fmt.Println("failed to marshal position:", err)
-				continue
-			}
-			m.White.SendChan <- WSMessage{
-				Type: MessageTypePosition,
-				Data: positionData,
-			}
-			m.Black.SendChan <- WSMessage{
-				Type: MessageTypePosition,
-				Data: positionData,
-			}
 		case EventTypeGameStarted:
-			positionData, err := json.Marshal(m.Position)
-			if err != nil {
-				fmt.Println("failed to marshal position:", err)
-				continue
-			}
 			fmt.Println("Started match")
-			m.White.SendChan <- WSMessage{
-				Type: MessageTypePosition,
-				Data: positionData,
-			}
-			m.Black.SendChan <- WSMessage{
-				Type: MessageTypePosition,
-				Data: positionData,
-			}
 		}
-		fmt.Println(event.Player, event.Type)
+		err := m.sendPositionUpdate()
+		if err != nil {
+			fmt.Println("failed to send position update:", err)
+		}
 	}
+}
+
+func (m *Match) sendPositionUpdate() error {
+	positionData, err := json.Marshal(m.Position)
+	if err != nil {
+		return fmt.Errorf("failed to marshal position: %v", err)
+	}
+	m.White.SendChan <- WSMessage{
+		Type: MessageTypePosition,
+		Data: positionData,
+	}
+	m.Black.SendChan <- WSMessage{
+		Type: MessageTypePosition,
+		Data: positionData,
+	}
+	return nil
 }
