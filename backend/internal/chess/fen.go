@@ -94,7 +94,7 @@ func parseBoard(s string) (Board, error) {
 			if char >= '1' && char <= '8' {
 				emptySquares := int(char - '0')
 				for k := range emptySquares {
-					board[i][j+k] = Piece{}
+					board[j+k][7-i] = Piece{}
 				}
 				j += emptySquares
 				continue
@@ -104,7 +104,7 @@ func parseBoard(s string) (Board, error) {
 			if !ok {
 				return Board{}, fmt.Errorf("invalid fen character: %c", char)
 			}
-			board[i][j] = piece
+			board[j][7-i] = piece
 			j++
 		}
 		if j != BoardSize {

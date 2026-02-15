@@ -16,13 +16,13 @@ func TestFenToPositionStart(t *testing.T) {
 		assert.Equal(t, BoardSize, len(rank))
 	}
 	assert.Equal(t, Rook, board[0][0].Type)
-	assert.Equal(t, Black, board[0][0].Color)
-	assert.Equal(t, Queen, board[0][3].Type)
-	assert.Equal(t, Black, board[0][3].Color)
-	assert.Equal(t, King, board[7][4].Type)
-	assert.Equal(t, White, board[7][4].Color)
-	assert.Equal(t, Pawn, board[6][7].Type)
-	assert.Equal(t, White, board[6][7].Color)
+	assert.Equal(t, White, board[0][0].Color)
+	assert.Equal(t, Queen, board[3][0].Type)
+	assert.Equal(t, White, board[3][0].Color)
+	assert.Equal(t, King, board[4][7].Type)
+	assert.Equal(t, Black, board[4][7].Color)
+	assert.Equal(t, Pawn, board[2][6].Type)
+	assert.Equal(t, Black, board[2][6].Color)
 
 	assert.Equal(t, White, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
@@ -45,16 +45,18 @@ func TestFenToPositionEndgame(t *testing.T) {
 		assert.Equal(t, BoardSize, len(rank))
 	}
 
-	assert.Equal(t, Queen, board[0][3].Type)
-	assert.Equal(t, White, board[0][3].Color)
-	assert.Equal(t, King, board[1][6].Type)
-	assert.Equal(t, Black, board[1][6].Color)
-	assert.Equal(t, Pawn, board[2][0].Type)
-	assert.Equal(t, Black, board[2][0].Color)
-	assert.Equal(t, Knight, board[4][3].Type)
-	assert.Equal(t, Black, board[4][3].Color)
-	assert.Equal(t, King, board[6][5].Type)
-	assert.Equal(t, White, board[6][5].Color)
+	assert.Equal(t, Queen, board[3][7].Type)
+	assert.Equal(t, White, board[3][7].Color)
+	assert.Equal(t, King, board[6][6].Type)
+	assert.Equal(t, Black, board[6][6].Color)
+	assert.Equal(t, Pawn, board[1][5].Type)
+	assert.Equal(t, Black, board[1][5].Color)
+	assert.Equal(t, Knight, board[3][3].Type)
+	assert.Equal(t, Black, board[3][3].Color)
+	assert.Equal(t, Knight, board[2][2].Type)
+	assert.Equal(t, White, board[2][2].Color)
+	assert.Equal(t, King, board[5][1].Type)
+	assert.Equal(t, White, board[5][1].Color)
 
 	assert.Equal(t, Black, pos.ActiveColor)
 	assert.Equal(t, false, pos.CastlingRights.WhiteOO)
@@ -78,10 +80,10 @@ func TestFenToPositionEnPassantWhite(t *testing.T) {
 		assert.Equal(t, BoardSize, len(rank))
 	}
 
-	assert.Equal(t, Pawn, board[3][3].Type)
-	assert.Equal(t, White, board[3][3].Color)
 	assert.Equal(t, Pawn, board[3][4].Type)
-	assert.Equal(t, Black, board[3][4].Color)
+	assert.Equal(t, White, board[3][4].Color)
+	assert.Equal(t, Pawn, board[4][4].Type)
+	assert.Equal(t, Black, board[4][4].Color)
 
 	assert.Equal(t, White, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
@@ -105,10 +107,10 @@ func TestFenToPositionEnPassantBlack(t *testing.T) {
 		assert.Equal(t, BoardSize, len(rank))
 	}
 
-	assert.Equal(t, Pawn, board[4][4].Type)
-	assert.Equal(t, White, board[4][4].Color)
 	assert.Equal(t, Pawn, board[4][3].Type)
-	assert.Equal(t, Black, board[4][3].Color)
+	assert.Equal(t, White, board[4][3].Color)
+	assert.Equal(t, Pawn, board[3][3].Type)
+	assert.Equal(t, Black, board[3][3].Color)
 
 	assert.Equal(t, Black, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)

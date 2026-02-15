@@ -30,10 +30,8 @@ type CastlingRights struct {
 	BlackOOO bool `json:"black_ooo"`
 }
 
-type Board [BoardSize][BoardSize]Piece
-
 type Position struct {
-	Board          Board          `json:"board"`           // Ranks(rows) 8-1, files(columns) a-h
+	Board          Board          `json:"board"`           // Files(columns) a-h, ranks(rows) 1-8
 	ActiveColor    Color          `json:"active_color"`    // Color to move
 	CastlingRights CastlingRights `json:"castling_rights"` // Castling rights
 	EnPassant      Square         `json:"en_passant"`      // En passant target square, square over which pawn just moved when moving two squares

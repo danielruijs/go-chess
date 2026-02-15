@@ -1,8 +1,8 @@
 import { type Square } from "../interfaces/chess";
 
-function coordsToSquare(rank: number, file: number): Square {
+function coordsToSquare(file: number, rank: number): Square {
     const fileChar = String.fromCharCode("a".charCodeAt(0) + file);
-    const rankChar = (8 - rank).toString();
+    const rankChar = (rank + 1).toString();
     return fileChar + rankChar;
 }
 
