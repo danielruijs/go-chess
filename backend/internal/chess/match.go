@@ -3,17 +3,19 @@ package chess
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 type Player struct {
 	Name     string
 	Match    *Match
 	SendChan chan WSMessage
+	Color    Color
 }
 
 type Match struct {
-	White Player
-	Black Player
+	White *Player
+	Black *Player
 
 	Moves     []Move
 	Position  *Position
@@ -23,7 +25,7 @@ type Match struct {
 func NewInitialPosition() *Position {
 	pos, err := StartingPositionFEN.ToPosition()
 	if err != nil {
-		panic(fmt.Sprintf("failed to create initial position: %v", err))
+		log.Fatalf("failed to create initial position: %v", err)
 	}
 	return &pos
 }
@@ -38,7 +40,7 @@ func (m *Match) Run() {
 				m.sendError("invalid move data format")
 				continue
 			}
-			err := m.Position.ApplyMove(moveData.Move)
+			err := m.Position.ApplyMove(moveData.Move, event.Player.Color)
 			if err != nil {
 				fmt.Println("invalid move:", err)
 				m.sendError(fmt.Sprintf("invalid move: %v", err))
@@ -72,11 +74,11 @@ func (m *Match) sendPositionUpdate() error {
 	return nil
 }
 
-func (m *Match) sendError(message string) error {
+func (m *Match) sendError(message string) {
 	errorData := ErrorData{Message: message}
 	errorDataJson, err := json.Marshal(errorData)
 	if err != nil {
-		return fmt.Errorf("failed to marshal error data: %v", err)
+		log.Fatal("failed to marshal error data:", err)
 	}
 	m.White.SendChan <- WSMessage{
 		Type: MessageTypeError,
@@ -86,5 +88,4 @@ func (m *Match) sendError(message string) error {
 		Type: MessageTypeError,
 		Data: errorDataJson,
 	}
-	return nil
 }

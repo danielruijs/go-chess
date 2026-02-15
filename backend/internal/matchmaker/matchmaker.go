@@ -27,8 +27,8 @@ func (mm *Matchmaker) Run() {
 		fmt.Println("Found player 2", player2.Name)
 
 		match := &chess.Match{
-			White:     *player1,
-			Black:     *player2,
+			White:     player1,
+			Black:     player2,
 			Moves:     []chess.Move{},
 			Position:  chess.NewInitialPosition(),
 			EventChan: make(chan chess.Event),
