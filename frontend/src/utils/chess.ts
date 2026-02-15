@@ -1,9 +1,9 @@
-import {type Square } from "../interfaces/chess";
+import { type Square } from "../interfaces/chess";
 
-function coordsToSquare(row: number, col: number): Square {
-    const file = String.fromCharCode("a".charCodeAt(0) + col);
-    const rank = (8 - row).toString();
-    return file + rank;
+function coordsToSquare(rank: number, file: number): Square {
+    const fileChar = String.fromCharCode("a".charCodeAt(0) + file);
+    const rankChar = (8 - rank).toString();
+    return fileChar + rankChar;
 }
 
 export { coordsToSquare };

@@ -78,14 +78,15 @@ func (f Fen) ToPosition() (Position, error) {
 
 func parseBoard(s string) (Board, error) {
 	var board Board
-	rows := strings.Split(s, "/")
-	if len(rows) != BoardSize {
-		return Board{}, fmt.Errorf("fen piece placement must have %d rows", BoardSize)
+	ranks := strings.Split(s, "/")
+	if len(ranks) != BoardSize {
+		return Board{}, fmt.Errorf("fen piece placement must have %d ranks", BoardSize)
 	}
-	// Rows 8 to 1
-	for i, row := range rows {
+	// Ranks 8 to 1
+	for i, rank := range ranks {
 		j := 0
-		for _, char := range row {
+		// Files a to h
+		for _, char := range rank {
 			if j >= BoardSize {
 				return Board{}, fmt.Errorf("fen piece placement has too many columns")
 			}

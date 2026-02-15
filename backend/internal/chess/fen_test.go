@@ -10,10 +10,10 @@ func TestFenToPositionStart(t *testing.T) {
 	pos, err := StartingPositionFEN.ToPosition()
 
 	board := pos.Board
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 	assert.Equal(t, BoardSize, len(board))
-	for _, row := range board {
-		assert.Equal(t, BoardSize, len(row))
+	for _, rank := range board {
+		assert.Equal(t, BoardSize, len(rank))
 	}
 	assert.Equal(t, Rook, board[0][0].Type)
 	assert.Equal(t, Black, board[0][0].Color)
@@ -39,9 +39,10 @@ func TestFenToPositionEndgame(t *testing.T) {
 	pos, err := fen.ToPosition()
 
 	board := pos.Board
+	assert.Nil(t, err)
 	assert.Equal(t, BoardSize, len(board))
-	for _, row := range board {
-		assert.Equal(t, BoardSize, len(row))
+	for _, rank := range board {
+		assert.Equal(t, BoardSize, len(rank))
 	}
 
 	assert.Equal(t, Queen, board[0][3].Type)
@@ -63,16 +64,68 @@ func TestFenToPositionEndgame(t *testing.T) {
 	assert.Equal(t, Square(""), pos.EnPassant)
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(37), pos.Fullmove)
+}
 
-	assert.Equal(t, nil, err)
+func TestFenToPositionEnPassantWhite(t *testing.T) {
+	fen := Fen("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3")
+
+	pos, err := fen.ToPosition()
+
+	board := pos.Board
+	assert.Nil(t, err)
+	assert.Equal(t, BoardSize, len(board))
+	for _, rank := range board {
+		assert.Equal(t, BoardSize, len(rank))
+	}
+
+	assert.Equal(t, Pawn, board[3][3].Type)
+	assert.Equal(t, White, board[3][3].Color)
+	assert.Equal(t, Pawn, board[3][4].Type)
+	assert.Equal(t, Black, board[3][4].Color)
+
+	assert.Equal(t, White, pos.ActiveColor)
+	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
+	assert.Equal(t, true, pos.CastlingRights.WhiteOOO)
+	assert.Equal(t, true, pos.CastlingRights.BlackOO)
+	assert.Equal(t, true, pos.CastlingRights.BlackOOO)
+	assert.Equal(t, Square("e6"), pos.EnPassant)
+	assert.Equal(t, uint(0), pos.Halfmove)
+	assert.Equal(t, uint(3), pos.Fullmove)
+}
+
+func TestFenToPositionEnPassantBlack(t *testing.T) {
+	fen := Fen("rnbqkbnr/ppp1pppp/8/8/P2pP3/8/1PPP1PPP/RNBQKBNR b KQkq e3 0 3")
+
+	pos, err := fen.ToPosition()
+
+	board := pos.Board
+	assert.Nil(t, err)
+	assert.Equal(t, BoardSize, len(board))
+	for _, rank := range board {
+		assert.Equal(t, BoardSize, len(rank))
+	}
+
+	assert.Equal(t, Pawn, board[4][4].Type)
+	assert.Equal(t, White, board[4][4].Color)
+	assert.Equal(t, Pawn, board[4][3].Type)
+	assert.Equal(t, Black, board[4][3].Color)
+
+	assert.Equal(t, Black, pos.ActiveColor)
+	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
+	assert.Equal(t, true, pos.CastlingRights.WhiteOOO)
+	assert.Equal(t, true, pos.CastlingRights.BlackOO)
+	assert.Equal(t, true, pos.CastlingRights.BlackOOO)
+	assert.Equal(t, Square("e3"), pos.EnPassant)
+	assert.Equal(t, uint(0), pos.Halfmove)
+	assert.Equal(t, uint(3), pos.Fullmove)
 }
 
 func TestFenToPositionInvalid(t *testing.T) {
 	invalidFens := []Fen{
-		"8/8/8/8/ w KQkq - 0 1",                  // Not enough rows
-		"8/8/8/8/8/8/8/8/8 w KQkq - 0 1",         // Too many rows
-		"8/8/8/8/8/8/8/9 w KQkq - 0 1",           // Too many columns
-		"8/8/8/8/ppppppppppp/8/8/8 w KQkq - 0 1", // Too many columns
+		"8/8/8/8/ w KQkq - 0 1",                  // Not enough ranks
+		"8/8/8/8/8/8/8/8/8 w KQkq - 0 1",         // Too many ranks
+		"8/8/8/8/8/8/8/9 w KQkq - 0 1",           // Too many files
+		"8/8/8/8/ppppppppppp/8/8/8 w KQkq - 0 1", // Too many files
 		"8/8/8/8/8/8/8/7X w KQkq - 0 1",          // Invalid character
 		"8/8/8/8/8/8/8/8 x KQkq - 0 1",           // Invalid active color
 		"8/8/8/8/8/8/8/8 w KQkq q1 0 1",          // Invalid en passant square

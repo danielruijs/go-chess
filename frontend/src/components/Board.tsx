@@ -5,7 +5,7 @@ import type { WSMessage, MoveData } from "../interfaces/message";
 import { coordsToSquare } from "../utils/chess";
 
 function Board({ position, socketRef }: { position: Position | null, socketRef: RefObject<WebSocket | null> }) {
-    const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
+    const [selected, setSelected] = useState<{ rank: number; file: number } | null>(null);
 
     if (!position) {
         return <div>Loading board...</div>;
@@ -14,18 +14,18 @@ function Board({ position, socketRef }: { position: Position | null, socketRef: 
     function handleClick(i: number, j: number) {
         // Nothing selected
         if (!selected) {
-            setSelected({ row: i, col: j });
+            setSelected({ rank: i, file: j });
             return;
         }
 
         // Deselect if square clicked again
-        if (selected.row === i && selected.col === j) {
+        if (selected.rank === i && selected.file === j) {
             setSelected(null);
             return;
         }
 
         // Move piece
-        const from = coordsToSquare(selected.row, selected.col)
+        const from = coordsToSquare(selected.rank, selected.file)
         const to = coordsToSquare(i, j)
         console.log(`${from} -> ${to}`);
         const move: Move = {
@@ -43,11 +43,11 @@ function Board({ position, socketRef }: { position: Position | null, socketRef: 
     }
 
     return <div>
-        {position.board.map((row, i) => (
+        {position.board.map((rank, i) => (
             <div key={i} style={{ display: "flex" }}>
-                {row.map((piece, j) => {
+                {rank.map((piece, j) => {
                     const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
-                    const isSelected = selected?.row === i && selected?.col === j;
+                    const isSelected = selected?.rank === i && selected?.file === j;
                     return (
                         <div
                             onClick={() => imgPath && handleClick(i, j)}

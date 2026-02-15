@@ -16,16 +16,16 @@ func (s Square) IsValid() bool {
 	if len(s) != 2 {
 		return false
 	}
-	row := s[0]
-	col := s[1]
-	return row >= 'a' && row <= 'h' && col >= '1' && col <= '8'
+	file := s[0]
+	rank := s[1]
+	return file >= 'a' && file <= 'h' && rank >= '1' && rank <= '8'
 }
 
-func (b Board) GetSquare(sq Square) (Piece, error) {
+func (b Board) GetPiece(sq Square) (Piece, error) {
 	if !sq.IsValid() {
 		return Piece{}, fmt.Errorf("invalid square: %s", sq)
 	}
-	row := int(sq[1] - '1')
-	col := int(sq[0] - 'a')
-	return b[row][col], nil
+	file := int(sq[0] - 'a')
+	rank := 7 - int(sq[1]-'1')
+	return b[rank][file], nil
 }
