@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { type WSMessage, MessageTypeJoinMatch, MessageTypePosition } from "../interfaces/message";
+import { MessageTypeJoinMatch, MessageTypePosition } from "../interfaces/message";
+import type { WSMessage, JoinMatchData, PositionData } from "../interfaces/message";
 import type { Position } from "../interfaces/chess";
 import { Button, Stack, TextField } from "@mui/material";
 import Board from "../components/Board";
@@ -27,7 +28,8 @@ function Game() {
       const message: WSMessage = JSON.parse(event.data);
 
       if (message.type === MessageTypePosition) {
-        const newPosition: Position = message.data;
+        const positionData: PositionData = message.data;
+        const newPosition: Position = positionData.position;
         setPosition(newPosition);
       }
     });
@@ -47,9 +49,10 @@ function Game() {
           variant="contained"
           disabled={!playerName}
           onClick={() => {
+            const joinMatchData: JoinMatchData = { playerName };
             const message: WSMessage = {
               type: MessageTypeJoinMatch,
-              data: playerName,
+              data: joinMatchData,
             };
             socket.current?.send(JSON.stringify(message));
           }}>

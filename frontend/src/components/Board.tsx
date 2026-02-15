@@ -1,6 +1,7 @@
 import { useState, type RefObject } from "react";
 import type { Move, Position } from "../interfaces/chess";
-import { MessageTypeMovePiece, type WSMessage } from "../interfaces/message";
+import { MessageTypeMove } from "../interfaces/message";
+import type { WSMessage, MoveData } from "../interfaces/message";
 import { coordsToSquare } from "../utils/chess";
 
 function Board({ position, socketRef }: { position: Position | null, socketRef: RefObject<WebSocket | null> }) {
@@ -31,9 +32,10 @@ function Board({ position, socketRef }: { position: Position | null, socketRef: 
             from: from,
             to: to
         };
+        const moveData: MoveData = { move };
         const message: WSMessage = {
-            type: MessageTypeMovePiece,
-            data: move,
+            type: MessageTypeMove,
+            data: moveData,
         };
         socketRef.current?.send(JSON.stringify(message));
 

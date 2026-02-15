@@ -1,22 +1,48 @@
 import type { Position, Move } from "./chess";
 
+const MessageTypePosition = "position";
+const MessageTypeMove = "move";
+const MessageTypeJoinMatch = "join_match";
+const MessageTypeError = "error";
+
+type PositionData = {
+  position: Position;
+};
+
+type MoveData = {
+  move: Move;
+};
+
+type JoinMatchData = {
+  playerName: string;
+};
+
+type ErrorData = {
+  message: string;
+};
+
 type WSMessage =
   | {
-      type: typeof MessageTypePosition;
-      data: Position
-    }
+    type: typeof MessageTypePosition;
+    data: PositionData;
+  }
   | {
-      type: typeof MessageTypeJoinMatch;
-      data: string
-    }
-    | {
-        type: typeof MessageTypeMovePiece
-        data: Move
-    };
+    type: typeof MessageTypeMove;
+    data: MoveData;
+  }
+  | {
+    type: typeof MessageTypeJoinMatch;
+    data: JoinMatchData;
+  }
+  | {
+    type: typeof MessageTypeError;
+    data: ErrorData;
+  };
 
-const MessageTypePosition = "position";
-const MessageTypeMovePiece = "move";
-const MessageTypeJoinMatch = "join_match";
-
-export type { WSMessage };
-export { MessageTypePosition, MessageTypeMovePiece, MessageTypeJoinMatch };
+export type { WSMessage, MoveData, PositionData, JoinMatchData, ErrorData };
+export {
+  MessageTypePosition,
+  MessageTypeMove,
+  MessageTypeJoinMatch,
+  MessageTypeError,
+};

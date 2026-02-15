@@ -20,6 +20,6 @@ func main() {
 
 	http.HandleFunc("/ws", webSocketHandler.ServeWS)
 
-	log.Print("Starting server...")
+	log.Print("Started server")
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }

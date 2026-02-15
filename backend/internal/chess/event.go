@@ -9,7 +9,7 @@ const (
 )
 
 type Event struct {
-	Player *Player   `json:"player"`
-	Type   eventType `json:"type"`
-	Data   eventData `json:"data"`
+	Player *Player
+	Type   eventType
+	Data   eventData
 }
