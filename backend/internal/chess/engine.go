@@ -34,7 +34,6 @@ func (e *Engine) ApplyMove(move Move, color Color) error {
 	if err != nil {
 		return fmt.Errorf("invalid move: %w", err)
 	}
-	fmt.Printf("Apply move %s -> %s\n", SquareToStr(move.From), SquareToStr(move.To))
 	// TODO: apply move to board
 	e.moves = append(e.moves, move)
 	return nil
