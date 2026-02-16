@@ -29,8 +29,7 @@ func (mm *Matchmaker) Run() {
 		match := &Match{
 			White:     player1,
 			Black:     player2,
-			Moves:     []chess.Move{},
-			Position:  NewInitialPosition(),
+			Engine:    chess.NewEngine(),
 			EventChan: make(chan Event),
 		}
 

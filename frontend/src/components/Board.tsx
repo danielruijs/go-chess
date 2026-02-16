@@ -1,13 +1,13 @@
 import { useState, type RefObject } from "react";
-import type { Move, Position } from "../interfaces/chess";
+import type { Move, Board } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { WSMessage, MoveData } from "../interfaces/message";
 import { coordsToSquare } from "../utils/chess";
 
-function Board({ position, socketRef }: { position: Position | null, socketRef: RefObject<WebSocket | null> }) {
+function BoardComponent({ board, socketRef }: { board: Board | null, socketRef: RefObject<WebSocket | null> }) {
     const [selected, setSelected] = useState<{ file: number; rank: number } | null>(null);
 
-    if (!position) {
+    if (!board) {
         return <div>Loading board...</div>;
     }
 
@@ -54,7 +54,7 @@ function Board({ position, socketRef }: { position: Position | null, socketRef: 
                 const file = index % 8;                 // a -> h
                 const rank = 7 - Math.floor(index / 8); // 8 -> 1
 
-                const piece = position.board[file][rank];
+                const piece = board[file][rank];
                 const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
                 const isSelected = selected?.file === file && selected?.rank === rank;
                 return (
@@ -80,4 +80,4 @@ function Board({ position, socketRef }: { position: Position | null, socketRef: 
     );
 }
 
-export default Board;
+export default BoardComponent;

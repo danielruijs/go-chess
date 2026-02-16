@@ -18,17 +18,8 @@ type Match struct {
 	White *Player
 	Black *Player
 
-	Moves     []chess.Move
-	Position  *chess.Position
+	Engine    chess.Engine
 	EventChan chan Event
-}
-
-func NewInitialPosition() *chess.Position {
-	pos, err := chess.StartingPositionFEN.ToPosition()
-	if err != nil {
-		log.Fatalf("failed to create initial position: %v", err)
-	}
-	return &pos
 }
 
 func (m *Match) Run() {
@@ -41,13 +32,12 @@ func (m *Match) Run() {
 				m.sendError("invalid move data format")
 				continue
 			}
-			err := m.Position.ApplyMove(moveData.Move, event.Player.Color)
+			err := m.Engine.ApplyMove(moveData.Move, event.Player.Color)
 			if err != nil {
-				fmt.Println("invalid move:", err)
+				fmt.Printf("failed to apply move %s -> %s: %v\n", moveData.Move.From, moveData.Move.To, err)
 				m.sendError(fmt.Sprintf("invalid move: %v", err))
 				continue
 			}
-			m.Moves = append(m.Moves, moveData.Move)
 		case EventTypeGameStarted:
 			fmt.Println("Started match")
 		}
@@ -59,17 +49,17 @@ func (m *Match) Run() {
 }
 
 func (m *Match) sendPositionUpdate() error {
-	positionData := PositionData{Position: *m.Position}
+	positionData := BoardData{Board: m.Engine.GetBoard()}
 	data, err := json.Marshal(positionData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal position: %v", err)
 	}
 	m.White.SendChan <- WSMessage{
-		Type: MessageTypePosition,
+		Type: MessageTypeBoard,
 		Data: data,
 	}
 	m.Black.SendChan <- WSMessage{
-		Type: MessageTypePosition,
+		Type: MessageTypeBoard,
 		Data: data,
 	}
 	return nil

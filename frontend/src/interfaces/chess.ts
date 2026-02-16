@@ -3,9 +3,7 @@ interface Piece {
     color: "white" | "black";
 }
 
-interface Position {
-    board: Piece[][];
-}
+type Board = Piece[][];
 
 type Square = string
 
@@ -14,4 +12,4 @@ interface Move {
     to: Square;
 }
 
-export type { Position, Move, Square };
+export type { Board, Move, Square };

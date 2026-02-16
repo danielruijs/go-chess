@@ -1,12 +1,12 @@
-import type { Position, Move } from "./chess";
+import type { Board, Move } from "./chess";
 
-const MessageTypePosition = "position";
+const MessageTypeBoard = "board";
 const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
 const MessageTypeError = "error";
 
-type PositionData = {
-  position: Position;
+type BoardData = {
+  board: Board;
 };
 
 type MoveData = {
@@ -23,8 +23,8 @@ type ErrorData = {
 
 type WSMessage =
   | {
-    type: typeof MessageTypePosition;
-    data: PositionData;
+    type: typeof MessageTypeBoard;
+    data: BoardData;
   }
   | {
     type: typeof MessageTypeMove;
@@ -39,9 +39,9 @@ type WSMessage =
     data: ErrorData;
   };
 
-export type { WSMessage, MoveData, PositionData, JoinMatchData, ErrorData };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, ErrorData };
 export {
-  MessageTypePosition,
+  MessageTypeBoard,
   MessageTypeMove,
   MessageTypeJoinMatch,
   MessageTypeError,

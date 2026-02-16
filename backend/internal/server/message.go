@@ -8,7 +8,7 @@ import (
 type MessageType string
 
 const (
-	MessageTypePosition  MessageType = "position"
+	MessageTypeBoard     MessageType = "board"
 	MessageTypeMove      MessageType = "move"
 	MessageTypeJoinMatch MessageType = "join_match"
 	MessageTypeError     MessageType = "error"
@@ -19,8 +19,8 @@ type WSMessage struct {
 	Data json.RawMessage `json:"data"`
 }
 
-type PositionData struct {
-	Position chess.Position `json:"position"`
+type BoardData struct {
+	Board chess.Board `json:"board"`
 }
 
 type MoveData struct {
