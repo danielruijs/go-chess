@@ -36,7 +36,7 @@ func (f Fen) ToPosition() (Position, error) {
 		return Position{}, fmt.Errorf("fen string must have 6 fields")
 	}
 
-	board, err := parseBoard(fields[0])
+	pos, err := parseBoard(fields[0])
 	if err != nil {
 		return Position{}, err
 	}
@@ -45,73 +45,102 @@ func (f Fen) ToPosition() (Position, error) {
 	if err != nil {
 		return Position{}, err
 	}
+	pos.ActiveColor = activeColor
 
 	castlingRights, err := parseCastlingRights(fields[2])
 	if err != nil {
 		return Position{}, err
 	}
+	pos.CastlingRights = castlingRights
 
 	enPassant, err := parseEnPassant(fields[3])
 	if err != nil {
 		return Position{}, err
 	}
+	pos.EnPassant = enPassant
 
 	halfmove, err := parseHalfmove(fields[4])
 	if err != nil {
 		return Position{}, err
 	}
+	pos.Halfmove = uint(halfmove)
 
 	fullmove, err := parseFullmove(fields[5])
 	if err != nil {
 		return Position{}, err
 	}
+	pos.Fullmove = uint(fullmove)
 
-	return Position{
-		Board:          board,
-		ActiveColor:    activeColor,
-		CastlingRights: castlingRights,
-		EnPassant:      enPassant,
-		Halfmove:       uint(halfmove),
-		Fullmove:       uint(fullmove),
-	}, nil
+	return pos, nil
 }
 
-func parseBoard(s string) (Board, error) {
-	var board Board
+func parseBoard(s string) (Position, error) {
+	var pos Position
+
 	ranks := strings.Split(s, "/")
 	if len(ranks) != BoardSize {
-		return Board{}, fmt.Errorf("fen piece placement must have %d ranks", BoardSize)
+		return Position{}, fmt.Errorf("fen piece placement must have %d ranks", BoardSize)
 	}
 	// Ranks 8 to 1
-	for i, rank := range ranks {
-		j := 0
+	for fenRank, rankStr := range ranks {
+		file := 0
 		// Files a to h
-		for _, char := range rank {
-			if j >= BoardSize {
-				return Board{}, fmt.Errorf("fen piece placement has too many columns")
-			}
+		for _, char := range rankStr {
 			// Empty squares
 			if char >= '1' && char <= '8' {
-				emptySquares := int(char - '0')
-				for k := range emptySquares {
-					board[j+k][7-i] = Piece{}
-				}
-				j += emptySquares
+				file += int(char - '0')
 				continue
 			}
-			// Pieces
+
 			piece, ok := FenCharToPiece[char]
 			if !ok {
-				return Board{}, fmt.Errorf("invalid fen character: %c", char)
+				return Position{}, fmt.Errorf("invalid fen character: %c", char)
 			}
-			board[j][7-i] = piece
-			j++
+
+			rank := 7 - fenRank
+			mask := coordMask(file, rank)
+
+			switch piece.Color {
+			case White:
+				switch piece.Type {
+				case Pawn:
+					pos.WhitePawns |= mask
+				case Knight:
+					pos.WhiteKnights |= mask
+				case Bishop:
+					pos.WhiteBishops |= mask
+				case Rook:
+					pos.WhiteRooks |= mask
+				case Queen:
+					pos.WhiteQueens |= mask
+				case King:
+					pos.WhiteKing |= mask
+				}
+			case Black:
+				switch piece.Type {
+				case Pawn:
+					pos.BlackPawns |= mask
+				case Knight:
+					pos.BlackKnights |= mask
+				case Bishop:
+					pos.BlackBishops |= mask
+				case Rook:
+					pos.BlackRooks |= mask
+				case Queen:
+					pos.BlackQueens |= mask
+				case King:
+					pos.BlackKing |= mask
+				}
+			}
+
+			file++
 		}
-		if j != BoardSize {
-			return Board{}, fmt.Errorf("fen piece placement must have %d columns", BoardSize)
+
+		if file != 8 {
+			return Position{}, fmt.Errorf("fen piece placement must have %d files", BoardSize)
 		}
 	}
-	return board, nil
+	return pos, nil
 }
 
 func parseColor(s string) (Color, error) {
@@ -140,15 +169,15 @@ func parseCastlingRights(s string) (CastlingRights, error) {
 	return castlingRights, nil
 }
 
-func parseEnPassant(s string) (Square, error) {
+func parseEnPassant(s string) (*Square, error) {
 	if s == "-" {
-		return Square(""), nil
+		return nil, nil
 	}
 	enPassant, err := StrToSquare(s)
 	if err != nil {
-		return Square(""), fmt.Errorf("invalid en passant target square in fen: %s", s)
+		return nil, fmt.Errorf("invalid en passant target square in fen: %s", s)
 	}
-	return enPassant, nil
+	return &enPassant, nil
 }
 
 func parseHalfmove(s string) (int, error) {

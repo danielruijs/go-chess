@@ -26,15 +26,21 @@ func (m *Match) Run() {
 	for event := range m.EventChan {
 		switch event.Type {
 		case EventTypeMove:
-			moveData, ok := event.Data.(MoveData)
+			data, ok := event.Data.(MoveData)
 			if !ok {
 				fmt.Println("invalid move data format")
 				m.sendError("invalid move data format")
 				continue
 			}
-			err := m.Engine.ApplyMove(moveData.Move, event.Player.Color)
+			move, err := moveDataToMove(data)
 			if err != nil {
-				fmt.Printf("failed to apply move %s -> %s: %v\n", moveData.Move.From, moveData.Move.To, err)
+				fmt.Println("invalid move data:", err)
+				m.sendError(fmt.Sprintf("invalid move data: %v", err))
+				continue
+			}
+			err = m.Engine.ApplyMove(move, event.Player.Color)
+			if err != nil {
+				fmt.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
 				m.sendError(fmt.Sprintf("invalid move: %v", err))
 				continue
 			}

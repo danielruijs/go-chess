@@ -24,7 +24,9 @@ type BoardData struct {
 }
 
 type MoveData struct {
-	Move chess.Move `json:"move"`
+	From      string           `json:"from"`
+	To        string           `json:"to"`
+	Promotion *chess.PieceType `json:"promotion"`
 }
 
 type JoinMatchData struct {

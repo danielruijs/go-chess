@@ -1,8 +1,8 @@
 import { useState, type RefObject } from "react";
-import type { Move, Board } from "../interfaces/chess";
+import type { Board } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { WSMessage, MoveData } from "../interfaces/message";
-import { coordsToSquare } from "../utils/chess";
+import { coordsToString } from "../utils/chess";
 
 function BoardComponent({ board, socketRef }: { board: Board | null, socketRef: RefObject<WebSocket | null> }) {
     const [selected, setSelected] = useState<{ file: number; rank: number } | null>(null);
@@ -25,14 +25,10 @@ function BoardComponent({ board, socketRef }: { board: Board | null, socketRef: 
         }
 
         // Move piece
-        const from = coordsToSquare(selected.file, selected.rank)
-        const to = coordsToSquare(i, j)
+        const from = coordsToString(selected.file, selected.rank)
+        const to = coordsToString(i, j)
         console.log(`${from} -> ${to}`);
-        const move: Move = {
-            from: from,
-            to: to
-        };
-        const moveData: MoveData = { move };
+        const moveData: MoveData = { from: from, to: to, promotion: null };
         const message: WSMessage = {
             type: MessageTypeMove,
             data: moveData,

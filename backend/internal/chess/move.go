@@ -1,6 +1,7 @@
 package chess
 
 type Move struct {
-	From Square `json:"from"`
-	To   Square `json:"to"`
+	From      Square
+	To        Square
+	Promotion *PieceType
 }

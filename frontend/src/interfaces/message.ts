@@ -1,4 +1,4 @@
-import type { Board, Move } from "./chess";
+import type { Board, PieceType } from "./chess";
 
 const MessageTypeBoard = "board";
 const MessageTypeMove = "move";
@@ -10,7 +10,9 @@ type BoardData = {
 };
 
 type MoveData = {
-  move: Move;
+  from: string;
+  to: string;
+  promotion: PieceType | null;
 };
 
 type JoinMatchData = {

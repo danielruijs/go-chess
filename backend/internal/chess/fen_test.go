@@ -9,27 +9,46 @@ import (
 func TestFenToPositionStart(t *testing.T) {
 	pos, err := StartingPositionFEN.ToPosition()
 
-	board := pos.Board
 	assert.Nil(t, err)
-	assert.Equal(t, BoardSize, len(board))
-	for _, rank := range board {
-		assert.Equal(t, BoardSize, len(rank))
+
+	// Rooks
+	assert.NotZero(t, pos.WhiteRooks&coordMask(0, 0))
+	assert.NotZero(t, pos.WhiteRooks&coordMask(7, 0))
+	assert.NotZero(t, pos.BlackRooks&coordMask(0, 7))
+	assert.NotZero(t, pos.BlackRooks&coordMask(7, 7))
+
+	// Knights
+	assert.NotZero(t, pos.WhiteKnights&coordMask(1, 0))
+	assert.NotZero(t, pos.WhiteKnights&coordMask(6, 0))
+	assert.NotZero(t, pos.BlackKnights&coordMask(1, 7))
+	assert.NotZero(t, pos.BlackKnights&coordMask(6, 7))
+
+	// Bishops
+	assert.NotZero(t, pos.WhiteBishops&coordMask(2, 0))
+	assert.NotZero(t, pos.WhiteBishops&coordMask(5, 0))
+	assert.NotZero(t, pos.BlackBishops&coordMask(2, 7))
+	assert.NotZero(t, pos.BlackBishops&coordMask(5, 7))
+
+	// Queens
+	assert.NotZero(t, pos.WhiteQueens&coordMask(3, 0))
+	assert.NotZero(t, pos.BlackQueens&coordMask(3, 7))
+
+	// Kings
+	assert.NotZero(t, pos.WhiteKing&coordMask(4, 0))
+	assert.NotZero(t, pos.BlackKing&coordMask(4, 7))
+
+	// Pawns
+	for file := 0; file < 8; file++ {
+		assert.NotZero(t, pos.WhitePawns&coordMask(file, 1))
+		assert.NotZero(t, pos.BlackPawns&coordMask(file, 6))
 	}
-	assert.Equal(t, Rook, board[0][0].Type)
-	assert.Equal(t, White, board[0][0].Color)
-	assert.Equal(t, Queen, board[3][0].Type)
-	assert.Equal(t, White, board[3][0].Color)
-	assert.Equal(t, King, board[4][7].Type)
-	assert.Equal(t, Black, board[4][7].Color)
-	assert.Equal(t, Pawn, board[2][6].Type)
-	assert.Equal(t, Black, board[2][6].Color)
 
 	assert.Equal(t, White, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOOO)
-	assert.Equal(t, Square(""), pos.EnPassant)
+	assert.Nil(t, pos.EnPassant)
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(1), pos.Fullmove)
 }
@@ -38,32 +57,21 @@ func TestFenToPositionEndgame(t *testing.T) {
 	fen := Fen("3Q4/5pk1/pp4pp/2pB4/P1Pn4/2N3PP/5KP1/8 b - - 0 37")
 	pos, err := fen.ToPosition()
 
-	board := pos.Board
 	assert.Nil(t, err)
-	assert.Equal(t, BoardSize, len(board))
-	for _, rank := range board {
-		assert.Equal(t, BoardSize, len(rank))
-	}
 
-	assert.Equal(t, Queen, board[3][7].Type)
-	assert.Equal(t, White, board[3][7].Color)
-	assert.Equal(t, King, board[6][6].Type)
-	assert.Equal(t, Black, board[6][6].Color)
-	assert.Equal(t, Pawn, board[1][5].Type)
-	assert.Equal(t, Black, board[1][5].Color)
-	assert.Equal(t, Knight, board[3][3].Type)
-	assert.Equal(t, Black, board[3][3].Color)
-	assert.Equal(t, Knight, board[2][2].Type)
-	assert.Equal(t, White, board[2][2].Color)
-	assert.Equal(t, King, board[5][1].Type)
-	assert.Equal(t, White, board[5][1].Color)
+	assert.NotZero(t, pos.WhiteQueens&coordMask(3, 7))
+	assert.NotZero(t, pos.BlackKing&coordMask(6, 6))
+	assert.NotZero(t, pos.BlackPawns&coordMask(1, 5))
+	assert.NotZero(t, pos.BlackKnights&coordMask(3, 3))
+	assert.NotZero(t, pos.WhiteKnights&coordMask(2, 2))
+	assert.NotZero(t, pos.WhiteKing&coordMask(5, 1))
 
 	assert.Equal(t, Black, pos.ActiveColor)
 	assert.Equal(t, false, pos.CastlingRights.WhiteOO)
 	assert.Equal(t, false, pos.CastlingRights.WhiteOOO)
 	assert.Equal(t, false, pos.CastlingRights.BlackOO)
 	assert.Equal(t, false, pos.CastlingRights.BlackOOO)
-	assert.Equal(t, Square(""), pos.EnPassant)
+	assert.Nil(t, pos.EnPassant)
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(37), pos.Fullmove)
 }
@@ -73,24 +81,17 @@ func TestFenToPositionEnPassantWhite(t *testing.T) {
 
 	pos, err := fen.ToPosition()
 
-	board := pos.Board
 	assert.Nil(t, err)
-	assert.Equal(t, BoardSize, len(board))
-	for _, rank := range board {
-		assert.Equal(t, BoardSize, len(rank))
-	}
 
-	assert.Equal(t, Pawn, board[3][4].Type)
-	assert.Equal(t, White, board[3][4].Color)
-	assert.Equal(t, Pawn, board[4][4].Type)
-	assert.Equal(t, Black, board[4][4].Color)
+	assert.NotZero(t, pos.WhitePawns&coordMask(3, 4))
+	assert.NotZero(t, pos.BlackPawns&coordMask(4, 4))
 
 	assert.Equal(t, White, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOOO)
-	assert.Equal(t, Square("e6"), pos.EnPassant)
+	assert.Equal(t, Square(44), *pos.EnPassant)
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 }
@@ -100,24 +101,17 @@ func TestFenToPositionEnPassantBlack(t *testing.T) {
 
 	pos, err := fen.ToPosition()
 
-	board := pos.Board
 	assert.Nil(t, err)
-	assert.Equal(t, BoardSize, len(board))
-	for _, rank := range board {
-		assert.Equal(t, BoardSize, len(rank))
-	}
 
-	assert.Equal(t, Pawn, board[4][3].Type)
-	assert.Equal(t, White, board[4][3].Color)
-	assert.Equal(t, Pawn, board[3][3].Type)
-	assert.Equal(t, Black, board[3][3].Color)
+	assert.NotZero(t, pos.WhitePawns&coordMask(4, 3))
+	assert.NotZero(t, pos.BlackPawns&coordMask(3, 3))
 
 	assert.Equal(t, Black, pos.ActiveColor)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOO)
 	assert.Equal(t, true, pos.CastlingRights.WhiteOOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOO)
 	assert.Equal(t, true, pos.CastlingRights.BlackOOO)
-	assert.Equal(t, Square("e3"), pos.EnPassant)
+	assert.Equal(t, Square(20), *pos.EnPassant)
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 }

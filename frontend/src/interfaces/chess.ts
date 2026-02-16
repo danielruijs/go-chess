@@ -1,15 +1,11 @@
+type PieceType = "pawn" | "knight" | "bishop" | "rook" | "queen" | "king";
+type Color = "white" | "black";
+
 interface Piece {
-    type: string;
-    color: "white" | "black";
+    type: PieceType;
+    color: Color;
 }
 
 type Board = Piece[][];
 
-type Square = string
-
-interface Move {
-    from: Square;
-    to: Square;
-}
-
-export type { Board, Move, Square };
+export type { Board, PieceType };
