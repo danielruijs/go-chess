@@ -1,8 +1,9 @@
-package chess
+package server
 
 import (
 	"encoding/json"
 	"fmt"
+	"go-chess/internal/chess"
 	"log"
 )
 
@@ -10,20 +11,20 @@ type Player struct {
 	Name     string
 	Match    *Match
 	SendChan chan WSMessage
-	Color    Color
+	Color    chess.Color
 }
 
 type Match struct {
 	White *Player
 	Black *Player
 
-	Moves     []Move
-	Position  *Position
+	Moves     []chess.Move
+	Position  *chess.Position
 	EventChan chan Event
 }
 
-func NewInitialPosition() *Position {
-	pos, err := StartingPositionFEN.ToPosition()
+func NewInitialPosition() *chess.Position {
+	pos, err := chess.StartingPositionFEN.ToPosition()
 	if err != nil {
 		log.Fatalf("failed to create initial position: %v", err)
 	}

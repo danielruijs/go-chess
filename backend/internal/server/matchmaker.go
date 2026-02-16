@@ -1,4 +1,4 @@
-package matchmaker
+package server
 
 import (
 	"fmt"
@@ -6,16 +6,16 @@ import (
 )
 
 type Matchmaker struct {
-	Queue chan *chess.Player
+	Queue chan *Player
 }
 
 func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
-		Queue: make(chan *chess.Player),
+		Queue: make(chan *Player),
 	}
 }
 
-func (mm *Matchmaker) JoinQueue(player *chess.Player) {
+func (mm *Matchmaker) JoinQueue(player *Player) {
 	mm.Queue <- player
 }
 
@@ -26,22 +26,25 @@ func (mm *Matchmaker) Run() {
 		player2 := <-mm.Queue
 		fmt.Println("Found player 2", player2.Name)
 
-		match := &chess.Match{
+		match := &Match{
 			White:     player1,
 			Black:     player2,
 			Moves:     []chess.Move{},
-			Position:  chess.NewInitialPosition(),
-			EventChan: make(chan chess.Event),
+			Position:  NewInitialPosition(),
+			EventChan: make(chan Event),
 		}
+
+		player1.Color = chess.White
+		player2.Color = chess.Black
 
 		player1.Match = match
 		player2.Match = match
 
 		go match.Run()
 
-		match.EventChan <- chess.Event{
+		match.EventChan <- Event{
 			Player: nil,
-			Type:   chess.EventTypeGameStarted,
+			Type:   EventTypeGameStarted,
 			Data:   nil,
 		}
 	}

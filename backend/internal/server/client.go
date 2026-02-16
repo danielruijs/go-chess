@@ -1,8 +1,6 @@
 package server
 
 import (
-	"go-chess/internal/chess"
-	"go-chess/internal/matchmaker"
 	"log"
 	"net/http"
 
@@ -11,12 +9,12 @@ import (
 
 type WebSocketHandler struct {
 	Upgrader   websocket.Upgrader
-	Matchmaker *matchmaker.Matchmaker
+	Matchmaker *Matchmaker
 }
 
 type Client struct {
 	Conn   *websocket.Conn
-	Player *chess.Player
+	Player *Player
 }
 
 func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
@@ -30,9 +28,9 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	client := Client{
 		Conn: conn,
-		Player: &chess.Player{
+		Player: &Player{
 			Name:     "",
-			SendChan: make(chan chess.WSMessage),
+			SendChan: make(chan WSMessage),
 		},
 	}
 
@@ -42,10 +40,10 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("New WebSocket connection established")
 }
 
-func (c Client) ReceiveMessages(matchmaker *matchmaker.Matchmaker) {
+func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
 	defer func() { _ = c.Conn.Close() }()
 	for {
-		var message chess.WSMessage
+		var message WSMessage
 		err := c.Conn.ReadJSON(&message)
 		if err != nil {
 			log.Println("Failed to unmarshal message:", err)
@@ -53,12 +51,12 @@ func (c Client) ReceiveMessages(matchmaker *matchmaker.Matchmaker) {
 		}
 
 		switch message.Type {
-		case chess.MessageTypeJoinMatch:
+		case MessageTypeJoinMatch:
 			err := c.handleJoinMatch(message, matchmaker)
 			if err != nil {
 				log.Println("Error handling join match:", err)
 			}
-		case chess.MessageTypeMove:
+		case MessageTypeMove:
 			err := c.handleMove(message)
 			if err != nil {
 				log.Println("Error handling move:", err)

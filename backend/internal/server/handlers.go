@@ -3,12 +3,10 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"go-chess/internal/chess"
-	"go-chess/internal/matchmaker"
 )
 
-func (c Client) handleMove(message chess.WSMessage) error {
-	var data chess.MoveData
+func (c Client) handleMove(message WSMessage) error {
+	var data MoveData
 	if err := json.Unmarshal(message.Data, &data); err != nil {
 		return fmt.Errorf("invalid move data format: %w", err)
 	}
@@ -17,17 +15,17 @@ func (c Client) handleMove(message chess.WSMessage) error {
 		return fmt.Errorf("player is not in a match")
 	}
 
-	c.Player.Match.EventChan <- chess.Event{
+	c.Player.Match.EventChan <- Event{
 		Player: c.Player,
-		Type:   chess.EventTypeMove,
+		Type:   EventTypeMove,
 		Data:   data,
 	}
 
 	return nil
 }
 
-func (c Client) handleJoinMatch(message chess.WSMessage, matchmaker *matchmaker.Matchmaker) error {
-	var data chess.JoinMatchData
+func (c Client) handleJoinMatch(message WSMessage, matchmaker *Matchmaker) error {
+	var data JoinMatchData
 	if err := json.Unmarshal(message.Data, &data); err != nil {
 		return fmt.Errorf("invalid join match data format: %w", err)
 	}

@@ -7,7 +7,8 @@ import (
 )
 
 func TestGetPiece(t *testing.T) {
-	board := NewInitialPosition().Board
+	position, _ := StartingPositionFEN.ToPosition()
+	board := position.Board
 
 	tests := []struct {
 		name     string

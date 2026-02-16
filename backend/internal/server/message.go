@@ -1,6 +1,9 @@
-package chess
+package server
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"go-chess/internal/chess"
+)
 
 type MessageType string
 
@@ -17,11 +20,11 @@ type WSMessage struct {
 }
 
 type PositionData struct {
-	Position Position `json:"position"`
+	Position chess.Position `json:"position"`
 }
 
 type MoveData struct {
-	Move Move `json:"move"`
+	Move chess.Move `json:"move"`
 }
 
 type JoinMatchData struct {

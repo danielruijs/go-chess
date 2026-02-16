@@ -1,4 +1,4 @@
-package chess
+package server
 
 type eventType string
 type eventData any
