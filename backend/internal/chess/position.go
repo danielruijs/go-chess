@@ -35,6 +35,11 @@ type Position struct {
 	Fullmove       uint           // Fullmove number
 }
 
+func (p *Position) GetOccupied() Bitboard {
+	return p.WhitePawns | p.WhiteKnights | p.WhiteBishops | p.WhiteRooks | p.WhiteQueens | p.WhiteKing |
+		p.BlackPawns | p.BlackKnights | p.BlackBishops | p.BlackRooks | p.BlackQueens | p.BlackKing
+}
+
 func (p *Position) GetPiece(sq Square) Piece {
 	mask := squareMask(sq)
 
