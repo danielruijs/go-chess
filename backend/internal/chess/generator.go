@@ -50,25 +50,26 @@ func (g *Generator) GeneratePieceMoves(pos *Position, color Color, pieceType Pie
 func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
-	var pawns, startingRankMask, promotionRankMask Bitboard
+	var pawns, startingRankMask, promotionRankMask, opponentPieces Bitboard
 	var forwardOffset int
 	if color == White {
 		pawns = pos.WhitePawns
 		startingRankMask = rank2Mask
 		promotionRankMask = rank8Mask
+		opponentPieces = pos.GetOccupiedBlack()
 		forwardOffset = 8
 	} else {
 		pawns = pos.BlackPawns
 		startingRankMask = rank7Mask
 		promotionRankMask = rank1Mask
+		opponentPieces = pos.GetOccupiedWhite()
 		forwardOffset = -8
 	}
 
 	occupied := pos.GetOccupied()
-	empty := ^occupied
 
 	// regular forward move by 1 if not blocked
-	singlePushes := shift(pawns, forwardOffset) & empty & ^promotionRankMask
+	singlePushes := shift(pawns, forwardOffset) & ^occupied & ^promotionRankMask
 	for singlePushes != 0 {
 		to := popLSB(&singlePushes)
 		from := to - forwardOffset
@@ -76,7 +77,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// move forward by 2 if on starting rank and not blocked
-	doublePushes := shift((pawns&startingRankMask), 2*forwardOffset) & empty
+	doublePushes := shift((pawns&startingRankMask), 2*forwardOffset) & ^occupied
 	for doublePushes != 0 {
 		to := popLSB(&doublePushes)
 		from := to - 2*forwardOffset
@@ -84,8 +85,8 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// capture diagonally by 1 if occupied by opponent piece
-	capturesLeft := shift(pawns, forwardOffset+1) & occupied & ^fileAMask
-	capturesRight := shift(pawns, forwardOffset-1) & occupied & ^fileHMask
+	capturesLeft := shift(pawns, forwardOffset+1) & opponentPieces & ^fileAMask
+	capturesRight := shift(pawns, forwardOffset-1) & opponentPieces & ^fileHMask
 
 	// en passant
 	if pos.EnPassant != nil {
@@ -108,7 +109,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// promotion
-	promotions := shift(pawns, forwardOffset) & empty & promotionRankMask
+	promotions := shift(pawns, forwardOffset) & ^occupied & promotionRankMask
 	for promotions != 0 {
 		to := popLSB(&promotions)
 		from := to - forwardOffset
