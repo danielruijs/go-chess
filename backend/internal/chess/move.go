@@ -5,4 +5,5 @@ type Move struct {
 	From      Square
 	To        Square
 	Promotion *PieceType
+	Castling  bool
 }

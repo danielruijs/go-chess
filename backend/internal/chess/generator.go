@@ -268,12 +268,29 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
 	var king, ownPieces Bitboard
+	var kingSideRight, queenSideRight bool
+	var kingSideMask, queenSideMask Bitboard
+	var kingSideTo, queenSideTo Square
 	if color == White {
 		king = pos.WhiteKing
 		ownPieces = pos.GetOccupiedWhite()
+
+		kingSideRight = pos.CastlingRights.WhiteOO
+		queenSideRight = pos.CastlingRights.WhiteOOO
+		kingSideMask = 0x60 // f1,g1
+		queenSideMask = 0xE // b1,c1,d1
+		kingSideTo = Square(6)
+		queenSideTo = Square(2)
 	} else {
 		king = pos.BlackKing
 		ownPieces = pos.GetOccupiedBlack()
+
+		kingSideRight = pos.CastlingRights.BlackOO
+		queenSideRight = pos.CastlingRights.BlackOOO
+		kingSideMask = 0x6000000000000000  // f8,g8
+		queenSideMask = 0x0E00000000000000 // b8,c8,d8
+		kingSideTo = Square(62)
+		queenSideTo = Square(58)
 	}
 
 	from := popLSB(&king) // should only be one king
@@ -283,7 +300,14 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 		moves = append(moves, Move{Piece: King, From: Square(from), To: Square(to)})
 	}
 
-	// TODO castling
+	// Castling
+	occupied := pos.GetOccupied()
+	if kingSideRight && occupied&kingSideMask == 0 {
+		moves = append(moves, Move{Piece: King, From: Square(from), To: kingSideTo, Castling: true})
+	}
+	if queenSideRight && occupied&queenSideMask == 0 {
+		moves = append(moves, Move{Piece: King, From: Square(from), To: queenSideTo, Castling: true})
+	}
 
 	return moves
 }

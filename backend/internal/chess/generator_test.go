@@ -1409,7 +1409,141 @@ func TestGenerateKingMoves(t *testing.T) {
 			color:      Black,
 			legalMoves: []Move{},
 		},
-		// TODO add castling cases
+		{
+			name: "white kingside castling allowed",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"e1"}),
+				WhiteRooks: bitboardFromStrs([]string{"h1"}),
+				CastlingRights: CastlingRights{
+					WhiteOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("e2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("g1"), Castling: true},
+			},
+		},
+		{
+			name: "white queenside castling allowed",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"e1"}),
+				WhiteRooks: bitboardFromStrs([]string{"a1"}),
+				CastlingRights: CastlingRights{
+					WhiteOOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("e2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("c1"), Castling: true},
+			},
+		},
+		{
+			name: "black kingside castling allowed",
+			pos: &Position{
+				BlackKing:  bitboardFromStrs([]string{"e8"}),
+				BlackRooks: bitboardFromStrs([]string{"h8"}),
+				CastlingRights: CastlingRights{
+					BlackOO: true,
+				},
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("e7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("g8"), Castling: true},
+			},
+		},
+		{
+			name: "black queenside castling allowed",
+			pos: &Position{
+				BlackKing:  bitboardFromStrs([]string{"e8"}),
+				BlackRooks: bitboardFromStrs([]string{"a8"}),
+				CastlingRights: CastlingRights{
+					BlackOOO: true,
+				},
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("e7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("c8"), Castling: true},
+			},
+		},
+		{
+			name: "white kingside castling blocked by piece",
+			pos: &Position{
+				WhiteKing:    bitboardFromStrs([]string{"e1"}),
+				WhiteRooks:   bitboardFromStrs([]string{"h1"}),
+				WhiteKnights: bitboardFromStrs([]string{"g1"}),
+				CastlingRights: CastlingRights{
+					WhiteOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("e2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f1")},
+			},
+		},
+		{
+			name: "black queenside castling blocked by piece",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"e8"}),
+				BlackRooks:   bitboardFromStrs([]string{"a8"}),
+				BlackBishops: bitboardFromStrs([]string{"c8"}),
+				CastlingRights: CastlingRights{
+					BlackOOO: true,
+				},
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("e7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f8")},
+			},
+		},
+		{
+			name: "white both castling allowed",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"e1"}),
+				WhiteRooks: bitboardFromStrs([]string{"a1", "h1"}),
+				CastlingRights: CastlingRights{
+					WhiteOO:  true,
+					WhiteOOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("e2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("g1"), Castling: true},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("c1"), Castling: true},
+			},
+		},
 	}
 
 	g := NewGenerator()
@@ -1529,7 +1663,7 @@ func TestGenerateMoves(t *testing.T) {
 			},
 			color: White,
 			legalMoves: []Move{
-				{Piece: Pawn, From: strToSquare("c2"), To: strToSquare("a4")}, // block
+				{Piece: Pawn, From: strToSquare("c2"), To: strToSquare("c4")}, // block
 				{Piece: King, From: strToSquare("e4"), To: strToSquare("d3")},
 				{Piece: King, From: strToSquare("e4"), To: strToSquare("e3")},
 				{Piece: King, From: strToSquare("e4"), To: strToSquare("f3")},
@@ -1684,7 +1818,60 @@ func TestGenerateMoves(t *testing.T) {
 				{Piece: King, From: strToSquare("a5"), To: strToSquare("a4")},
 			},
 		},
-		// TODO add castling cases
+		{
+			name: "white kingside castling blocked by king in check",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"e1"}),
+				WhiteRooks: bitboardFromStrs([]string{"h1"}),
+				BlackRooks: bitboardFromStrs([]string{"e8"}),
+				CastlingRights: CastlingRights{
+					WhiteOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("f1")},
+			},
+		},
+		{
+			name: "white kingside castling blocked by attacked square",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"e1"}),
+				WhiteRooks: bitboardFromStrs([]string{"h1"}),
+				BlackRooks: bitboardFromStrs([]string{"f8"}),
+				CastlingRights: CastlingRights{
+					WhiteOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d1")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e1"), To: strToSquare("e2")},
+			},
+		},
+		{
+			name: "black queenside castling puts king in check",
+			pos: &Position{
+				BlackKing:  bitboardFromStrs([]string{"e8"}),
+				BlackRooks: bitboardFromStrs([]string{"a8"}),
+				WhiteRooks: bitboardFromStrs([]string{"c8"}),
+				CastlingRights: CastlingRights{
+					BlackOOO: true,
+				},
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("e7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f8")},
+			},
+		},
 	}
 
 	g := NewGenerator()
