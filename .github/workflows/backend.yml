@@ -1,28 +1,9 @@
-name: Lint
+name: Backend
 
 on: [push, pull_request]
 
 jobs:
-    frontend:
-        name: Frontend lint
-        runs-on: ubuntu-latest
-
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v6
-
-          - name: Set up Node.js
-            uses: actions/setup-node@v6
-            with:
-              node-version: '24'
-
-          - name: Install dependencies
-            run: cd frontend && npm install
-
-          - name: Lint
-            run: cd frontend && npx eslint '**/*.ts' '**/*.tsx'
-
-    backend:
+    lint:
         name: Backend lint
         runs-on: ubuntu-latest
 
@@ -46,3 +27,22 @@ jobs:
               with:
                 version: latest
                 working-directory: backend
+
+    test:
+      name: Backend test
+      runs-on: ubuntu-latest
+
+      steps:
+          - name: Checkout code
+            uses: actions/checkout@v6
+
+          - name: Setup Go
+            uses: actions/setup-go@v6
+            with:
+              go-version: '1.26'
+
+          - name: Install dependencies
+            run: cd backend && go mod download
+
+          - name: Test
+            run: cd backend && go test -v ./...
