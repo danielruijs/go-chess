@@ -36,8 +36,15 @@ type Position struct {
 }
 
 func (p *Position) GetOccupied() Bitboard {
-	return p.WhitePawns | p.WhiteKnights | p.WhiteBishops | p.WhiteRooks | p.WhiteQueens | p.WhiteKing |
-		p.BlackPawns | p.BlackKnights | p.BlackBishops | p.BlackRooks | p.BlackQueens | p.BlackKing
+	return p.GetOccupiedWhite() | p.GetOccupiedBlack()
+}
+
+func (p *Position) GetOccupiedWhite() Bitboard {
+	return p.WhitePawns | p.WhiteKnights | p.WhiteBishops | p.WhiteRooks | p.WhiteQueens | p.WhiteKing
+}
+
+func (p *Position) GetOccupiedBlack() Bitboard {
+	return p.BlackPawns | p.BlackKnights | p.BlackBishops | p.BlackRooks | p.BlackQueens | p.BlackKing
 }
 
 func (p *Position) GetPiece(sq Square) Piece {

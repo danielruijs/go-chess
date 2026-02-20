@@ -17,7 +17,12 @@ type Generator interface {
 }
 
 var pieceToGenerator = map[PieceType]Generator{
-	Pawn: PawnMoveGenerator{},
+	Pawn:   pawnMoveGenerator{},
+	Knight: knightMoveGenerator{},
+	Bishop: bishopMoveGenerator{},
+	Rook:   rookMoveGenerator{},
+	Queen:  queenMoveGenerator{},
+	King:   kingMoveGenerator{},
 }
 
 // generates all legal moves in a position for a given color
@@ -32,9 +37,9 @@ func GeneratePieceMoves(pos *Position, color Color, pieceType PieceType) []Move 
 	return generator.generateMoves(pos, color)
 }
 
-type PawnMoveGenerator struct{}
+type pawnMoveGenerator struct{}
 
-func (g PawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g pawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
 	var pawns, startingRankMask, promotionRankMask Bitboard
@@ -59,7 +64,7 @@ func (g PawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 	for sq := singlePushes; sq != 0; {
 		to := bits.TrailingZeros64(uint64(sq)) // index of LSB
 		from := to - forwardOffset
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 		sq &= sq - 1 // clear LSB
 	}
 
@@ -68,7 +73,7 @@ func (g PawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 	for sq := doublePushes; sq != 0; {
 		to := bits.TrailingZeros64(uint64(sq)) // index of LSB
 		from := to - 2*forwardOffset
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 		sq &= sq - 1 // clear LSB
 	}
 
@@ -88,13 +93,13 @@ func (g PawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 	for sq := capturesLeft; sq != 0; {
 		to := bits.TrailingZeros64(uint64(sq))
 		from := to - forwardOffset - 1
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 		sq &= sq - 1
 	}
 	for sq := capturesRight; sq != 0; {
 		to := bits.TrailingZeros64(uint64(sq))
 		from := to - forwardOffset + 1
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 		sq &= sq - 1
 	}
 
@@ -104,7 +109,7 @@ func (g PawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 		to := bits.TrailingZeros64(uint64(sq))
 		from := to - forwardOffset
 		for _, promotionPiece := range []PieceType{Queen, Rook, Bishop, Knight} {
-			moves = append(moves, Move{From: Square(from), To: Square(to), Promotion: &promotionPiece})
+			moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to), Promotion: &promotionPiece})
 		}
 		sq &= sq - 1
 	}
@@ -118,4 +123,82 @@ func shift(b Bitboard, n int) Bitboard {
 	} else {
 		return b >> (-n)
 	}
+}
+
+type knightMoveGenerator struct{}
+
+func (g knightMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+	// TODO
+	return []Move{}
+}
+
+type bishopMoveGenerator struct{}
+
+func (g bishopMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+	directions := []int{7, 9, -7, -9} // NW, NE, SE, SW
+
+	var bishops, ownPieces Bitboard
+	if color == White {
+		bishops = pos.WhiteBishops
+		ownPieces = pos.GetOccupiedWhite()
+	} else {
+		bishops = pos.BlackBishops
+		ownPieces = pos.GetOccupiedBlack()
+	}
+
+	occupied := pos.GetOccupied()
+
+	moves := []Move{}
+	for sq := bishops; sq != 0; {
+		from := bits.TrailingZeros64(uint64(sq)) // index of LSB
+		for _, dir := range directions {
+			to := from
+			for {
+				prevFile := to % 8
+				to += dir
+				toMask := squareMask(Square(to))
+				newFile := to % 8
+
+				// edges of the board
+				fileDiff := newFile - prevFile
+				if to < 0 || to > 63 || (fileDiff != 1 && fileDiff != -1) {
+					break
+				}
+
+				// blocked by own piece
+				if toMask&ownPieces != 0 {
+					break
+				}
+				moves = append(moves, Move{Piece: Bishop, From: Square(from), To: Square(to)})
+				// blocked by opponent piece, added capture
+				if toMask&occupied != 0 {
+					break
+				}
+			}
+		}
+		sq &= sq - 1 // clear LSB
+	}
+
+	return moves
+}
+
+type rookMoveGenerator struct{}
+
+func (g rookMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+	// TODO
+	return []Move{}
+}
+
+type queenMoveGenerator struct{}
+
+func (g queenMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+	// TODO
+	return []Move{}
+}
+
+type kingMoveGenerator struct{}
+
+func (g kingMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+	// TODO
+	return []Move{}
 }
