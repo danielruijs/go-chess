@@ -127,14 +127,6 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	return moves
 }
 
-func shift(b Bitboard, n int) Bitboard {
-	if n > 0 {
-		return b << n
-	} else {
-		return b >> (-n)
-	}
-}
-
 func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
