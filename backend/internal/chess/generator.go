@@ -1,7 +1,5 @@
 package chess
 
-import "math/bits"
-
 const (
 	rank1Mask Bitboard = 0x00000000000000FF
 	rank2Mask Bitboard = 0x000000000000FF00
@@ -22,7 +20,7 @@ type Generator struct {
 func NewGenerator() *Generator {
 	g := &Generator{}
 
-	// g.knightMoves = TODO
+	g.knightMoves = precomputeKnightMoves()
 
 	g.pieceToGenerator = map[PieceType]func(pos *Position, color Color) []Move{
 		Pawn:   g.generatePawnMoves,
@@ -71,20 +69,18 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 
 	// regular forward move by 1 if not blocked
 	singlePushes := shift(pawns, forwardOffset) & empty & ^promotionRankMask
-	for sq := singlePushes; sq != 0; {
-		to := bits.TrailingZeros64(uint64(sq)) // index of LSB
+	for singlePushes != 0 {
+		to := popLSB(&singlePushes)
 		from := to - forwardOffset
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
-		sq &= sq - 1 // clear LSB
 	}
 
 	// move forward by 2 if on starting rank and not blocked
 	doublePushes := shift((pawns&startingRankMask), 2*forwardOffset) & empty
-	for sq := doublePushes; sq != 0; {
-		to := bits.TrailingZeros64(uint64(sq)) // index of LSB
+	for doublePushes != 0 {
+		to := popLSB(&doublePushes)
 		from := to - 2*forwardOffset
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
-		sq &= sq - 1 // clear LSB
 	}
 
 	// capture diagonally by 1 if occupied by opponent piece
@@ -100,36 +96,76 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 		capturesLeft |= epCapturesLeft
 		capturesRight |= epCapturesRight
 	}
-	for sq := capturesLeft; sq != 0; {
-		to := bits.TrailingZeros64(uint64(sq))
+	for capturesLeft != 0 {
+		to := popLSB(&capturesLeft)
 		from := to - forwardOffset - 1
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
-		sq &= sq - 1
 	}
-	for sq := capturesRight; sq != 0; {
-		to := bits.TrailingZeros64(uint64(sq))
+	for capturesRight != 0 {
+		to := popLSB(&capturesRight)
 		from := to - forwardOffset + 1
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
-		sq &= sq - 1
 	}
 
 	// promotion
 	promotions := shift(pawns, forwardOffset) & empty & promotionRankMask
-	for sq := promotions; sq != 0; {
-		to := bits.TrailingZeros64(uint64(sq))
+	for promotions != 0 {
+		to := popLSB(&promotions)
 		from := to - forwardOffset
 		for _, promotionPiece := range []PieceType{Queen, Rook, Bishop, Knight} {
 			moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to), Promotion: &promotionPiece})
 		}
-		sq &= sq - 1
 	}
 
 	return moves
 }
 
+func precomputeKnightMoves() [64]Bitboard {
+	var knightMoves [64]Bitboard
+
+	offsets := []struct{ rank, file int }{
+		{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+		{1, 2}, {1, -2}, {-1, 2}, {-1, -2},
+	}
+
+	for sq := 0; sq < 64; sq++ {
+		var moves Bitboard
+		rank := sq / 8
+		file := sq % 8
+		for _, offset := range offsets {
+			newRank := rank + offset.rank
+			newFile := file + offset.file
+			if newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8 {
+				moves |= coordMask(newFile, newRank)
+			}
+		}
+		knightMoves[sq] = moves
+	}
+
+	return knightMoves
+}
+
 func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
-	// TODO
-	return []Move{}
+	moves := []Move{}
+
+	var knights, ownPieces Bitboard
+	if color == White {
+		knights = pos.WhiteKnights
+		ownPieces = pos.GetOccupiedWhite()
+	} else {
+		knights = pos.BlackKnights
+		ownPieces = pos.GetOccupiedBlack()
+	}
+
+	for knights != 0 {
+		from := popLSB(&knights)
+		toMask := g.knightMoves[from] & ^ownPieces
+		for toMask != 0 {
+			to := popLSB(&toMask)
+			moves = append(moves, Move{Piece: Knight, From: Square(from), To: Square(to)})
+		}
+	}
+	return moves
 }
 
 func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
@@ -147,8 +183,8 @@ func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
 	occupied := pos.GetOccupied()
 
 	moves := []Move{}
-	for sq := bishops; sq != 0; {
-		from := bits.TrailingZeros64(uint64(sq)) // index of LSB
+	for bishops != 0 {
+		from := popLSB(&bishops)
 		for _, dir := range directions {
 			to := from
 			for {
@@ -174,7 +210,6 @@ func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
 				}
 			}
 		}
-		sq &= sq - 1 // clear LSB
 	}
 
 	return moves

@@ -203,6 +203,172 @@ func TestPawnMoveGenerator_generateMoves(t *testing.T) {
 	}
 }
 
+func TestKnightMoveGenerator_generateMoves(t *testing.T) {
+	tests := []struct {
+		name       string
+		pos        *Position
+		color      Color
+		legalMoves []Move
+	}{
+		{
+			name: "white clear board",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("f6")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("g5")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("g3")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("f2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("c3")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("c5")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d6")},
+			},
+		},
+		{
+			name: "black clear board",
+			pos: &Position{
+				BlackKnights: bitboardFromStrs([]string{"d4"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("e6")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("f5")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("f3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("e2")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c2")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b5")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c6")},
+			},
+		},
+		{
+			name: "white corner",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"a1"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("a1"), To: strToSquare("b3")},
+				{Piece: Knight, From: strToSquare("a1"), To: strToSquare("c2")},
+			},
+		},
+		{
+			name: "black corner",
+			pos: &Position{
+				BlackKnights: bitboardFromStrs([]string{"a8"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("a8"), To: strToSquare("b6")},
+				{Piece: Knight, From: strToSquare("a8"), To: strToSquare("c7")},
+			},
+		},
+		{
+			name: "white edge",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"a4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("a4"), To: strToSquare("b6")},
+				{Piece: Knight, From: strToSquare("a4"), To: strToSquare("c5")},
+				{Piece: Knight, From: strToSquare("a4"), To: strToSquare("c3")},
+				{Piece: Knight, From: strToSquare("a4"), To: strToSquare("b2")},
+			},
+		},
+		{
+			name: "black edge",
+			pos: &Position{
+				BlackKnights: bitboardFromStrs([]string{"e8"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("e8"), To: strToSquare("g7")},
+				{Piece: Knight, From: strToSquare("e8"), To: strToSquare("f6")},
+				{Piece: Knight, From: strToSquare("e8"), To: strToSquare("d6")},
+				{Piece: Knight, From: strToSquare("e8"), To: strToSquare("c7")},
+			},
+		},
+		{
+			name: "white blocked own pieces",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+				WhitePawns:   bitboardFromStrs([]string{"f6", "g5", "c3"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("g3")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("f2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("c5")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d6")},
+			},
+		},
+		{
+			name: "black blocked own pieces",
+			pos: &Position{
+				BlackKnights: bitboardFromStrs([]string{"d4"}),
+				BlackPawns:   bitboardFromStrs([]string{"e6", "f5", "e2"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("f3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c2")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b5")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c6")},
+			},
+		},
+		{
+			name: "white blocked enemy pieces",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+				BlackPawns:   bitboardFromStrs([]string{"f6", "g5"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("f6")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("g5")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("g3")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("f2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d2")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("c3")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("c5")},
+				{Piece: Knight, From: strToSquare("e4"), To: strToSquare("d6")},
+			},
+		},
+		{
+			name: "black blocked enemy pieces",
+			pos: &Position{
+				BlackKnights: bitboardFromStrs([]string{"d4"}),
+				WhitePawns:   bitboardFromStrs([]string{"e6", "f5"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("e6")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("f5")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("f3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("e2")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c2")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b3")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("b5")},
+				{Piece: Knight, From: strToSquare("d4"), To: strToSquare("c6")},
+			},
+		},
+	}
+
+	g := NewGenerator()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			moves := g.generateKnightMoves(tt.pos, tt.color)
+			assert.ElementsMatch(t, tt.legalMoves, moves)
+		})
+	}
+}
+
 func TestBishopMoveGenerator_generateMoves(t *testing.T) {
 	tests := []struct {
 		name       string
