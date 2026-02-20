@@ -176,6 +176,8 @@ func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType P
 			pieces = pos.WhiteBishops
 		case Rook:
 			pieces = pos.WhiteRooks
+		case Queen:
+			pieces = pos.WhiteQueens
 		}
 		ownPieces = pos.GetOccupiedWhite()
 	} else {
@@ -184,6 +186,8 @@ func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType P
 			pieces = pos.BlackBishops
 		case Rook:
 			pieces = pos.BlackRooks
+		case Queen:
+			pieces = pos.BlackQueens
 		}
 		ownPieces = pos.GetOccupiedBlack()
 	}
@@ -234,8 +238,8 @@ func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
 }
 
 func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
-	// TODO
-	return []Move{}
+	directions := []int{1, -1, 8, -8, 7, 9, -7, -9}
+	return g.generateSlidingMoves(pos, color, Queen, directions)
 }
 
 func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
