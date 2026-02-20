@@ -1409,6 +1409,7 @@ func TestGenerateKingMoves(t *testing.T) {
 			color:      Black,
 			legalMoves: []Move{},
 		},
+		// TODO add castling cases
 	}
 
 	g := NewGenerator()
@@ -1416,6 +1417,295 @@ func TestGenerateKingMoves(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			moves := g.generateKingMoves(tt.pos, tt.color)
 			assert.ElementsMatch(t, tt.legalMoves, moves)
+		})
+	}
+}
+
+func TestGenerateMoves(t *testing.T) {
+	tests := []struct {
+		name       string
+		pos        *Position
+		color      Color
+		legalMoves []Move
+	}{
+		{
+			name: "white king cant move into check",
+			pos: &Position{
+				WhiteKing:   bitboardFromStrs([]string{"e4"}),
+				BlackQueens: bitboardFromStrs([]string{"d6"}),
+				BlackPawns:  bitboardFromStrs([]string{"g6"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("f3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("e3")},
+			},
+		},
+		{
+			name: "black king cant move into check",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"d4"}),
+				WhiteRooks:   bitboardFromStrs([]string{"c5"}),
+				WhiteBishops: bitboardFromStrs([]string{"g5"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e4")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d3")},
+			},
+		},
+		{
+			name: "white cant move other piece when in check",
+			pos: &Position{
+				WhiteKing:   bitboardFromStrs([]string{"e4"}),
+				WhitePawns:  bitboardFromStrs([]string{"c2"}),
+				BlackQueens: bitboardFromStrs([]string{"e6"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("d4")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("f3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("f4")},
+			},
+		},
+		{
+			name: "black cant move other piece when in check",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"d4"}),
+				BlackRooks:   bitboardFromStrs([]string{"a1"}),
+				WhiteBishops: bitboardFromStrs([]string{"f2"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("c3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("c4")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e5")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e4")},
+			},
+		},
+		{
+			name: "white can move other piece when in check to capture checking piece",
+			pos: &Position{
+				WhiteKing:    bitboardFromStrs([]string{"d4"}),
+				WhiteBishops: bitboardFromStrs([]string{"c3"}),
+				BlackQueens:  bitboardFromStrs([]string{"b4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Bishop, From: strToSquare("c3"), To: strToSquare("b4")}, // capture
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e5")},
+			},
+		},
+		{
+			name: "black can move other piece when in check to capture checking piece",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"d4"}),
+				BlackRooks:   bitboardFromStrs([]string{"a1"}),
+				WhiteBishops: bitboardFromStrs([]string{"g1"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("g1")}, // capture
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("c3")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("c4")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e5")},
+				{Piece: King, From: strToSquare("d4"), To: strToSquare("e4")},
+			},
+		},
+		{
+			name: "white can move other piece when in check to block checking piece",
+			pos: &Position{
+				WhiteKing:   bitboardFromStrs([]string{"e4"}),
+				WhitePawns:  bitboardFromStrs([]string{"c2"}),
+				BlackQueens: bitboardFromStrs([]string{"a4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Pawn, From: strToSquare("c2"), To: strToSquare("a4")}, // block
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("e3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("f3")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("d5")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("e5")},
+				{Piece: King, From: strToSquare("e4"), To: strToSquare("f5")},
+			},
+		},
+		{
+			name: "black can move other piece when in check to block checking piece",
+			pos: &Position{
+				BlackKing:   bitboardFromStrs([]string{"e7"}),
+				BlackQueens: bitboardFromStrs([]string{"c4"}),
+				WhiteRooks:  bitboardFromStrs([]string{"e1"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Queen, From: strToSquare("c4"), To: strToSquare("e2")}, // block
+				{Piece: Queen, From: strToSquare("c4"), To: strToSquare("e4")}, // block
+				{Piece: Queen, From: strToSquare("c4"), To: strToSquare("e6")}, // block
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("d6")},
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("f6")},
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e7"), To: strToSquare("f8")},
+			},
+		},
+		{
+			name: "white can only move king when double checked",
+			pos: &Position{
+				WhiteKing:   bitboardFromStrs([]string{"d5"}),
+				WhiteQueens: bitboardFromStrs([]string{"b1"}),
+				BlackQueens: bitboardFromStrs([]string{"b7"}),
+				BlackRooks:  bitboardFromStrs([]string{"f5"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("d6")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("e6")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("d4")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("c4")},
+			},
+		},
+		{
+			name: "black can only move king when double checked",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"e8"}),
+				BlackBishops: bitboardFromStrs([]string{"f6"}),
+				WhiteRooks:   bitboardFromStrs([]string{"e5"}),
+				WhiteKnights: bitboardFromStrs([]string{"g7"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("d8")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f7")},
+				{Piece: King, From: strToSquare("e8"), To: strToSquare("f8")},
+			},
+		},
+		{
+			name: "white evades check with en passant",
+			pos: &Position{
+				WhiteKing:  bitboardFromStrs([]string{"f4"}),
+				WhitePawns: bitboardFromStrs([]string{"d5"}),
+				BlackPawns: bitboardFromStrs([]string{"e5"}),
+				EnPassant:  toPtr(strToSquare("e6")),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Pawn, From: strToSquare("d5"), To: strToSquare("e6")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("e5")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("f5")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("g5")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("g4")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("g3")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("f3")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("e3")},
+				{Piece: King, From: strToSquare("f4"), To: strToSquare("e4")},
+			},
+		},
+		{
+			name: "black evades check with en passant",
+			pos: &Position{
+				BlackKing:   bitboardFromStrs([]string{"b5"}),
+				BlackPawns:  bitboardFromStrs([]string{"e4"}),
+				WhiteQueens: bitboardFromStrs([]string{"f1"}),
+				WhitePawns:  bitboardFromStrs([]string{"d4"}),
+				EnPassant:   toPtr(strToSquare("d3")),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Pawn, From: strToSquare("e4"), To: strToSquare("d3")},
+				{Piece: King, From: strToSquare("b5"), To: strToSquare("b6")},
+				{Piece: King, From: strToSquare("b5"), To: strToSquare("c6")},
+				{Piece: King, From: strToSquare("b5"), To: strToSquare("b4")},
+				{Piece: King, From: strToSquare("b5"), To: strToSquare("a4")},
+				{Piece: King, From: strToSquare("b5"), To: strToSquare("a5")},
+			},
+		},
+		{
+			name: "white cant move pinned piece",
+			pos: &Position{
+				WhiteKing:    bitboardFromStrs([]string{"e3"}),
+				WhiteBishops: bitboardFromStrs([]string{"d3"}),
+				BlackRooks:   bitboardFromStrs([]string{"f8"}),
+				BlackQueens:  bitboardFromStrs([]string{"b3"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("e3"), To: strToSquare("d4")},
+				{Piece: King, From: strToSquare("e3"), To: strToSquare("e4")},
+				{Piece: King, From: strToSquare("e3"), To: strToSquare("d2")},
+				{Piece: King, From: strToSquare("e3"), To: strToSquare("e2")},
+			},
+		},
+		{
+			name: "black cant move pinned piece",
+			pos: &Position{
+				BlackKing:    bitboardFromStrs([]string{"d5"}),
+				BlackKnights: bitboardFromStrs([]string{"d4"}),
+				BlackRooks:   bitboardFromStrs([]string{"e4"}),
+				WhiteRooks:   bitboardFromStrs([]string{"d1"}),
+				WhiteBishops: bitboardFromStrs([]string{"g2"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("c4")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("c5")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("c6")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("d6")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("e6")},
+				{Piece: King, From: strToSquare("d5"), To: strToSquare("e5")},
+			},
+		},
+		{
+			name: "white cant take en passant to leave king in check",
+			pos: &Position{
+				WhiteKing:   bitboardFromStrs([]string{"a5"}),
+				WhitePawns:  bitboardFromStrs([]string{"d5"}),
+				BlackQueens: bitboardFromStrs([]string{"h5"}),
+				BlackPawns:  bitboardFromStrs([]string{"e5"}),
+				EnPassant:   toPtr(strToSquare("e6")),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Pawn, From: strToSquare("d5"), To: strToSquare("d6")},
+				{Piece: King, From: strToSquare("a5"), To: strToSquare("a6")},
+				{Piece: King, From: strToSquare("a5"), To: strToSquare("b6")},
+				{Piece: King, From: strToSquare("a5"), To: strToSquare("b5")},
+				{Piece: King, From: strToSquare("a5"), To: strToSquare("b4")},
+				{Piece: King, From: strToSquare("a5"), To: strToSquare("a4")},
+			},
+		},
+		// TODO add castling cases
+	}
+
+	g := NewGenerator()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Test full move generation
+			moves := g.GenerateMoves(tt.pos, tt.color)
+			assert.ElementsMatch(t, tt.legalMoves, moves, "full move generation")
+
+			// Test GeneratePieceMoves for each piece type
+			for _, pieceType := range []PieceType{Pawn, Knight, Bishop, Rook, Queen, King} {
+				var expectedPieceMoves []Move
+				for _, move := range tt.legalMoves {
+					if move.Piece == pieceType {
+						expectedPieceMoves = append(expectedPieceMoves, move)
+					}
+				}
+
+				pieceMoves := g.GeneratePieceMoves(tt.pos, tt.color, pieceType)
+				assert.ElementsMatch(t, expectedPieceMoves, pieceMoves, "piece type: %v", pieceType)
+			}
 		})
 	}
 }

@@ -37,15 +37,24 @@ func NewGenerator() *Generator {
 
 // Generates all legal moves in a position for a given color
 func (g *Generator) GenerateMoves(pos *Position, color Color) []Move {
-	// TODO
-	return []Move{}
+	psuedoLegalMoves := []Move{}
+	for _, generator := range g.pieceToGenerator {
+		psuedoLegalMoves = append(psuedoLegalMoves, generator(pos, color)...)
+	}
+	return g.filterLegalMoves(pos, color, psuedoLegalMoves)
 }
 
 // Generates all legal moves in a position for a given color and piece type
 func (g *Generator) GeneratePieceMoves(pos *Position, color Color, pieceType PieceType) []Move {
 	generator := g.pieceToGenerator[pieceType]
 	psuedoLegalMoves := generator(pos, color)
-	return psuedoLegalMoves // TODO check legality
+	return g.filterLegalMoves(pos, color, psuedoLegalMoves)
+}
+
+// Filters pseudo legal moves to only legal moves
+func (g *Generator) filterLegalMoves(pos *Position, color Color, moves []Move) []Move {
+	// TODO
+	return moves
 }
 
 func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
@@ -273,5 +282,8 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 		to := popLSB(&toMask)
 		moves = append(moves, Move{Piece: King, From: Square(from), To: Square(to)})
 	}
+
+	// TODO castling
+
 	return moves
 }
