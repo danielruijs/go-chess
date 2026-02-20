@@ -12,7 +12,7 @@ const (
 
 type Generator struct {
 	knightMoves [64]Bitboard
-	// kingMoves   [64]Bitboard
+	kingMoves   [64]Bitboard
 
 	pieceToGenerator map[PieceType]func(pos *Position, color Color) []Move
 }
@@ -21,6 +21,7 @@ func NewGenerator() *Generator {
 	g := &Generator{}
 
 	g.knightMoves = precomputeKnightMoves()
+	g.kingMoves = precomputeKingMoves()
 
 	g.pieceToGenerator = map[PieceType]func(pos *Position, color Color) []Move{
 		Pawn:   g.generatePawnMoves,
@@ -121,29 +122,32 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	return moves
 }
 
-func precomputeKnightMoves() [64]Bitboard {
-	var knightMoves [64]Bitboard
+func precomputeNonSlidingMoves(offsets []struct{ file, rank int }) [64]Bitboard {
+	var moves [64]Bitboard
 
-	offsets := []struct{ rank, file int }{
+	for sq := 0; sq < 64; sq++ {
+		var moveMask Bitboard
+		file := sq % 8
+		rank := sq / 8
+		for _, offset := range offsets {
+			newFile := file + offset.file
+			newRank := rank + offset.rank
+			if newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8 {
+				moveMask |= coordMask(newFile, newRank)
+			}
+		}
+		moves[sq] = moveMask
+	}
+
+	return moves
+}
+
+func precomputeKnightMoves() [64]Bitboard {
+	offsets := []struct{ file, rank int }{
 		{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
 		{1, 2}, {1, -2}, {-1, 2}, {-1, -2},
 	}
-
-	for sq := 0; sq < 64; sq++ {
-		var moves Bitboard
-		rank := sq / 8
-		file := sq % 8
-		for _, offset := range offsets {
-			newRank := rank + offset.rank
-			newFile := file + offset.file
-			if newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8 {
-				moves |= coordMask(newFile, newRank)
-			}
-		}
-		knightMoves[sq] = moves
-	}
-
-	return knightMoves
+	return precomputeNonSlidingMoves(offsets)
 }
 
 func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
@@ -243,7 +247,31 @@ func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
 	return g.generateSlidingMoves(pos, color, Queen, directions)
 }
 
+func precomputeKingMoves() [64]Bitboard {
+	offsets := []struct{ file, rank int }{
+		{1, 0}, {-1, 0}, {0, 1}, {0, -1},
+		{1, 1}, {1, -1}, {-1, 1}, {-1, -1},
+	}
+	return precomputeNonSlidingMoves(offsets)
+}
+
 func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
-	// TODO
-	return []Move{}
+	moves := []Move{}
+
+	var king, ownPieces Bitboard
+	if color == White {
+		king = pos.WhiteKing
+		ownPieces = pos.GetOccupiedWhite()
+	} else {
+		king = pos.BlackKing
+		ownPieces = pos.GetOccupiedBlack()
+	}
+
+	from := popLSB(&king) // should only be one king
+	toMask := g.kingMoves[from] & ^ownPieces
+	for toMask != 0 {
+		to := popLSB(&toMask)
+		moves = append(moves, Move{Piece: King, From: Square(from), To: Square(to)})
+	}
+	return moves
 }
