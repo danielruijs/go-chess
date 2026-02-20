@@ -1,10 +1,16 @@
 name: Frontend
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
 
 jobs:
     lint:
-          name: Frontend lint
+          name: Lint
           runs-on: ubuntu-latest
 
           steps:
@@ -23,7 +29,7 @@ jobs:
               run: cd frontend && npx eslint '**/*.ts' '**/*.tsx'
 
     test:
-        name: Frontend test
+        name: Test
         runs-on: ubuntu-latest
 
         steps:

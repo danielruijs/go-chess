@@ -1,10 +1,16 @@
 name: Backend
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
 
 jobs:
     lint:
-        name: Backend lint
+        name: Lint
         runs-on: ubuntu-latest
 
         steps:
@@ -29,7 +35,7 @@ jobs:
                 working-directory: backend
 
     test:
-      name: Backend test
+      name: Test
       runs-on: ubuntu-latest
 
       steps:
