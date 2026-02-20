@@ -12,34 +12,44 @@ const (
 	fileHMask Bitboard = 0x8080808080808080
 )
 
-type Generator interface {
-	generateMoves(pos *Position, color Color) []Move
+type Generator struct {
+	knightMoves [64]Bitboard
+	// kingMoves   [64]Bitboard
+
+	pieceToGenerator map[PieceType]func(pos *Position, color Color) []Move
 }
 
-var pieceToGenerator = map[PieceType]Generator{
-	Pawn:   pawnMoveGenerator{},
-	Knight: knightMoveGenerator{},
-	Bishop: bishopMoveGenerator{},
-	Rook:   rookMoveGenerator{},
-	Queen:  queenMoveGenerator{},
-	King:   kingMoveGenerator{},
+func NewGenerator() *Generator {
+	g := &Generator{}
+
+	// g.knightMoves = TODO
+
+	g.pieceToGenerator = map[PieceType]func(pos *Position, color Color) []Move{
+		Pawn:   g.generatePawnMoves,
+		Knight: g.generateKnightMoves,
+		Bishop: g.generateBishopMoves,
+		Rook:   g.generateRookMoves,
+		Queen:  g.generateQueenMoves,
+		King:   g.generateKingMoves,
+	}
+
+	return g
 }
 
-// generates all legal moves in a position for a given color
-func GenerateMoves(pos *Position, color Color) []Move {
+// Generates all legal moves in a position for a given color
+func (g *Generator) GenerateMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
 }
 
-// generates all legal moves in a position for a given color and piece type
-func GeneratePieceMoves(pos *Position, color Color, pieceType PieceType) []Move {
-	generator := pieceToGenerator[pieceType]
-	return generator.generateMoves(pos, color)
+// Generates all legal moves in a position for a given color and piece type
+func (g *Generator) GeneratePieceMoves(pos *Position, color Color, pieceType PieceType) []Move {
+	generator := g.pieceToGenerator[pieceType]
+	psuedoLegalMoves := generator(pos, color)
+	return psuedoLegalMoves // TODO check legality
 }
 
-type pawnMoveGenerator struct{}
-
-func (g pawnMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
 	var pawns, startingRankMask, promotionRankMask Bitboard
@@ -125,16 +135,12 @@ func shift(b Bitboard, n int) Bitboard {
 	}
 }
 
-type knightMoveGenerator struct{}
-
-func (g knightMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
 }
 
-type bishopMoveGenerator struct{}
-
-func (g bishopMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
 	directions := []int{7, 9, -7, -9} // NW, NE, SE, SW
 
 	var bishops, ownPieces Bitboard
@@ -182,23 +188,17 @@ func (g bishopMoveGenerator) generateMoves(pos *Position, color Color) []Move {
 	return moves
 }
 
-type rookMoveGenerator struct{}
-
-func (g rookMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
 }
 
-type queenMoveGenerator struct{}
-
-func (g queenMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
 }
 
-type kingMoveGenerator struct{}
-
-func (g kingMoveGenerator) generateMoves(pos *Position, color Color) []Move {
+func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	// TODO
 	return []Move{}
 }

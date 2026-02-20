@@ -18,7 +18,7 @@ type Match struct {
 	White *Player
 	Black *Player
 
-	Engine    chess.Engine
+	Engine    *chess.Engine
 	EventChan chan Event
 }
 

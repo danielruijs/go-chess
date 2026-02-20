@@ -1,8 +1,6 @@
 package chess
 
-import (
-	"fmt"
-)
+import "log"
 
 type Bitboard uint64 // 64-bit integer representing the presence of pieces on the board, bit 0 (LSB) -> a1, bit 1 -> b1, ..., bit 63 (MSB) -> h8
 
@@ -33,6 +31,14 @@ type Position struct {
 	EnPassant      *Square        // En passant target square, square over which pawn just moved when moving two squares
 	Halfmove       uint           // Halfmove clock, number of halfmoves since last capture or pawn move, for fifty-move rule
 	Fullmove       uint           // Fullmove number
+}
+
+func NewInitialPosition() *Position {
+	pos, err := StartingPositionFEN.ToPosition()
+	if err != nil {
+		log.Fatalf("failed to create initial position: %v", err)
+	}
+	return &pos
 }
 
 func (p *Position) GetOccupied() Bitboard {
@@ -91,25 +97,4 @@ func (p *Position) GetBoard() Board {
 		}
 	}
 	return board
-}
-
-func (p *Position) ValidateMove(move Move, color Color) error {
-	pieceToMove := p.GetPiece(move.From)
-	if pieceToMove == (Piece{}) {
-		return fmt.Errorf("no piece at source square")
-	}
-	if color != p.ActiveColor {
-		return fmt.Errorf("not %s's turn to move", color)
-	}
-	if pieceToMove.Color != color {
-		return fmt.Errorf("piece at source square does not belong to player")
-	}
-
-	moves := GeneratePieceMoves(p, color, pieceToMove.Type)
-	for _, m := range moves {
-		if m == move {
-			return nil
-		}
-	}
-	return fmt.Errorf("invalid move")
 }

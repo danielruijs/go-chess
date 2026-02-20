@@ -51,24 +51,3 @@ func TestGetBoard(t *testing.T) {
 	assert.Equal(t, Pawn, board[2][6].Type)
 	assert.Equal(t, Black, board[2][6].Color)
 }
-
-func TestValidateMoveNoPiece(t *testing.T) {
-	position := NewInitialPosition()
-	move := Move{From: 20, To: 28} // e3 to e4
-	err := position.ValidateMove(move, White)
-	assert.NotNil(t, err)
-}
-
-func TestValidateMoveWrongActiveColor(t *testing.T) {
-	position := NewInitialPosition()
-	move := Move{From: 52, To: 44} // e7 to e6
-	err := position.ValidateMove(move, Black)
-	assert.NotNil(t, err)
-}
-
-func TestValidateMoveNotPlayersPiece(t *testing.T) {
-	position := NewInitialPosition()
-	move := Move{From: 52, To: 44} // e7 to e6
-	err := position.ValidateMove(move, White)
-	assert.NotNil(t, err)
-}

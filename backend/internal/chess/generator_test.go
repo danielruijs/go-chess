@@ -194,10 +194,10 @@ func TestPawnMoveGenerator_generateMoves(t *testing.T) {
 		},
 	}
 
+	g := NewGenerator()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := pawnMoveGenerator{}
-			moves := g.generateMoves(tt.pos, tt.color)
+			moves := g.generatePawnMoves(tt.pos, tt.color)
 			assert.ElementsMatch(t, tt.legalMoves, moves)
 		})
 	}
@@ -382,10 +382,10 @@ func TestBishopMoveGenerator_generateMoves(t *testing.T) {
 		},
 	}
 
+	g := NewGenerator()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := bishopMoveGenerator{}
-			moves := g.generateMoves(tt.pos, tt.color)
+			moves := g.generateBishopMoves(tt.pos, tt.color)
 			assert.ElementsMatch(t, tt.legalMoves, moves)
 		})
 	}
