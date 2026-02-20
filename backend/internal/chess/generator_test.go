@@ -25,7 +25,7 @@ func bitboardFromStrs(squareStrings []string) Bitboard {
 	return bb
 }
 
-func TestPawnMoveGenerator_generateMoves(t *testing.T) {
+func TestGeneratePawnMoves(t *testing.T) {
 	tests := []struct {
 		name       string
 		pos        *Position
@@ -203,7 +203,7 @@ func TestPawnMoveGenerator_generateMoves(t *testing.T) {
 	}
 }
 
-func TestKnightMoveGenerator_generateMoves(t *testing.T) {
+func TestGenerateKnightMoves(t *testing.T) {
 	tests := []struct {
 		name       string
 		pos        *Position
@@ -369,7 +369,7 @@ func TestKnightMoveGenerator_generateMoves(t *testing.T) {
 	}
 }
 
-func TestBishopMoveGenerator_generateMoves(t *testing.T) {
+func TestGenerateBishopMoves(t *testing.T) {
 	tests := []struct {
 		name       string
 		pos        *Position
@@ -552,6 +552,210 @@ func TestBishopMoveGenerator_generateMoves(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			moves := g.generateBishopMoves(tt.pos, tt.color)
+			assert.ElementsMatch(t, tt.legalMoves, moves)
+		})
+	}
+}
+
+func TestGenerateRookMoves(t *testing.T) {
+	tests := []struct {
+		name       string
+		pos        *Position
+		color      Color
+		legalMoves []Move
+	}{
+		{
+			name: "white clear board",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"e4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("b4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("c4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("d4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("f4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("g4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("h4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e1")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e2")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e3")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e5")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e6")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e7")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e8")},
+			},
+		},
+		{
+			name: "black clear board",
+			pos: &Position{
+				BlackRooks: bitboardFromStrs([]string{"d4"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("b4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("c4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("e4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("f4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("g4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("h4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d1")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d2")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d3")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d6")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d7")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d8")},
+			},
+		},
+		{
+			name: "white blocked own pieces",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"e4"}),
+				WhitePawns: bitboardFromStrs([]string{"e5", "f4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("b4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("c4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("d4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e1")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e2")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e3")},
+			},
+		},
+		{
+			name: "black blocked own pieces",
+			pos: &Position{
+				BlackRooks: bitboardFromStrs([]string{"d4"}),
+				BlackPawns: bitboardFromStrs([]string{"d3", "c4"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("e4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("f4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("g4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("h4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d6")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d7")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d8")},
+			},
+		},
+		{
+			name: "white blocked enemy pieces",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"e4"}),
+				BlackPawns: bitboardFromStrs([]string{"e5", "f4"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("b4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("c4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("d4")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("f4")}, // capture
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e1")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e2")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e3")},
+				{Piece: Rook, From: strToSquare("e4"), To: strToSquare("e5")}, // capture
+			},
+		},
+		{
+			name: "black blocked enemy pieces",
+			pos: &Position{
+				BlackRooks: bitboardFromStrs([]string{"d4"}),
+				WhitePawns: bitboardFromStrs([]string{"d3", "c4"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("c4")}, // capture
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("e4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("f4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("g4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("h4")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d3")}, // capture
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d5")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d6")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d7")},
+				{Piece: Rook, From: strToSquare("d4"), To: strToSquare("d8")},
+			},
+		},
+		{
+			name: "white blocked in corner",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"a1"}),
+				WhitePawns: bitboardFromStrs([]string{"a2", "b1"}),
+			},
+			color:      White,
+			legalMoves: []Move{},
+		},
+		{
+			name: "black blocked in corner",
+			pos: &Position{
+				BlackRooks: bitboardFromStrs([]string{"a8"}),
+				BlackPawns: bitboardFromStrs([]string{"a7", "b8"}),
+			},
+			color:      Black,
+			legalMoves: []Move{},
+		},
+		{
+			name: "white corner clear",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"a1"}),
+				WhitePawns: bitboardFromStrs([]string{"b2"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("b1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("c1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("d1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("e1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("f1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("g1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("h1")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a2")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a3")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a5")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a6")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a7")},
+				{Piece: Rook, From: strToSquare("a1"), To: strToSquare("a8")},
+			},
+		},
+		{
+			name: "black corner clear",
+			pos: &Position{
+				BlackRooks: bitboardFromStrs([]string{"a8"}),
+				BlackPawns: bitboardFromStrs([]string{"b7"}),
+			},
+			color: Black,
+			legalMoves: []Move{
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("b8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("c8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("d8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("e8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("f8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("g8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("h8")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a7")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a6")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a5")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a4")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a3")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a2")},
+				{Piece: Rook, From: strToSquare("a8"), To: strToSquare("a1")},
+			},
+		},
+	}
+
+	g := NewGenerator()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			moves := g.generateRookMoves(tt.pos, tt.color)
 			assert.ElementsMatch(t, tt.legalMoves, moves)
 		})
 	}

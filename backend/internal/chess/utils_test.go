@@ -6,6 +6,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestAbs(t *testing.T) {
+	tests := []struct {
+		name     string
+		n        int
+		expected int
+	}{
+		{
+			name:     "abs of positive number",
+			n:        5,
+			expected: 5,
+		},
+		{
+			name:     "abs of negative number",
+			n:        -5,
+			expected: 5,
+		},
+		{
+			name:     "abs of zero",
+			n:        0,
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := abs(tt.n)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestShift(t *testing.T) {
 	tests := []struct {
 		name     string

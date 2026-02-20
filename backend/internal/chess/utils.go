@@ -2,6 +2,13 @@ package chess
 
 import "math/bits"
 
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
 func shift(b Bitboard, n int) Bitboard {
 	if n > 0 {
 		return b << n

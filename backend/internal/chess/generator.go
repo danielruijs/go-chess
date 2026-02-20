@@ -195,7 +195,7 @@ func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
 
 				// edges of the board
 				fileDiff := newFile - prevFile
-				if to < 0 || to > 63 || (fileDiff != 1 && fileDiff != -1) {
+				if to < 0 || to > 63 || abs(fileDiff) != 1 {
 					break
 				}
 
@@ -216,8 +216,50 @@ func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
 }
 
 func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
-	// TODO
-	return []Move{}
+	directions := []int{1, -1, 8, -8}
+
+	var rooks, ownPieces Bitboard
+	if color == White {
+		rooks = pos.WhiteRooks
+		ownPieces = pos.GetOccupiedWhite()
+	} else {
+		rooks = pos.BlackRooks
+		ownPieces = pos.GetOccupiedBlack()
+	}
+
+	occupied := pos.GetOccupied()
+
+	moves := []Move{}
+	for rooks != 0 {
+		from := popLSB(&rooks)
+		for _, dir := range directions {
+			to := from
+			for {
+				prevFile := to % 8
+				to += dir
+				toMask := squareMask(Square(to))
+				newFile := to % 8
+
+				// edges of the board
+				fileDiff := newFile - prevFile
+				if to < 0 || to > 63 || abs(fileDiff) > 1 {
+					break
+				}
+
+				// blocked by own piece
+				if toMask&ownPieces != 0 {
+					break
+				}
+				moves = append(moves, Move{Piece: Rook, From: Square(from), To: Square(to)})
+				// blocked by opponent piece, added capture
+				if toMask&occupied != 0 {
+					break
+				}
+			}
+		}
+	}
+
+	return moves
 }
 
 func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
