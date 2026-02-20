@@ -168,70 +168,31 @@ func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 	return moves
 }
 
-func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
-	directions := []int{7, 9, -7, -9} // NW, NE, SE, SW
-
-	var bishops, ownPieces Bitboard
+func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType PieceType, directions []int) []Move {
+	var pieces, ownPieces Bitboard
 	if color == White {
-		bishops = pos.WhiteBishops
-		ownPieces = pos.GetOccupiedWhite()
-	} else {
-		bishops = pos.BlackBishops
-		ownPieces = pos.GetOccupiedBlack()
-	}
-
-	occupied := pos.GetOccupied()
-
-	moves := []Move{}
-	for bishops != 0 {
-		from := popLSB(&bishops)
-		for _, dir := range directions {
-			to := from
-			for {
-				prevFile := to % 8
-				to += dir
-				toMask := squareMask(Square(to))
-				newFile := to % 8
-
-				// edges of the board
-				fileDiff := newFile - prevFile
-				if to < 0 || to > 63 || abs(fileDiff) != 1 {
-					break
-				}
-
-				// blocked by own piece
-				if toMask&ownPieces != 0 {
-					break
-				}
-				moves = append(moves, Move{Piece: Bishop, From: Square(from), To: Square(to)})
-				// blocked by opponent piece, added capture
-				if toMask&occupied != 0 {
-					break
-				}
-			}
+		switch pieceType {
+		case Bishop:
+			pieces = pos.WhiteBishops
+		case Rook:
+			pieces = pos.WhiteRooks
 		}
-	}
-
-	return moves
-}
-
-func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
-	directions := []int{1, -1, 8, -8}
-
-	var rooks, ownPieces Bitboard
-	if color == White {
-		rooks = pos.WhiteRooks
 		ownPieces = pos.GetOccupiedWhite()
 	} else {
-		rooks = pos.BlackRooks
+		switch pieceType {
+		case Bishop:
+			pieces = pos.BlackBishops
+		case Rook:
+			pieces = pos.BlackRooks
+		}
 		ownPieces = pos.GetOccupiedBlack()
 	}
 
 	occupied := pos.GetOccupied()
 
 	moves := []Move{}
-	for rooks != 0 {
-		from := popLSB(&rooks)
+	for pieces != 0 {
+		from := popLSB(&pieces)
 		for _, dir := range directions {
 			to := from
 			for {
@@ -250,7 +211,7 @@ func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
 				if toMask&ownPieces != 0 {
 					break
 				}
-				moves = append(moves, Move{Piece: Rook, From: Square(from), To: Square(to)})
+				moves = append(moves, Move{Piece: pieceType, From: Square(from), To: Square(to)})
 				// blocked by opponent piece, added capture
 				if toMask&occupied != 0 {
 					break
@@ -260,6 +221,16 @@ func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
 	}
 
 	return moves
+}
+
+func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
+	directions := []int{7, 9, -7, -9} // NW, NE, SE, SW
+	return g.generateSlidingMoves(pos, color, Bishop, directions)
+}
+
+func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
+	directions := []int{1, -1, 8, -8}
+	return g.generateSlidingMoves(pos, color, Rook, directions)
 }
 
 func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
