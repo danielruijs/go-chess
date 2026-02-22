@@ -156,6 +156,18 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 		},
 		{
+			name: "white capture edge of board",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"b6"}),
+				BlackPawns: bitboardFromStrs([]string{"a7"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("b6"), To: strToSquare("b7")},
+				{From: strToSquare("b6"), To: strToSquare("a7")},
+			},
+		},
+		{
 			name: "white en passant",
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d5"}),
@@ -195,6 +207,19 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 		},
 		{
+			name: "en passant edge of board",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"b5"}),
+				BlackPawns: bitboardFromStrs([]string{"a5"}),
+				EnPassant:  new(strToSquare("a6")),
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("b5"), To: strToSquare("a6")},
+				{From: strToSquare("b5"), To: strToSquare("b6")},
+			},
+		},
+		{
 			name: "white promotion",
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"a7"}),
@@ -218,6 +243,24 @@ func TestGeneratePawnMoves(t *testing.T) {
 				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Rook)},
 				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Bishop)},
 				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Knight)},
+			},
+		},
+		{
+			name: "white capture promotion",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"a7"}),
+				BlackRooks: bitboardFromStrs([]string{"b8"}),
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Rook)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Bishop)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Knight)},
+				{From: strToSquare("a7"), To: strToSquare("b8"), Promotion: new(Queen)},
+				{From: strToSquare("a7"), To: strToSquare("b8"), Promotion: new(Rook)},
+				{From: strToSquare("a7"), To: strToSquare("b8"), Promotion: new(Bishop)},
+				{From: strToSquare("a7"), To: strToSquare("b8"), Promotion: new(Knight)},
 			},
 		},
 		{

@@ -108,16 +108,16 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// capture diagonally by 1 if occupied by opponent piece
-	capturesLeft := shift(pawns, forwardOffset-1) & opponentPieces & ^fileAMask
-	capturesRight := shift(pawns, forwardOffset+1) & opponentPieces & ^fileHMask
+	capturesLeft := shift(pawns & ^fileAMask, forwardOffset-1) & opponentPieces
+	capturesRight := shift(pawns & ^fileHMask, forwardOffset+1) & opponentPieces
 
 	// en passant
 	if pos.EnPassant != nil {
 		captureSquareMask := squareMask(*pos.EnPassant - Square(forwardOffset))
 		if (captureSquareMask & opponentPieces) != 0 {
 			enPassantMask := squareMask(*pos.EnPassant)
-			epCapturesLeft := shift(pawns, forwardOffset-1) & enPassantMask & ^fileAMask
-			epCapturesRight := shift(pawns, forwardOffset+1) & enPassantMask & ^fileHMask
+			epCapturesLeft := shift(pawns & ^fileAMask, forwardOffset-1) & enPassantMask
+			epCapturesRight := shift(pawns & ^fileHMask, forwardOffset+1) & enPassantMask
 
 			capturesLeft |= epCapturesLeft
 			capturesRight |= epCapturesRight
@@ -126,15 +126,29 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	for capturesLeft != 0 {
 		to := popLSB(&capturesLeft)
 		from := to - forwardOffset + 1
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		if squareMask(Square(to))&promotionRankMask != 0 {
+			// promotion capture
+			for _, promotionPiece := range []PieceType{Queen, Rook, Bishop, Knight} {
+				moves = append(moves, Move{From: Square(from), To: Square(to), Promotion: &promotionPiece})
+			}
+		} else {
+			moves = append(moves, Move{From: Square(from), To: Square(to)})
+		}
 	}
 	for capturesRight != 0 {
 		to := popLSB(&capturesRight)
 		from := to - forwardOffset - 1
-		moves = append(moves, Move{From: Square(from), To: Square(to)})
+		if squareMask(Square(to))&promotionRankMask != 0 {
+			// promotion capture
+			for _, promotionPiece := range []PieceType{Queen, Rook, Bishop, Knight} {
+				moves = append(moves, Move{From: Square(from), To: Square(to), Promotion: &promotionPiece})
+			}
+		} else {
+			moves = append(moves, Move{From: Square(from), To: Square(to)})
+		}
 	}
 
-	// promotion
+	// regular promotion
 	promotions := shift(pawns, forwardOffset) & ^occupied & promotionRankMask
 	for promotions != 0 {
 		to := popLSB(&promotions)
