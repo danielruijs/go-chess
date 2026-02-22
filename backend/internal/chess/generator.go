@@ -64,7 +64,6 @@ func (g *Generator) filterLegalMoves(pos *Position, color Color, moves []Move) [
 		posCopy := pos.GetCopy()
 		posCopy.MakeMove(move)
 		if !posCopy.IsInCheck(g, color) {
-			// TODO: Special case for castling: Cant castle out of, through, or into check.
 			legalMoves = append(legalMoves, move)
 		}
 	}
@@ -314,17 +313,27 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 
-	// Castling, only checks rights and that the squares between the king and rook are empty.
-	// Legality (not castling out of, through, or into check) is checked in filterLegalMoves
+	// Castling, cant castle out of, through, or into check (into filtered in filterLegalMoves)
 	occupied := pos.GetOccupied()
-	if kingSideRight && occupied&kingSideMask == 0 {
+	kingSidePath := []Square{Square(from), Square(from + 1)}
+	if kingSideRight && occupied&kingSideMask == 0 && !g.areSquaresAttacked(pos, color, kingSidePath) {
 		moves = append(moves, Move{From: Square(from), To: kingSideTo})
 	}
-	if queenSideRight && occupied&queenSideMask == 0 {
+	queenSidePath := []Square{Square(from), Square(from - 1)}
+	if queenSideRight && occupied&queenSideMask == 0 && !g.areSquaresAttacked(pos, color, queenSidePath) {
 		moves = append(moves, Move{From: Square(from), To: queenSideTo})
 	}
 
 	return moves
+}
+
+func (g *Generator) areSquaresAttacked(pos *Position, color Color, squares []Square) bool {
+	for _, sq := range squares {
+		if g.IsSquareAttacked(sq, pos, color) {
+			return true
+		}
+	}
+	return false
 }
 
 // Checks if a square is attacked in a position for a given color
