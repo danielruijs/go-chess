@@ -23,8 +23,8 @@ func (e *Engine) GetBoard() Board {
 	return e.position.GetBoard()
 }
 
-func (e *Engine) GetLegalMoves() []Move {
-	return e.generator.GenerateMoves(e.position, e.position.ActiveColor)
+func (e *Engine) GetLegalMoves(color Color) []Move {
+	return e.generator.GenerateMoves(e.position, color)
 }
 
 func (e *Engine) ApplyMove(move Move, color Color) error {

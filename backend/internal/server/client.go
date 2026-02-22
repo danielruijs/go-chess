@@ -41,7 +41,10 @@ func (wsh WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
-	defer func() { _ = c.Conn.Close() }()
+	defer func() {
+		matchmaker.Leave(c.Player)
+		_ = c.Conn.Close()
+	}()
 	for {
 		var message WSMessage
 		err := c.Conn.ReadJSON(&message)

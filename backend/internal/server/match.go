@@ -15,8 +15,8 @@ type Player struct {
 }
 
 type Match struct {
-	White *Player
-	Black *Player
+	Player1 *Player
+	Player2 *Player
 
 	Engine    *chess.Engine
 	EventChan chan Event
@@ -55,22 +55,20 @@ func (m *Match) Run() {
 }
 
 func (m *Match) sendPositionUpdate() error {
-	legalMovesList := m.Engine.GetLegalMoves()
-	positionData := BoardData{
-		Board:      m.Engine.GetBoard(),
-		LegalMoves: moveListToLegalMoves(legalMovesList),
-	}
-	data, err := json.Marshal(positionData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal position: %v", err)
-	}
-	m.White.SendChan <- WSMessage{
-		Type: MessageTypeBoard,
-		Data: data,
-	}
-	m.Black.SendChan <- WSMessage{
-		Type: MessageTypeBoard,
-		Data: data,
+	for _, player := range []*Player{m.Player1, m.Player2} {
+		legalMovesList := m.Engine.GetLegalMoves(player.Color)
+		positionData := BoardData{
+			Board:      m.Engine.GetBoard(),
+			LegalMoves: moveListToLegalMoves(legalMovesList),
+		}
+		data, err := json.Marshal(positionData)
+		if err != nil {
+			return fmt.Errorf("failed to marshal position: %v", err)
+		}
+		player.SendChan <- WSMessage{
+			Type: MessageTypeBoard,
+			Data: data,
+		}
 	}
 	return nil
 }
@@ -81,11 +79,11 @@ func (m *Match) sendError(message string) {
 	if err != nil {
 		log.Fatal("failed to marshal error data:", err)
 	}
-	m.White.SendChan <- WSMessage{
+	m.Player1.SendChan <- WSMessage{
 		Type: MessageTypeError,
 		Data: errorDataJson,
 	}
-	m.Black.SendChan <- WSMessage{
+	m.Player2.SendChan <- WSMessage{
 		Type: MessageTypeError,
 		Data: errorDataJson,
 	}

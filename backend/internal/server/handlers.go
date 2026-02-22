@@ -35,7 +35,10 @@ func (c Client) handleJoinMatch(message WSMessage, matchmaker *Matchmaker) error
 	}
 
 	c.Player.Name = data.PlayerName
-	matchmaker.JoinQueue(c.Player)
+	err := matchmaker.Join(c.Player)
+	if err != nil {
+		return fmt.Errorf("failed to join matchmaking queue: %w", err)
+	}
 
 	return nil
 }
