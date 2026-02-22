@@ -24,6 +24,9 @@ func (e *Engine) GetBoard() Board {
 }
 
 func (e *Engine) GetLegalMoves(color Color) []Move {
+	if color != e.position.ActiveColor {
+		return []Move{}
+	}
 	return e.generator.GenerateMoves(e.position, color)
 }
 
