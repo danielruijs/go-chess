@@ -110,3 +110,86 @@ func TestIsEnPassant(t *testing.T) {
 		})
 	}
 }
+
+func TestIsCastling(t *testing.T) {
+	tests := []struct {
+		name     string
+		move     Move
+		pos      *Position
+		expected bool
+	}{
+		{
+			name: "white kingside castling",
+			move: Move{
+				From: strToSquare("e1"),
+				To:   strToSquare("g1"),
+			},
+			pos: &Position{
+				WhiteKing: bitboardFromStrs([]string{"e1"}),
+			},
+			expected: true,
+		},
+		{
+			name: "white queenside castling",
+			move: Move{
+				From: strToSquare("e1"),
+				To:   strToSquare("c1"),
+			},
+			pos: &Position{
+				WhiteKing: bitboardFromStrs([]string{"e1"}),
+			},
+			expected: true,
+		},
+		{
+			name: "black kingside castling",
+			move: Move{
+				From: strToSquare("e8"),
+				To:   strToSquare("g8"),
+			},
+			pos: &Position{
+				BlackKing: bitboardFromStrs([]string{"e8"}),
+			},
+			expected: true,
+		},
+		{
+			name: "black queenside castling",
+			move: Move{
+				From: strToSquare("e8"),
+				To:   strToSquare("c8"),
+			},
+			pos: &Position{
+				BlackKing: bitboardFromStrs([]string{"e8"}),
+			},
+			expected: true,
+		},
+		{
+			name: "not castling - king short move",
+			move: Move{
+				From: strToSquare("e1"),
+				To:   strToSquare("e2"),
+			},
+			pos: &Position{
+				WhiteKing: bitboardFromStrs([]string{"e1"}),
+			},
+			expected: false,
+		},
+		{
+			name: "not castling - pawn move",
+			move: Move{
+				From: strToSquare("e2"),
+				To:   strToSquare("e4"),
+			},
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"e2"}),
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.move.IsCastling(tt.pos)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

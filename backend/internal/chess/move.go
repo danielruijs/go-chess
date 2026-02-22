@@ -12,3 +12,11 @@ func (m Move) IsEnPassant(p *Position) bool {
 	isCapture := (m.From-m.To)%8 != 0
 	return isPawn && isCapture && p.EnPassant != nil && *p.EnPassant == m.To
 }
+
+func (m Move) IsCastling(p *Position) bool {
+	piece := p.GetPiece(m.From)
+	isKing := piece.Type == King
+	isSameRank := m.From/8 == m.To/8
+	isLongMove := abs(int(m.To)-int(m.From)) > 1
+	return isKing && isLongMove && isSameRank
+}
