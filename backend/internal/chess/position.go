@@ -100,32 +100,14 @@ func (p *Position) GetBoard() Board {
 }
 
 func (p *Position) GetCopy() Position {
-	var enPassant *Square
+	copy := *p
+
 	if p.EnPassant != nil {
 		ep := *p.EnPassant
-		enPassant = &ep
+		copy.EnPassant = &ep
 	}
-	return Position{
-		WhitePawns:   p.WhitePawns,
-		WhiteKnights: p.WhiteKnights,
-		WhiteBishops: p.WhiteBishops,
-		WhiteRooks:   p.WhiteRooks,
-		WhiteQueens:  p.WhiteQueens,
-		WhiteKing:    p.WhiteKing,
 
-		BlackPawns:   p.BlackPawns,
-		BlackKnights: p.BlackKnights,
-		BlackBishops: p.BlackBishops,
-		BlackRooks:   p.BlackRooks,
-		BlackQueens:  p.BlackQueens,
-		BlackKing:    p.BlackKing,
-
-		ActiveColor:    p.ActiveColor,
-		CastlingRights: p.CastlingRights,
-		EnPassant:      enPassant,
-		Halfmove:       p.Halfmove,
-		Fullmove:       p.Fullmove,
-	}
+	return copy
 }
 
 func (p *Position) MakeMove(move Move) {

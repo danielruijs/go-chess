@@ -51,3 +51,42 @@ func TestGetBoard(t *testing.T) {
 	assert.Equal(t, Pawn, board[2][6].Type)
 	assert.Equal(t, Black, board[2][6].Color)
 }
+
+func TestGetCopy(t *testing.T) {
+	position := NewInitialPosition()
+	position.Halfmove = 5
+	position.Fullmove = 10
+	enPassantSquare := Square(16)
+	position.EnPassant = &enPassantSquare
+
+	copy := position.GetCopy()
+
+	assert.Equal(t, position.WhitePawns, copy.WhitePawns)
+	assert.Equal(t, position.BlackPawns, copy.BlackPawns)
+
+	assert.Equal(t, position.ActiveColor, copy.ActiveColor)
+	assert.Equal(t, position.CastlingRights, copy.CastlingRights)
+	assert.Equal(t, position.Halfmove, copy.Halfmove)
+	assert.Equal(t, position.Fullmove, copy.Fullmove)
+
+	assert.NotNil(t, copy.EnPassant)
+	assert.Equal(t, *position.EnPassant, *copy.EnPassant)
+	assert.NotSame(t, position.EnPassant, copy.EnPassant)
+
+	// Changing en passant should not change original
+	*copy.EnPassant = 20
+	assert.Equal(t, Square(16), *position.EnPassant)
+
+	// Changing a piece should not change original
+	copy.WhitePawns |= squareMask(24)
+	assert.Equal(t, Bitboard(1<<24), copy.WhitePawns&squareMask(24))
+	assert.Equal(t, Bitboard(0), position.WhitePawns&squareMask(24))
+}
+
+func TestGetCopyWithNilEnPassant(t *testing.T) {
+	position := NewInitialPosition()
+
+	copy := position.GetCopy()
+
+	assert.Nil(t, copy.EnPassant)
+}
