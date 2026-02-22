@@ -40,15 +40,23 @@ func NewInitialPosition() *Position {
 }
 
 func (p *Position) GetOccupied() Bitboard {
-	return p.GetOccupiedWhite() | p.GetOccupiedBlack()
+	return p.getOccupiedWhite() | p.getOccupiedBlack()
 }
 
-func (p *Position) GetOccupiedWhite() Bitboard {
+func (p *Position) getOccupiedWhite() Bitboard {
 	return p.WhitePawns | p.WhiteKnights | p.WhiteBishops | p.WhiteRooks | p.WhiteQueens | p.WhiteKing
 }
 
-func (p *Position) GetOccupiedBlack() Bitboard {
+func (p *Position) getOccupiedBlack() Bitboard {
 	return p.BlackPawns | p.BlackKnights | p.BlackBishops | p.BlackRooks | p.BlackQueens | p.BlackKing
+}
+
+func (p *Position) GetOccupiedByColor(color Color) Bitboard {
+	if color == White {
+		return p.getOccupiedWhite()
+	} else {
+		return p.getOccupiedBlack()
+	}
 }
 
 func (p *Position) GetPieceBitboard(color Color, pieceType PieceType) *Bitboard {

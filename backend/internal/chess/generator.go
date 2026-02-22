@@ -73,19 +73,18 @@ func (g *Generator) filterLegalMoves(pos *Position, color Color, moves []Move) [
 func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
-	var pawns, startingRankMask, promotionRankMask, opponentPieces Bitboard
+	var startingRankMask, promotionRankMask, opponentPieces Bitboard
 	var forwardOffset int
+	pawns := *pos.GetPieceBitboard(color, Pawn)
 	if color == White {
-		pawns = pos.WhitePawns
 		startingRankMask = rank2Mask
 		promotionRankMask = rank8Mask
-		opponentPieces = pos.GetOccupiedBlack()
+		opponentPieces = pos.GetOccupiedByColor(Black)
 		forwardOffset = 8
 	} else {
-		pawns = pos.BlackPawns
 		startingRankMask = rank7Mask
 		promotionRankMask = rank1Mask
-		opponentPieces = pos.GetOccupiedWhite()
+		opponentPieces = pos.GetOccupiedByColor(White)
 		forwardOffset = -8
 	}
 
@@ -176,14 +175,8 @@ func precomputeKnightMoves() [64]Bitboard {
 func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
-	var knights, ownPieces Bitboard
-	if color == White {
-		knights = pos.WhiteKnights
-		ownPieces = pos.GetOccupiedWhite()
-	} else {
-		knights = pos.BlackKnights
-		ownPieces = pos.GetOccupiedBlack()
-	}
+	knights := *pos.GetPieceBitboard(color, Knight)
+	ownPieces := pos.GetOccupiedByColor(color)
 
 	for knights != 0 {
 		from := popLSB(&knights)
@@ -197,28 +190,14 @@ func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 }
 
 func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType PieceType, directions []int) []Move {
-	var pieces, ownPieces Bitboard
-	if color == White {
-		switch pieceType {
-		case Bishop:
-			pieces = pos.WhiteBishops
-		case Rook:
-			pieces = pos.WhiteRooks
-		case Queen:
-			pieces = pos.WhiteQueens
-		}
-		ownPieces = pos.GetOccupiedWhite()
-	} else {
-		switch pieceType {
-		case Bishop:
-			pieces = pos.BlackBishops
-		case Rook:
-			pieces = pos.BlackRooks
-		case Queen:
-			pieces = pos.BlackQueens
-		}
-		ownPieces = pos.GetOccupiedBlack()
+	switch pieceType {
+	case Bishop, Rook, Queen:
+		// allowed, do nothing
+	default:
+		return []Move{}
 	}
+	pieces := *pos.GetPieceBitboard(color, pieceType)
+	ownPieces := pos.GetOccupiedByColor(color)
 
 	occupied := pos.GetOccupied()
 
@@ -280,14 +259,13 @@ func precomputeKingMoves() [64]Bitboard {
 func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
-	var king, ownPieces Bitboard
+	king := *pos.GetPieceBitboard(color, King)
+	ownPieces := pos.GetOccupiedByColor(color)
+
 	var kingSideRight, queenSideRight bool
 	var kingSideMask, queenSideMask Bitboard
 	var kingSideTo, queenSideTo Square
 	if color == White {
-		king = pos.WhiteKing
-		ownPieces = pos.GetOccupiedWhite()
-
 		kingSideRight = pos.CastlingRights.WhiteOO
 		queenSideRight = pos.CastlingRights.WhiteOOO
 		kingSideMask = 0x60 // f1,g1
@@ -295,9 +273,6 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 		kingSideTo = Square(6)
 		queenSideTo = Square(2)
 	} else {
-		king = pos.BlackKing
-		ownPieces = pos.GetOccupiedBlack()
-
 		kingSideRight = pos.CastlingRights.BlackOO
 		queenSideRight = pos.CastlingRights.BlackOOO
 		kingSideMask = 0x6000000000000000  // f8,g8
@@ -341,25 +316,22 @@ func (g *Generator) IsSquareAttacked(sq Square, pos *Position, color Color) bool
 	occupied := pos.GetOccupied()
 	sqMask := squareMask(sq)
 
-	var pawns, knights, bishops, rooks, queens, king Bitboard
 	var forwardOffset int
+	var opponentColor Color
 	if color == White {
-		pawns = pos.BlackPawns
-		knights = pos.BlackKnights
-		bishops = pos.BlackBishops
-		rooks = pos.BlackRooks
-		queens = pos.BlackQueens
-		king = pos.BlackKing
 		forwardOffset = 8
+		opponentColor = Black
 	} else {
-		pawns = pos.WhitePawns
-		knights = pos.WhiteKnights
-		bishops = pos.WhiteBishops
-		rooks = pos.WhiteRooks
-		queens = pos.WhiteQueens
-		king = pos.WhiteKing
 		forwardOffset = -8
+		opponentColor = White
 	}
+
+	pawns := *pos.GetPieceBitboard(opponentColor, Pawn)
+	knights := *pos.GetPieceBitboard(opponentColor, Knight)
+	bishops := *pos.GetPieceBitboard(opponentColor, Bishop)
+	rooks := *pos.GetPieceBitboard(opponentColor, Rook)
+	queens := *pos.GetPieceBitboard(opponentColor, Queen)
+	king := *pos.GetPieceBitboard(opponentColor, King)
 
 	// to check if sq is attacked by a pawn, do the inverses
 	// project a pawn's capture move FROM the target square
