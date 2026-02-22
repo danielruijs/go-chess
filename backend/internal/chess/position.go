@@ -151,9 +151,11 @@ func (p *Position) MakeMove(move Move) {
 	piece := p.GetPiece(move.From)
 	occupied := p.GetOccupied()
 	toMask := squareMask(move.To)
+	isCapture := false
 
 	if move.IsEnPassant(p) {
 		// en passant
+		isCapture = true
 		p.removePiece(move.From)
 		p.setPiece(move.To, piece)
 		var capturedSquare Square
@@ -180,11 +182,15 @@ func (p *Position) MakeMove(move Move) {
 		p.removePiece(rookFrom)
 		p.setPiece(rookTo, Piece{Type: Rook, Color: piece.Color})
 	} else if move.Promotion != nil {
-		// promotion
+		// promotion, can be capture
+		if occupied&toMask != 0 {
+			isCapture = true
+		}
 		p.removePiece(move.From)
 		p.setPiece(move.To, Piece{Type: *move.Promotion, Color: piece.Color})
 	} else if occupied&toMask != 0 {
 		// captures
+		isCapture = true
 		p.removePiece(move.To)
 		p.removePiece(move.From)
 		p.setPiece(move.To, piece)
@@ -227,6 +233,25 @@ func (p *Position) MakeMove(move Move) {
 		} else {
 			p.EnPassant = new(Square(move.To + 8))
 		}
+	}
+
+	// update halfmove clock
+	if piece.Type == Pawn || isCapture {
+		p.Halfmove = 0
+	} else {
+		p.Halfmove++
+	}
+
+	// update fullmove number
+	if piece.Color == Black {
+		p.Fullmove++
+	}
+
+	// switch active color
+	if piece.Color == White {
+		p.ActiveColor = Black
+	} else {
+		p.ActiveColor = White
 	}
 }
 
