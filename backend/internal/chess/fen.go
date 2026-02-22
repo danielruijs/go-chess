@@ -78,8 +78,8 @@ func parseBoard(s string) (Position, error) {
 	var pos Position
 
 	ranks := strings.Split(s, "/")
-	if len(ranks) != BoardSize {
-		return Position{}, fmt.Errorf("fen piece placement must have %d ranks", BoardSize)
+	if len(ranks) != 8 {
+		return Position{}, fmt.Errorf("fen piece placement must have 8 ranks")
 	}
 	// Ranks 8 to 1
 	for fenRank, rankStr := range ranks {
@@ -137,7 +137,7 @@ func parseBoard(s string) (Position, error) {
 		}
 
 		if file != 8 {
-			return Position{}, fmt.Errorf("fen piece placement must have %d files", BoardSize)
+			return Position{}, fmt.Errorf("fen piece placement must have 8 files")
 		}
 	}
 	return pos, nil

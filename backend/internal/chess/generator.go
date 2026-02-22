@@ -97,7 +97,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	for singlePushes != 0 {
 		to := popLSB(&singlePushes)
 		from := to - forwardOffset
-		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
+		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 
 	// move forward by 2 if on starting rank and not blocked
@@ -106,7 +106,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	for doublePushes != 0 {
 		to := popLSB(&doublePushes)
 		from := to - 2*forwardOffset
-		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
+		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 
 	// capture diagonally by 1 if occupied by opponent piece
@@ -125,12 +125,12 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	for capturesLeft != 0 {
 		to := popLSB(&capturesLeft)
 		from := to - forwardOffset + 1
-		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
+		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 	for capturesRight != 0 {
 		to := popLSB(&capturesRight)
 		from := to - forwardOffset - 1
-		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
+		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 
 	// promotion
@@ -139,7 +139,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 		to := popLSB(&promotions)
 		from := to - forwardOffset
 		for _, promotionPiece := range []PieceType{Queen, Rook, Bishop, Knight} {
-			moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to), Promotion: &promotionPiece})
+			moves = append(moves, Move{From: Square(from), To: Square(to), Promotion: &promotionPiece})
 		}
 	}
 
@@ -191,7 +191,7 @@ func (g *Generator) generateKnightMoves(pos *Position, color Color) []Move {
 		toMask := g.knightMoves[from] & ^ownPieces
 		for toMask != 0 {
 			to := popLSB(&toMask)
-			moves = append(moves, Move{Piece: Knight, From: Square(from), To: Square(to)})
+			moves = append(moves, Move{From: Square(from), To: Square(to)})
 		}
 	}
 	return moves
@@ -243,7 +243,7 @@ func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType P
 				if toMask&ownPieces != 0 {
 					break
 				}
-				moves = append(moves, Move{Piece: pieceType, From: Square(from), To: Square(to)})
+				moves = append(moves, Move{From: Square(from), To: Square(to)})
 				// blocked by opponent piece, added capture
 				if toMask&occupied != 0 {
 					break
@@ -311,17 +311,17 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	toMask := g.kingMoves[from] & ^ownPieces
 	for toMask != 0 {
 		to := popLSB(&toMask)
-		moves = append(moves, Move{Piece: King, From: Square(from), To: Square(to)})
+		moves = append(moves, Move{From: Square(from), To: Square(to)})
 	}
 
 	// Castling, only checks rights and that the squares between the king and rook are empty.
 	// Legality (not castling out of, through, or into check) is checked in filterLegalMoves
 	occupied := pos.GetOccupied()
 	if kingSideRight && occupied&kingSideMask == 0 {
-		moves = append(moves, Move{Piece: King, From: Square(from), To: kingSideTo, Castling: true})
+		moves = append(moves, Move{From: Square(from), To: kingSideTo})
 	}
 	if queenSideRight && occupied&queenSideMask == 0 {
-		moves = append(moves, Move{Piece: King, From: Square(from), To: queenSideTo, Castling: true})
+		moves = append(moves, Move{From: Square(from), To: queenSideTo})
 	}
 
 	return moves

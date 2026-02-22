@@ -23,4 +23,4 @@ type Piece struct {
 	Color Color     `json:"color"`
 }
 
-type Board [BoardSize][BoardSize]Piece // Files(columns) a-h, ranks(rows) 1-8
+type Board [8][8]Piece // Files(columns) a-h, ranks(rows) 1-8
