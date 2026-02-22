@@ -28,26 +28,30 @@ func (e *Engine) GetLegalMoves() []Move {
 }
 
 func (e *Engine) ApplyMove(move Move, color Color) error {
-	if !e.isMoveLegal(move, color) {
-		return fmt.Errorf("illegal move")
+	err := e.validateMove(move, color)
+	if err != nil {
+		return fmt.Errorf("illegal move: %w", err)
 	}
 	e.position.MakeMove(move)
 	e.moves = append(e.moves, move)
 	return nil
 }
 
-func (e *Engine) isMoveLegal(move Move, color Color) bool {
+func (e *Engine) validateMove(move Move, color Color) error {
 	pieceToMove := e.position.GetPiece(move.From)
 	if pieceToMove == (Piece{}) {
-		return false
+		return fmt.Errorf("no piece at from square")
 	}
 	if color != e.position.ActiveColor {
-		return false
+		return fmt.Errorf("wrong active color")
 	}
-	if pieceToMove.Color != color {
-		return false
+	if color != pieceToMove.Color {
+		return fmt.Errorf("piece does not belong to player")
 	}
 
 	moves := e.generator.GeneratePieceMoves(e.position, color, pieceToMove.Type)
-	return slices.Contains(moves, move)
+	if !slices.Contains(moves, move) {
+		return fmt.Errorf("move is not legal for piece")
+	}
+	return nil
 }

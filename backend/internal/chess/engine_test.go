@@ -8,21 +8,21 @@ import (
 
 func TestValidateMoveNoPiece(t *testing.T) {
 	e := NewEngine()
-	move := Move{From: 20, To: 28} // e3 to e4
-	isLegal := e.isMoveLegal(move, White)
-	assert.False(t, isLegal)
+	move := Move{From: strToSquare("e3"), To: strToSquare("e4")}
+	err := e.validateMove(move, White)
+	assert.NotNil(t, err)
 }
 
 func TestValidateMoveWrongActiveColor(t *testing.T) {
 	e := NewEngine()
-	move := Move{From: 52, To: 44} // e7 to e6
-	isLegal := e.isMoveLegal(move, Black)
-	assert.False(t, isLegal)
+	move := Move{From: strToSquare("e7"), To: strToSquare("e6")}
+	err := e.validateMove(move, Black)
+	assert.NotNil(t, err)
 }
 
 func TestValidateMoveNotPlayersPiece(t *testing.T) {
 	e := NewEngine()
-	move := Move{From: 52, To: 44} // e7 to e6
-	isLegal := e.isMoveLegal(move, White)
-	assert.False(t, isLegal)
+	move := Move{From: strToSquare("e7"), To: strToSquare("e6")}
+	err := e.validateMove(move, White)
+	assert.NotNil(t, err)
 }
