@@ -95,19 +95,19 @@ func (p *Position) GetPieceBitboard(color Color, pieceType PieceType) *Bitboard 
 	panic("invalid color or piece type in GetPieceBitboard")
 }
 
-func (p *Position) GetPiece(sq Square) Piece {
+func (p *Position) GetPiece(sq Square) *Piece {
 	mask := squareMask(sq)
 
 	for _, color := range []Color{White, Black} {
 		for _, pieceType := range []PieceType{Pawn, Knight, Bishop, Rook, Queen, King} {
 			pieceBitboard := p.GetPieceBitboard(color, pieceType)
 			if *pieceBitboard&mask != 0 {
-				return Piece{Type: pieceType, Color: color}
+				return &Piece{Type: pieceType, Color: color}
 			}
 		}
 	}
 
-	return Piece{}
+	return nil
 }
 
 func (p *Position) GetBoard() Board {
@@ -133,7 +133,10 @@ func (p *Position) GetCopy() Position {
 	return copy
 }
 
-func (p *Position) setPiece(sq Square, piece Piece) {
+func (p *Position) setPiece(sq Square, piece *Piece) {
+	if piece == nil {
+		return
+	}
 	mask := squareMask(sq)
 	pieceBitboard := p.GetPieceBitboard(piece.Color, piece.Type)
 	*pieceBitboard |= mask
@@ -180,14 +183,14 @@ func (p *Position) MakeMove(move Move) {
 		p.removePiece(move.From)
 		p.setPiece(move.To, piece)
 		p.removePiece(rookFrom)
-		p.setPiece(rookTo, Piece{Type: Rook, Color: piece.Color})
+		p.setPiece(rookTo, &Piece{Type: Rook, Color: piece.Color})
 	} else if move.Promotion != nil {
 		// promotion, can be capture
 		if occupied&toMask != 0 {
 			isCapture = true
 		}
 		p.removePiece(move.From)
-		p.setPiece(move.To, Piece{Type: *move.Promotion, Color: piece.Color})
+		p.setPiece(move.To, &Piece{Type: *move.Promotion, Color: piece.Color})
 	} else if occupied&toMask != 0 {
 		// captures
 		isCapture = true

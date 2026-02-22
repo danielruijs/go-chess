@@ -39,7 +39,7 @@ func (e *Engine) ApplyMove(move Move, color Color) error {
 
 func (e *Engine) validateMove(move Move, color Color) error {
 	pieceToMove := e.position.GetPiece(move.From)
-	if pieceToMove == (Piece{}) {
+	if pieceToMove == nil {
 		return fmt.Errorf("no piece at from square")
 	}
 	if color != e.position.ActiveColor {
@@ -51,7 +51,7 @@ func (e *Engine) validateMove(move Move, color Color) error {
 
 	moves := e.generator.GeneratePieceMoves(e.position, color, pieceToMove.Type)
 	if !slices.Contains(moves, move) {
-		return fmt.Errorf("move is not legal for piece")
+		return fmt.Errorf("move is not legal")
 	}
 	return nil
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageTypeBoard, MessageTypeJoinMatch } from "../interfaces/message";
-import type { WSMessage, JoinMatchData, BoardData } from "../interfaces/message";
+import type { WSMessage, JoinMatchData, BoardData, LegalMove } from "../interfaces/message";
 import type { Board } from "../interfaces/chess";
 import { Button, Stack, TextField } from "@mui/material";
 import BoardComponent from "../components/Board";
@@ -10,6 +10,7 @@ const WS_URL = import.meta.env.VITE_WS_URL;
 function Game() {
   const socket = useRef<WebSocket | null>(null);
   const [board, setBoard] = useState<Board | null>(null)
+  const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
   const [playerName, setPlayerName] = useState<string>("");
 
   useEffect(() => {
@@ -30,6 +31,7 @@ function Game() {
       if (message.type === MessageTypeBoard) {
         const boardData: BoardData = message.data;
         setBoard(boardData.board);
+        setLegalMoves(boardData.legalMoves);
       }
     });
 
@@ -67,7 +69,7 @@ function Game() {
           flexGrow: 1,
         }}
       >
-        <BoardComponent board={board} socketRef={socket} />
+        <BoardComponent board={board} legalMoves={legalMoves} socketRef={socket} />
       </div>
     </div >
   );

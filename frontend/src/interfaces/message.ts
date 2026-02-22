@@ -5,8 +5,14 @@ const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
 const MessageTypeError = "error";
 
+type LegalMove = {
+  to: string;
+  promotion: PieceType | null;
+};
+
 type BoardData = {
   board: Board;
+  legalMoves: Record<string, LegalMove[]>;
 };
 
 type MoveData = {
@@ -41,7 +47,7 @@ type WSMessage =
     data: ErrorData;
   };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, ErrorData };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, ErrorData, LegalMove };
 export {
   MessageTypeBoard,
   MessageTypeMove,

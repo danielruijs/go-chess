@@ -9,27 +9,27 @@ import (
 func TestGetPiece(t *testing.T) {
 	pos := NewInitialPosition()
 
-	assert.Equal(t, Piece{Type: Rook, Color: White}, pos.GetPiece(strToSquare("a1")))
-	assert.Equal(t, Piece{Type: Knight, Color: White}, pos.GetPiece(strToSquare("b1")))
-	assert.Equal(t, Piece{Type: Bishop, Color: White}, pos.GetPiece(strToSquare("c1")))
-	assert.Equal(t, Piece{Type: Queen, Color: White}, pos.GetPiece(strToSquare("d1")))
-	assert.Equal(t, Piece{Type: King, Color: White}, pos.GetPiece(strToSquare("e1")))
+	assert.Equal(t, Piece{Type: Rook, Color: White}, *pos.GetPiece(strToSquare("a1")))
+	assert.Equal(t, Piece{Type: Knight, Color: White}, *pos.GetPiece(strToSquare("b1")))
+	assert.Equal(t, Piece{Type: Bishop, Color: White}, *pos.GetPiece(strToSquare("c1")))
+	assert.Equal(t, Piece{Type: Queen, Color: White}, *pos.GetPiece(strToSquare("d1")))
+	assert.Equal(t, Piece{Type: King, Color: White}, *pos.GetPiece(strToSquare("e1")))
 
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("a2")))
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("h2")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("a2")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("h2")))
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("a3")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("d4")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("h6")))
+	assert.Nil(t, pos.GetPiece(strToSquare("a3")))
+	assert.Nil(t, pos.GetPiece(strToSquare("d4")))
+	assert.Nil(t, pos.GetPiece(strToSquare("h6")))
 
-	assert.Equal(t, Piece{Type: Pawn, Color: Black}, pos.GetPiece(strToSquare("a7")))
-	assert.Equal(t, Piece{Type: Pawn, Color: Black}, pos.GetPiece(strToSquare("h7")))
+	assert.Equal(t, Piece{Type: Pawn, Color: Black}, *pos.GetPiece(strToSquare("a7")))
+	assert.Equal(t, Piece{Type: Pawn, Color: Black}, *pos.GetPiece(strToSquare("h7")))
 
-	assert.Equal(t, Piece{Type: Queen, Color: Black}, pos.GetPiece(strToSquare("d8")))
-	assert.Equal(t, Piece{Type: King, Color: Black}, pos.GetPiece(strToSquare("e8")))
-	assert.Equal(t, Piece{Type: Bishop, Color: Black}, pos.GetPiece(strToSquare("f8")))
-	assert.Equal(t, Piece{Type: Knight, Color: Black}, pos.GetPiece(strToSquare("g8")))
-	assert.Equal(t, Piece{Type: Rook, Color: Black}, pos.GetPiece(strToSquare("h8")))
+	assert.Equal(t, Piece{Type: Queen, Color: Black}, *pos.GetPiece(strToSquare("d8")))
+	assert.Equal(t, Piece{Type: King, Color: Black}, *pos.GetPiece(strToSquare("e8")))
+	assert.Equal(t, Piece{Type: Bishop, Color: Black}, *pos.GetPiece(strToSquare("f8")))
+	assert.Equal(t, Piece{Type: Knight, Color: Black}, *pos.GetPiece(strToSquare("g8")))
+	assert.Equal(t, Piece{Type: Rook, Color: Black}, *pos.GetPiece(strToSquare("h8")))
 }
 
 func TestGetBoard(t *testing.T) {
@@ -94,29 +94,29 @@ func TestGetCopyWithNilEnPassant(t *testing.T) {
 func TestSetPieceWhite(t *testing.T) {
 	pos := NewInitialPosition()
 
-	pos.setPiece(strToSquare("e4"), Piece{Type: Pawn, Color: White})
+	pos.setPiece(strToSquare("e4"), &Piece{Type: Pawn, Color: White})
 
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("e4")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("e4")))
 }
 
 func TestSetPieceBlack(t *testing.T) {
 	pos := NewInitialPosition()
 
-	pos.setPiece(strToSquare("e5"), Piece{Type: Pawn, Color: Black})
+	pos.setPiece(strToSquare("e5"), &Piece{Type: Pawn, Color: Black})
 
-	assert.Equal(t, Piece{Type: Pawn, Color: Black}, pos.GetPiece(strToSquare("e5")))
+	assert.Equal(t, Piece{Type: Pawn, Color: Black}, *pos.GetPiece(strToSquare("e5")))
 }
 
 func TestSetPieceMultiple(t *testing.T) {
 	pos := NewInitialPosition()
 
-	pos.setPiece(strToSquare("e4"), Piece{Type: Pawn, Color: White})
-	pos.setPiece(strToSquare("d4"), Piece{Type: Knight, Color: White})
-	pos.setPiece(strToSquare("f4"), Piece{Type: Bishop, Color: White})
+	pos.setPiece(strToSquare("e4"), &Piece{Type: Pawn, Color: White})
+	pos.setPiece(strToSquare("d4"), &Piece{Type: Knight, Color: White})
+	pos.setPiece(strToSquare("f4"), &Piece{Type: Bishop, Color: White})
 
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("e4")))
-	assert.Equal(t, Piece{Type: Knight, Color: White}, pos.GetPiece(strToSquare("d4")))
-	assert.Equal(t, Piece{Type: Bishop, Color: White}, pos.GetPiece(strToSquare("f4")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("e4")))
+	assert.Equal(t, Piece{Type: Knight, Color: White}, *pos.GetPiece(strToSquare("d4")))
+	assert.Equal(t, Piece{Type: Bishop, Color: White}, *pos.GetPiece(strToSquare("f4")))
 }
 
 func TestRemovePiece(t *testing.T) {
@@ -124,7 +124,7 @@ func TestRemovePiece(t *testing.T) {
 
 	pos.removePiece(strToSquare("e2"))
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e2")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e2")))
 }
 
 func TestRemovePieceMultiplePieces(t *testing.T) {
@@ -133,9 +133,9 @@ func TestRemovePieceMultiplePieces(t *testing.T) {
 	pos.removePiece(strToSquare("a2"))
 	pos.removePiece(strToSquare("b2"))
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("a2")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("b2")))
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("c2")))
+	assert.Nil(t, pos.GetPiece(strToSquare("a2")))
+	assert.Nil(t, pos.GetPiece(strToSquare("b2")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("c2")))
 }
 
 func TestMakeMoveRegular(t *testing.T) {
@@ -144,8 +144,8 @@ func TestMakeMoveRegular(t *testing.T) {
 
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e2")))
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("e4")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e2")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("e4")))
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(1), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -163,8 +163,8 @@ func TestMakeMoveCapture(t *testing.T) {
 	move := Move{From: strToSquare("e4"), To: strToSquare("f5")}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e4")))
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("f5")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e4")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("f5")))
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -181,8 +181,8 @@ func TestMakeMovePromotion(t *testing.T) {
 	move := Move{From: strToSquare("e7"), To: strToSquare("e8"), Promotion: new(Queen)}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e7")))
-	assert.Equal(t, Piece{Type: Queen, Color: White}, pos.GetPiece(strToSquare("e8")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e7")))
+	assert.Equal(t, Piece{Type: Queen, Color: White}, *pos.GetPiece(strToSquare("e8")))
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -200,8 +200,8 @@ func TestMakeMovePromotionCapture(t *testing.T) {
 	move := Move{From: strToSquare("e7"), To: strToSquare("d8"), Promotion: new(Queen)}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e7")))
-	assert.Equal(t, Piece{Type: Queen, Color: White}, pos.GetPiece(strToSquare("d8")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e7")))
+	assert.Equal(t, Piece{Type: Queen, Color: White}, *pos.GetPiece(strToSquare("d8")))
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -220,9 +220,9 @@ func TestMakeMoveEnPassant(t *testing.T) {
 	move := Move{From: strToSquare("a5"), To: strToSquare("b6")}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("a5")))
-	assert.Equal(t, Piece{Type: Pawn, Color: White}, pos.GetPiece(strToSquare("b6")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("b5")))
+	assert.Nil(t, pos.GetPiece(strToSquare("a5")))
+	assert.Equal(t, Piece{Type: Pawn, Color: White}, *pos.GetPiece(strToSquare("b6")))
+	assert.Nil(t, pos.GetPiece(strToSquare("b5")))
 	assert.Equal(t, uint(0), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -240,10 +240,10 @@ func TestMakeMoveKingSideCastling(t *testing.T) {
 	move := Move{From: strToSquare("e1"), To: strToSquare("g1")}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{Type: King, Color: White}, pos.GetPiece(strToSquare("g1")))
-	assert.Equal(t, Piece{Type: Rook, Color: White}, pos.GetPiece(strToSquare("f1")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e1")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("h1")))
+	assert.Equal(t, Piece{Type: King, Color: White}, *pos.GetPiece(strToSquare("g1")))
+	assert.Equal(t, Piece{Type: Rook, Color: White}, *pos.GetPiece(strToSquare("f1")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e1")))
+	assert.Nil(t, pos.GetPiece(strToSquare("h1")))
 	assert.Equal(t, uint(11), pos.Halfmove)
 	assert.Equal(t, uint(3), pos.Fullmove)
 	assert.Equal(t, Black, pos.ActiveColor)
@@ -261,10 +261,10 @@ func TestMakeMoveQueenSideCastling(t *testing.T) {
 	move := Move{From: strToSquare("e8"), To: strToSquare("c8")}
 	pos.MakeMove(move)
 
-	assert.Equal(t, Piece{Type: King, Color: Black}, pos.GetPiece(strToSquare("c8")))
-	assert.Equal(t, Piece{Type: Rook, Color: Black}, pos.GetPiece(strToSquare("d8")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("e8")))
-	assert.Equal(t, Piece{}, pos.GetPiece(strToSquare("a8")))
+	assert.Equal(t, Piece{Type: King, Color: Black}, *pos.GetPiece(strToSquare("c8")))
+	assert.Equal(t, Piece{Type: Rook, Color: Black}, *pos.GetPiece(strToSquare("d8")))
+	assert.Nil(t, pos.GetPiece(strToSquare("e8")))
+	assert.Nil(t, pos.GetPiece(strToSquare("a8")))
 	assert.Equal(t, uint(11), pos.Halfmove)
 	assert.Equal(t, uint(4), pos.Fullmove)
 	assert.Equal(t, White, pos.ActiveColor)
