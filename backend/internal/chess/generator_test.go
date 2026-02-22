@@ -93,7 +93,7 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 		},
 		{
-			name: "white double push blocked",
+			name: "white double push blocked, single allowed",
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"a2"}),
 				BlackPawns: bitboardFromStrs([]string{"a4"}),
@@ -104,7 +104,7 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 		},
 		{
-			name: "black double push blocked",
+			name: "black double push blocked, single allowed",
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"a5"}),
 				BlackPawns: bitboardFromStrs([]string{"a7"}),
@@ -113,6 +113,24 @@ func TestGeneratePawnMoves(t *testing.T) {
 			legalMoves: []Move{
 				{Piece: Pawn, From: strToSquare("a7"), To: strToSquare("a6")},
 			},
+		},
+		{
+			name: "white double push blocked",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"a2"}),
+				BlackPawns: bitboardFromStrs([]string{"a3"}),
+			},
+			color:      White,
+			legalMoves: []Move{},
+		},
+		{
+			name: "black double push blocked",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"a5"}),
+				BlackPawns: bitboardFromStrs([]string{"a6"}),
+			},
+			color:      Black,
+			legalMoves: []Move{},
 		},
 		{
 			name: "white capture",

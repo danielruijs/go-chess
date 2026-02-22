@@ -87,7 +87,8 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// move forward by 2 if on starting rank and not blocked
-	doublePushes := shift((pawns&startingRankMask), 2*forwardOffset) & ^occupied
+	oneStep := shift((pawns&startingRankMask), forwardOffset) & ^occupied
+	doublePushes := shift(oneStep, forwardOffset) & ^occupied
 	for doublePushes != 0 {
 		to := popLSB(&doublePushes)
 		from := to - 2*forwardOffset
@@ -95,26 +96,26 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 	}
 
 	// capture diagonally by 1 if occupied by opponent piece
-	capturesLeft := shift(pawns, forwardOffset+1) & opponentPieces & ^fileAMask
-	capturesRight := shift(pawns, forwardOffset-1) & opponentPieces & ^fileHMask
+	capturesLeft := shift(pawns, forwardOffset-1) & opponentPieces & ^fileAMask
+	capturesRight := shift(pawns, forwardOffset+1) & opponentPieces & ^fileHMask
 
 	// en passant
 	if pos.EnPassant != nil {
 		enPassantMask := squareMask(*pos.EnPassant)
-		epCapturesLeft := shift(pawns, forwardOffset+1) & enPassantMask & ^fileAMask
-		epCapturesRight := shift(pawns, forwardOffset-1) & enPassantMask & ^fileHMask
+		epCapturesLeft := shift(pawns, forwardOffset-1) & enPassantMask & ^fileAMask
+		epCapturesRight := shift(pawns, forwardOffset+1) & enPassantMask & ^fileHMask
 
 		capturesLeft |= epCapturesLeft
 		capturesRight |= epCapturesRight
 	}
 	for capturesLeft != 0 {
 		to := popLSB(&capturesLeft)
-		from := to - forwardOffset - 1
+		from := to - forwardOffset + 1
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 	}
 	for capturesRight != 0 {
 		to := popLSB(&capturesRight)
-		from := to - forwardOffset + 1
+		from := to - forwardOffset - 1
 		moves = append(moves, Move{Piece: Pawn, From: Square(from), To: Square(to)})
 	}
 
