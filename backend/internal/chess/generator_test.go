@@ -182,6 +182,19 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 		},
 		{
+			name: "white en passant cant capture own pawn",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"d4", "e2"}),
+				EnPassant:  new(strToSquare("d3")),
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("d4"), To: strToSquare("d5")},
+				{From: strToSquare("e2"), To: strToSquare("e3")},
+				{From: strToSquare("e2"), To: strToSquare("e4")},
+			},
+		},
+		{
 			name: "white promotion",
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"a7"}),
@@ -2143,4 +2156,21 @@ func TestGenerateMoves(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGenerateMovesFullPosition(t *testing.T) {
+	position := NewInitialPosition()
+
+	g := NewGenerator()
+	moves := g.GenerateMoves(position, White)
+	assert.Len(t, moves, 20)
+	moves = g.GenerateMoves(position, Black)
+	assert.Len(t, moves, 20)
+
+	position.MakeMove(Move{From: strToSquare("d2"), To: strToSquare("d4")})
+
+	moves = g.GenerateMoves(position, White)
+	assert.Len(t, moves, 28)
+	moves = g.GenerateMoves(position, Black)
+	assert.Len(t, moves, 20)
 }

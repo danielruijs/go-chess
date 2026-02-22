@@ -113,12 +113,15 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 
 	// en passant
 	if pos.EnPassant != nil {
-		enPassantMask := squareMask(*pos.EnPassant)
-		epCapturesLeft := shift(pawns, forwardOffset-1) & enPassantMask & ^fileAMask
-		epCapturesRight := shift(pawns, forwardOffset+1) & enPassantMask & ^fileHMask
+		captureSquareMask := squareMask(*pos.EnPassant - Square(forwardOffset))
+		if (captureSquareMask & opponentPieces) != 0 {
+			enPassantMask := squareMask(*pos.EnPassant)
+			epCapturesLeft := shift(pawns, forwardOffset-1) & enPassantMask & ^fileAMask
+			epCapturesRight := shift(pawns, forwardOffset+1) & enPassantMask & ^fileHMask
 
-		capturesLeft |= epCapturesLeft
-		capturesRight |= epCapturesRight
+			capturesLeft |= epCapturesLeft
+			capturesRight |= epCapturesRight
+		}
 	}
 	for capturesLeft != 0 {
 		to := popLSB(&capturesLeft)

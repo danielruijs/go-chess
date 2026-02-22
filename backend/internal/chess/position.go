@@ -227,6 +227,7 @@ func (p *Position) MakeMove(move Move) {
 	}
 
 	// update en passant square for double pawn moves
+	p.EnPassant = nil
 	if piece.Type == Pawn && abs(int(move.To)-int(move.From)) == 16 {
 		if piece.Color == White {
 			p.EnPassant = new(Square(move.To - 8))
