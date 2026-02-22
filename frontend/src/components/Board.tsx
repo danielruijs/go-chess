@@ -26,10 +26,11 @@ function BoardComponent({
     function handleClick(i: number, j: number) {
         const clickedSquare = coordsToString(i, j);
         const clickedPiece = board?.[i][j] ?? null;
+        const clickedPieceWithMoves = clickedPiece ? legalMoves?.[clickedSquare] : null;
 
         // Nothing selected
         if (!selected) {
-            if (clickedPiece) {
+            if (clickedPieceWithMoves) {
                 setSelected({ file: i, rank: j });
             }
             return;
@@ -51,7 +52,7 @@ function BoardComponent({
             return;
         }
 
-        if (clickedPiece && !(selected.file === i && selected.rank === j)) {
+        if (clickedPieceWithMoves && !(selected.file === i && selected.rank === j)) {
             setSelected({ file: i, rank: j });
         } else {
             setSelected(null);
