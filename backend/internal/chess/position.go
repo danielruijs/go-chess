@@ -98,3 +98,48 @@ func (p *Position) GetBoard() Board {
 	}
 	return board
 }
+
+func (p *Position) GetCopy() Position {
+	var enPassant *Square
+	if p.EnPassant != nil {
+		ep := *p.EnPassant
+		enPassant = &ep
+	}
+	return Position{
+		WhitePawns:   p.WhitePawns,
+		WhiteKnights: p.WhiteKnights,
+		WhiteBishops: p.WhiteBishops,
+		WhiteRooks:   p.WhiteRooks,
+		WhiteQueens:  p.WhiteQueens,
+		WhiteKing:    p.WhiteKing,
+
+		BlackPawns:   p.BlackPawns,
+		BlackKnights: p.BlackKnights,
+		BlackBishops: p.BlackBishops,
+		BlackRooks:   p.BlackRooks,
+		BlackQueens:  p.BlackQueens,
+		BlackKing:    p.BlackKing,
+
+		ActiveColor:    p.ActiveColor,
+		CastlingRights: p.CastlingRights,
+		EnPassant:      enPassant,
+		Halfmove:       p.Halfmove,
+		Fullmove:       p.Fullmove,
+	}
+}
+
+func (p *Position) MakeMove(move Move) {
+	// TODO
+}
+
+func (p *Position) IsInCheck(g *Generator, color Color) bool {
+	var king Bitboard
+	if color == White {
+		king = p.WhiteKing
+	} else {
+		king = p.BlackKing
+	}
+
+	kingSq := Square(popLSB(&king))
+	return g.IsSquareAttacked(kingSq, p, color)
+}

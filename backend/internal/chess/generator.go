@@ -14,6 +14,9 @@ type Generator struct {
 	knightMoves [64]Bitboard
 	kingMoves   [64]Bitboard
 
+	bishopMoveDirections []int
+	rookMoveDirections   []int
+
 	pieceToGenerator map[PieceType]func(pos *Position, color Color) []Move
 }
 
@@ -22,6 +25,9 @@ func NewGenerator() *Generator {
 
 	g.knightMoves = precomputeKnightMoves()
 	g.kingMoves = precomputeKingMoves()
+
+	g.bishopMoveDirections = []int{7, 9, -7, -9} // NW, NE, SE, SW
+	g.rookMoveDirections = []int{1, -1, 8, -8}   // E, W, N, S
 
 	g.pieceToGenerator = map[PieceType]func(pos *Position, color Color) []Move{
 		Pawn:   g.generatePawnMoves,
@@ -53,8 +59,16 @@ func (g *Generator) GeneratePieceMoves(pos *Position, color Color, pieceType Pie
 
 // Filters pseudo legal moves to only legal moves
 func (g *Generator) filterLegalMoves(pos *Position, color Color, moves []Move) []Move {
-	// TODO
-	return moves
+	legalMoves := []Move{}
+	for _, move := range moves {
+		posCopy := pos.GetCopy()
+		posCopy.MakeMove(move)
+		if !posCopy.IsInCheck(g, color) {
+			// TODO: Special case for castling: Cant castle out of, through, or into check.
+			legalMoves = append(legalMoves, move)
+		}
+	}
+	return legalMoves
 }
 
 func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
@@ -221,8 +235,7 @@ func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType P
 				newFile := to % 8
 
 				// edges of the board
-				fileDiff := newFile - prevFile
-				if to < 0 || to > 63 || abs(fileDiff) > 1 {
+				if to < 0 || to > 63 || abs(newFile-prevFile) > 1 {
 					break
 				}
 
@@ -243,17 +256,17 @@ func (g *Generator) generateSlidingMoves(pos *Position, color Color, pieceType P
 }
 
 func (g *Generator) generateBishopMoves(pos *Position, color Color) []Move {
-	directions := []int{7, 9, -7, -9} // NW, NE, SE, SW
+	directions := g.bishopMoveDirections
 	return g.generateSlidingMoves(pos, color, Bishop, directions)
 }
 
 func (g *Generator) generateRookMoves(pos *Position, color Color) []Move {
-	directions := []int{1, -1, 8, -8}
+	directions := g.rookMoveDirections
 	return g.generateSlidingMoves(pos, color, Rook, directions)
 }
 
 func (g *Generator) generateQueenMoves(pos *Position, color Color) []Move {
-	directions := []int{1, -1, 8, -8, 7, 9, -7, -9}
+	directions := append(g.bishopMoveDirections, g.rookMoveDirections...)
 	return g.generateSlidingMoves(pos, color, Queen, directions)
 }
 
@@ -301,7 +314,8 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 		moves = append(moves, Move{Piece: King, From: Square(from), To: Square(to)})
 	}
 
-	// Castling
+	// Castling, only checks rights and that the squares between the king and rook are empty.
+	// Legality (not castling out of, through, or into check) is checked in filterLegalMoves
 	occupied := pos.GetOccupied()
 	if kingSideRight && occupied&kingSideMask == 0 {
 		moves = append(moves, Move{Piece: King, From: Square(from), To: kingSideTo, Castling: true})
@@ -311,4 +325,84 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	}
 
 	return moves
+}
+
+// Checks if a square is attacked in a position for a given color
+func (g *Generator) IsSquareAttacked(sq Square, pos *Position, color Color) bool {
+	occupied := pos.GetOccupied()
+	sqMask := squareMask(sq)
+
+	var pawns, knights, bishops, rooks, queens, king Bitboard
+	var forwardOffset int
+	if color == White {
+		pawns = pos.BlackPawns
+		knights = pos.BlackKnights
+		bishops = pos.BlackBishops
+		rooks = pos.BlackRooks
+		queens = pos.BlackQueens
+		king = pos.BlackKing
+		forwardOffset = 8
+	} else {
+		pawns = pos.WhitePawns
+		knights = pos.WhiteKnights
+		bishops = pos.WhiteBishops
+		rooks = pos.WhiteRooks
+		queens = pos.WhiteQueens
+		king = pos.WhiteKing
+		forwardOffset = -8
+	}
+
+	// to check if sq is attacked by a pawn, do the inverses
+	// project a pawn's capture move FROM the target square
+	// if that projection lands on an opponent's pawn, the square is under attack
+	pawnAttacksLeft := shift(sqMask, forwardOffset-1) & ^fileAMask
+	pawnAttackRight := shift(sqMask, forwardOffset+1) & ^fileHMask
+	if (pawnAttacksLeft|pawnAttackRight)&pawns != 0 {
+		return true
+	}
+
+	// same inverse logic, project knight moves from sq and see if any hit opponent knights
+	if g.knightMoves[sq]&knights != 0 {
+		return true
+	}
+
+	if isAttackedBySlidingPiece(sq, g.bishopMoveDirections, bishops|queens, occupied) {
+		return true
+	}
+
+	if isAttackedBySlidingPiece(sq, g.rookMoveDirections, rooks|queens, occupied) {
+		return true
+	}
+
+	if g.kingMoves[sq]&king != 0 {
+		return true
+	}
+
+	return false
+}
+
+func isAttackedBySlidingPiece(sq Square, directions []int, attackers, occupied Bitboard) bool {
+	// go in each direction from sq, if we hit an attacker sq is attacked
+	for _, dir := range directions {
+		to := int(sq)
+		for {
+			prevFile := to % 8
+			to += dir
+			toMask := squareMask(Square(to))
+			newFile := to % 8
+
+			if to < 0 || to > 63 || abs(newFile-prevFile) > 1 {
+				break
+			}
+
+			if toMask&attackers != 0 {
+				return true
+			}
+			if toMask&occupied != 0 {
+				break
+			}
+		}
+	}
+
+	return false
 }

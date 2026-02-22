@@ -1573,6 +1573,218 @@ func TestGenerateKingMoves(t *testing.T) {
 	}
 }
 
+func TestIsSquareAttacked(t *testing.T) {
+	tests := []struct {
+		name       string
+		pos        *Position
+		sq         Square
+		color      Color
+		isAttacked bool
+	}{
+		{
+			name: "white pawn attacks black square",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"d4"}),
+			},
+			sq:         strToSquare("e5"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "white pawn does not attack square forward",
+			pos: &Position{
+				WhitePawns: bitboardFromStrs([]string{"d4"}),
+			},
+			sq:         strToSquare("d5"),
+			color:      Black,
+			isAttacked: false,
+		},
+		{
+			name: "black pawn attacks white square",
+			pos: &Position{
+				BlackPawns: bitboardFromStrs([]string{"e5"}),
+			},
+			sq:         strToSquare("f4"),
+			color:      White,
+			isAttacked: true,
+		},
+		{
+			name: "black pawn does not attack backwards",
+			pos: &Position{
+				BlackPawns: bitboardFromStrs([]string{"d4"}),
+			},
+			sq:         strToSquare("e5"),
+			color:      White,
+			isAttacked: false,
+		},
+		{
+			name: "knight attacks square",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("f6"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "knight does not attack adjacent square",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("e5"),
+			color:      Black,
+			isAttacked: false,
+		},
+		{
+			name: "bishop attacks square on diagonal",
+			pos: &Position{
+				BlackBishops: bitboardFromStrs([]string{"a1"}),
+			},
+			sq:         strToSquare("h8"),
+			color:      White,
+			isAttacked: true,
+		},
+		{
+			name: "bishop blocked by own piece",
+			pos: &Position{
+				BlackBishops: bitboardFromStrs([]string{"a1"}),
+				BlackPawns:   bitboardFromStrs([]string{"d4"}),
+			},
+			sq:         strToSquare("h8"),
+			color:      White,
+			isAttacked: false,
+		},
+		{
+			name: "bishop blocked by opponent piece",
+			pos: &Position{
+				BlackBishops: bitboardFromStrs([]string{"a1"}),
+				WhitePawns:   bitboardFromStrs([]string{"d4"}),
+			},
+			sq:         strToSquare("h8"),
+			color:      White,
+			isAttacked: false,
+		},
+		{
+			name: "rook attacks square on rank",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"a4"}),
+			},
+			sq:         strToSquare("h4"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "rook attacks square on file",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"d1"}),
+			},
+			sq:         strToSquare("d8"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "rook blocked by piece",
+			pos: &Position{
+				WhiteRooks: bitboardFromStrs([]string{"a4"}),
+				BlackPawns: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("h4"),
+			color:      Black,
+			isAttacked: false,
+		},
+		{
+			name: "queen attacks square on diagonal",
+			pos: &Position{
+				WhiteQueens: bitboardFromStrs([]string{"a1"}),
+			},
+			sq:         strToSquare("h8"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "queen attacks square on rank",
+			pos: &Position{
+				WhiteQueens: bitboardFromStrs([]string{"a4"}),
+			},
+			sq:         strToSquare("h4"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "queen attacks square on file",
+			pos: &Position{
+				WhiteQueens: bitboardFromStrs([]string{"d1"}),
+			},
+			sq:         strToSquare("d8"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "king attacks adjacent square",
+			pos: &Position{
+				BlackKing: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("f5"),
+			color:      White,
+			isAttacked: true,
+		},
+		{
+			name: "king does not attack square two away",
+			pos: &Position{
+				BlackKing: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("e6"),
+			color:      White,
+			isAttacked: false,
+		},
+		{
+			name: "multiple pieces attack same square",
+			pos: &Position{
+				WhitePawns:   bitboardFromStrs([]string{"d4"}),
+				WhiteKnights: bitboardFromStrs([]string{"f3"}),
+			},
+			sq:         strToSquare("e5"),
+			color:      Black,
+			isAttacked: true,
+		},
+		{
+			name: "no pieces attack square",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"a1"}),
+			},
+			sq:         strToSquare("h8"),
+			color:      Black,
+			isAttacked: false,
+		},
+		{
+			name: "white not attacked by own piece",
+			pos: &Position{
+				WhiteKnights: bitboardFromStrs([]string{"e4"}),
+			},
+			sq:         strToSquare("f6"),
+			color:      White,
+			isAttacked: false,
+		},
+		{
+			name: "black not attacked by own piece",
+			pos: &Position{
+				BlackQueens: bitboardFromStrs([]string{"a4"}),
+			},
+			sq:         strToSquare("h4"),
+			color:      Black,
+			isAttacked: false,
+		},
+	}
+
+	g := NewGenerator()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := g.IsSquareAttacked(tt.sq, tt.pos, tt.color)
+			assert.Equal(t, tt.isAttacked, result)
+		})
+	}
+}
+
 func TestGenerateMoves(t *testing.T) {
 	tests := []struct {
 		name       string
