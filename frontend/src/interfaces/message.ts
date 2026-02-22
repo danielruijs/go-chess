@@ -3,7 +3,6 @@ import type { Board, PieceType } from "./chess";
 const MessageTypeBoard = "board";
 const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
-const MessageTypeError = "error";
 
 type LegalMove = {
   to: string;
@@ -25,10 +24,6 @@ type JoinMatchData = {
   playerName: string;
 };
 
-type ErrorData = {
-  message: string;
-};
-
 type WSMessage =
   | {
     type: typeof MessageTypeBoard;
@@ -41,16 +36,11 @@ type WSMessage =
   | {
     type: typeof MessageTypeJoinMatch;
     data: JoinMatchData;
-  }
-  | {
-    type: typeof MessageTypeError;
-    data: ErrorData;
   };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, ErrorData, LegalMove };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove };
 export {
   MessageTypeBoard,
   MessageTypeMove,
   MessageTypeJoinMatch,
-  MessageTypeError,
 };

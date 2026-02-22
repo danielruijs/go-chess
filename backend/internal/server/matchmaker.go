@@ -2,8 +2,8 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"go-chess/internal/chess"
+	"log"
 	"math/rand"
 )
 
@@ -28,7 +28,7 @@ func (mm *Matchmaker) Join(player *Player) error {
 		}
 
 		mm.queue[player] = struct{}{}
-		fmt.Printf("Player %s joined. Queue size: %d\n", player.Name, len(mm.queue))
+		log.Printf("Player %s joined. Queue size: %d\n", player.Name, len(mm.queue))
 
 		errChan <- nil
 	}
@@ -42,7 +42,7 @@ func (mm *Matchmaker) Leave(player *Player) {
 		}
 		delete(mm.queue, player)
 
-		fmt.Printf("Player %s left. Queue size: %d\n", player.Name, len(mm.queue))
+		log.Printf("Player %s left. Queue size: %d\n", player.Name, len(mm.queue))
 	}
 }
 
@@ -86,7 +86,7 @@ func startMatch(player1, player2 *Player) {
 	player1.Match = match
 	player2.Match = match
 
-	fmt.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.Color, player2.Name, player2.Color)
+	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.Color, player2.Name, player2.Color)
 
 	go match.Run()
 

@@ -28,28 +28,25 @@ func (m *Match) Run() {
 		case EventTypeMove:
 			data, ok := event.Data.(MoveData)
 			if !ok {
-				fmt.Println("invalid move data format")
-				m.sendError("invalid move data format")
+				log.Println("invalid move data format")
 				continue
 			}
 			move, err := moveDataToMove(data)
 			if err != nil {
-				fmt.Println("invalid move data:", err)
-				m.sendError(fmt.Sprintf("invalid move data: %v", err))
+				log.Println("invalid move data:", err)
 				continue
 			}
 			err = m.Engine.ApplyMove(move, event.Player.Color)
 			if err != nil {
-				fmt.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
-				m.sendError(fmt.Sprintf("invalid move: %v", err))
+				log.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
 				continue
 			}
 		case EventTypeGameStarted:
-			fmt.Println("Started match")
+			log.Println("Started match")
 		}
 		err := m.sendPositionUpdate()
 		if err != nil {
-			fmt.Println("failed to send position update:", err)
+			log.Println("failed to send position update:", err)
 		}
 	}
 }
@@ -71,20 +68,4 @@ func (m *Match) sendPositionUpdate() error {
 		}
 	}
 	return nil
-}
-
-func (m *Match) sendError(message string) {
-	errorData := ErrorData{Message: message}
-	errorDataJson, err := json.Marshal(errorData)
-	if err != nil {
-		log.Fatal("failed to marshal error data:", err)
-	}
-	m.Player1.SendChan <- WSMessage{
-		Type: MessageTypeError,
-		Data: errorDataJson,
-	}
-	m.Player2.SendChan <- WSMessage{
-		Type: MessageTypeError,
-		Data: errorDataJson,
-	}
 }

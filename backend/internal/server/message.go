@@ -11,7 +11,6 @@ const (
 	MessageTypeBoard     MessageType = "board"
 	MessageTypeMove      MessageType = "move"
 	MessageTypeJoinMatch MessageType = "join_match"
-	MessageTypeError     MessageType = "error"
 )
 
 type WSMessage struct {
@@ -37,8 +36,4 @@ type MoveData struct {
 
 type JoinMatchData struct {
 	PlayerName string `json:"playerName"`
-}
-
-type ErrorData struct {
-	Message string `json:"message"`
 }
