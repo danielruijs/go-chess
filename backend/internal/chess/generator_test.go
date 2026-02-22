@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// unsafe version of StrToSquare, only for tests
 func strToSquare(str string) Square {
 	file := int(str[0] - 'a')
 	rank := int(str[1] - '1')

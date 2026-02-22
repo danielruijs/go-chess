@@ -27,7 +27,7 @@ func (e *Engine) ApplyMove(move Move, color Color) error {
 	if !e.isMoveLegal(move, color) {
 		return fmt.Errorf("illegal move")
 	}
-	// TODO: apply move to board
+	e.position.MakeMove(move)
 	e.moves = append(e.moves, move)
 	return nil
 }
