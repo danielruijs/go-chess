@@ -21,3 +21,16 @@ func moveDataToMove(data MoveData) (chess.Move, error) {
 		Promotion: data.Promotion,
 	}, nil
 }
+
+func moveListToLegalMoves(moves []chess.Move) map[string][]LegalMove {
+	legalMoves := make(map[string][]LegalMove)
+	for _, move := range moves {
+		fromStr := chess.SquareToStr(move.From)
+		legalMove := LegalMove{
+			To:        chess.SquareToStr(move.To),
+			Promotion: move.Promotion,
+		}
+		legalMoves[fromStr] = append(legalMoves[fromStr], legalMove)
+	}
+	return legalMoves
+}

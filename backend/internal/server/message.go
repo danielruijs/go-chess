@@ -19,14 +19,20 @@ type WSMessage struct {
 	Data json.RawMessage `json:"data"`
 }
 
+type LegalMove struct {
+	To        string           `json:"to"`
+	Promotion *chess.PieceType `json:"promotion,omitempty"`
+}
+
 type BoardData struct {
-	Board chess.Board `json:"board"`
+	Board      chess.Board            `json:"board"`
+	LegalMoves map[string][]LegalMove `json:"legalMoves"`
 }
 
 type MoveData struct {
 	From      string           `json:"from"`
 	To        string           `json:"to"`
-	Promotion *chess.PieceType `json:"promotion"`
+	Promotion *chess.PieceType `json:"promotion,omitempty"`
 }
 
 type JoinMatchData struct {

@@ -23,6 +23,10 @@ func (e *Engine) GetBoard() Board {
 	return e.position.GetBoard()
 }
 
+func (e *Engine) GetLegalMoves() []Move {
+	return e.generator.GenerateMoves(e.position, e.position.ActiveColor)
+}
+
 func (e *Engine) ApplyMove(move Move, color Color) error {
 	if !e.isMoveLegal(move, color) {
 		return fmt.Errorf("illegal move")

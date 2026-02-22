@@ -55,7 +55,11 @@ func (m *Match) Run() {
 }
 
 func (m *Match) sendPositionUpdate() error {
-	positionData := BoardData{Board: m.Engine.GetBoard()}
+	legalMovesList := m.Engine.GetLegalMoves()
+	positionData := BoardData{
+		Board:      m.Engine.GetBoard(),
+		LegalMoves: moveListToLegalMoves(legalMovesList),
+	}
 	data, err := json.Marshal(positionData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal position: %v", err)

@@ -22,6 +22,12 @@ func isValidStr(str string) bool {
 	return file >= 'a' && file <= 'h' && rank >= '1' && rank <= '8'
 }
 
+func SquareToStr(sq Square) string {
+	file := sq % 8
+	rank := sq / 8
+	return fmt.Sprintf("%c%d", 'a'+file, rank+1)
+}
+
 func coordsToSquare(file, rank int) Square {
 	return Square(file + rank*8)
 }

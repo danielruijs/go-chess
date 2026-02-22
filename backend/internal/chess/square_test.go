@@ -31,6 +31,12 @@ func TestSquareConversions(t *testing.T) {
 			t.Errorf("StrToSquare(%s) = %d; want %d", tt.str, sq, tt.square)
 		}
 
+		// SquareToStr
+		str := SquareToStr(tt.square)
+		if str != tt.str {
+			t.Errorf("SquareToStr(%d) = %s; want %s", tt.square, str, tt.str)
+		}
+
 		// coordsToSquare
 		if sq := coordsToSquare(tt.file, tt.rank); sq != tt.square {
 			t.Errorf("coordsToSquare(%d,%d) = %d; want %d", tt.file, tt.rank, sq, tt.square)
