@@ -149,7 +149,7 @@ func (g *Generator) generatePawnMoves(pos *Position, color Color) []Move {
 func precomputeNonSlidingMoves(offsets []struct{ file, rank int }) [64]Bitboard {
 	var moves [64]Bitboard
 
-	for sq := 0; sq < 64; sq++ {
+	for sq := range 64 {
 		var moveMask Bitboard
 		file := sq % 8
 		rank := sq / 8

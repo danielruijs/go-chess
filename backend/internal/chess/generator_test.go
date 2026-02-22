@@ -6,10 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func toPtr[T any](v T) *T {
-	return &v
-}
-
 func strToSquare(str string) Square {
 	file := int(str[0] - 'a')
 	rank := int(str[1] - '1')
@@ -163,7 +159,7 @@ func TestGeneratePawnMoves(t *testing.T) {
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d5"}),
 				BlackPawns: bitboardFromStrs([]string{"e5"}),
-				EnPassant:  toPtr(strToSquare("e6")),
+				EnPassant:  new(strToSquare("e6")),
 			},
 			color: White,
 			legalMoves: []Move{
@@ -176,7 +172,7 @@ func TestGeneratePawnMoves(t *testing.T) {
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d4"}),
 				BlackPawns: bitboardFromStrs([]string{"e4"}),
-				EnPassant:  toPtr(strToSquare("d3")),
+				EnPassant:  new(strToSquare("d3")),
 			},
 			color: Black,
 			legalMoves: []Move{
@@ -191,10 +187,10 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 			color: White,
 			legalMoves: []Move{
-				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: toPtr(Queen)},
-				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: toPtr(Rook)},
-				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: toPtr(Bishop)},
-				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: toPtr(Knight)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Rook)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Bishop)},
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Knight)},
 			},
 		},
 		{
@@ -204,10 +200,10 @@ func TestGeneratePawnMoves(t *testing.T) {
 			},
 			color: Black,
 			legalMoves: []Move{
-				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: toPtr(Queen)},
-				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: toPtr(Rook)},
-				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: toPtr(Bishop)},
-				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: toPtr(Knight)},
+				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Queen)},
+				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Rook)},
+				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Bishop)},
+				{From: strToSquare("a2"), To: strToSquare("a1"), Promotion: new(Knight)},
 			},
 		},
 		{
@@ -1960,7 +1956,7 @@ func TestGenerateMoves(t *testing.T) {
 				WhiteKing:  bitboardFromStrs([]string{"f4"}),
 				WhitePawns: bitboardFromStrs([]string{"d5"}),
 				BlackPawns: bitboardFromStrs([]string{"e5"}),
-				EnPassant:  toPtr(strToSquare("e6")),
+				EnPassant:  new(strToSquare("e6")),
 			},
 			color: White,
 			legalMoves: []Move{
@@ -1982,7 +1978,7 @@ func TestGenerateMoves(t *testing.T) {
 				BlackPawns:  bitboardFromStrs([]string{"e4"}),
 				WhiteQueens: bitboardFromStrs([]string{"f1"}),
 				WhitePawns:  bitboardFromStrs([]string{"d4"}),
-				EnPassant:   toPtr(strToSquare("d3")),
+				EnPassant:   new(strToSquare("d3")),
 			},
 			color: Black,
 			legalMoves: []Move{
@@ -2036,7 +2032,7 @@ func TestGenerateMoves(t *testing.T) {
 				WhitePawns:  bitboardFromStrs([]string{"d5"}),
 				BlackQueens: bitboardFromStrs([]string{"h5"}),
 				BlackPawns:  bitboardFromStrs([]string{"e5"}),
-				EnPassant:   toPtr(strToSquare("e6")),
+				EnPassant:   new(strToSquare("e6")),
 			},
 			color: White,
 			legalMoves: []Move{

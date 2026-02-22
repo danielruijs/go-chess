@@ -38,7 +38,7 @@ func TestFenToPositionStart(t *testing.T) {
 	assert.NotZero(t, pos.BlackKing&coordMask(4, 7))
 
 	// Pawns
-	for file := 0; file < 8; file++ {
+	for file := range 8 {
 		assert.NotZero(t, pos.WhitePawns&coordMask(file, 1))
 		assert.NotZero(t, pos.BlackPawns&coordMask(file, 6))
 	}

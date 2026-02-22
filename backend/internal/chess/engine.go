@@ -2,6 +2,7 @@ package chess
 
 import (
 	"fmt"
+	"slices"
 )
 
 type Engine struct {
@@ -44,10 +45,5 @@ func (e *Engine) isMoveLegal(move Move, color Color) bool {
 	}
 
 	moves := e.generator.GeneratePieceMoves(e.position, color, pieceToMove.Type)
-	for _, m := range moves {
-		if m == move {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(moves, move)
 }

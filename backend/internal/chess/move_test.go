@@ -22,7 +22,7 @@ func TestIsEnPassant(t *testing.T) {
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d5"}),
 				BlackPawns: bitboardFromStrs([]string{"e5"}),
-				EnPassant:  toPtr(strToSquare("e6")),
+				EnPassant:  new(strToSquare("e6")),
 			},
 			expected: true,
 		},
@@ -35,7 +35,7 @@ func TestIsEnPassant(t *testing.T) {
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d4"}),
 				BlackPawns: bitboardFromStrs([]string{"e4"}),
-				EnPassant:  toPtr(strToSquare("d3")),
+				EnPassant:  new(strToSquare("d3")),
 			},
 			expected: true,
 		},
@@ -72,7 +72,7 @@ func TestIsEnPassant(t *testing.T) {
 			pos: &Position{
 				WhitePawns: bitboardFromStrs([]string{"d5"}),
 				BlackPawns: bitboardFromStrs([]string{"e5"}),
-				EnPassant:  toPtr(strToSquare("d6")),
+				EnPassant:  new(strToSquare("d6")),
 			},
 			expected: false,
 		},
@@ -84,7 +84,7 @@ func TestIsEnPassant(t *testing.T) {
 			},
 			pos: &Position{
 				WhiteKnights: bitboardFromStrs([]string{"b1"}),
-				EnPassant:    toPtr(strToSquare("c3")),
+				EnPassant:    new(strToSquare("c3")),
 			},
 			expected: false,
 		},
