@@ -1,33 +1,21 @@
-import { useEffect, useRef, useState } from "react";
-import { MessageTypeBoard, MessageTypeJoinMatch } from "../interfaces/message";
-import type { WSMessage, JoinMatchData, BoardData, LegalMove } from "../interfaces/message";
+import { useEffect, useState } from "react";
+import { MessageTypeBoard } from "../interfaces/message";
+import type { WSMessage, BoardData, LegalMove } from "../interfaces/message";
 import type { Board } from "../interfaces/chess";
-import { Button, Stack, TextField } from "@mui/material";
 import BoardComponent from "../components/Board";
-
-const WS_URL = import.meta.env.VITE_WS_URL;
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 function Game() {
-  const socket = useRef<WebSocket | null>(null);
+  const { socket } = useWebSocket();
   const [board, setBoard] = useState<Board | null>(null)
   const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
   const [whiteName, setWhiteName] = useState<string>("");
   const [blackName, setBlackName] = useState<string>("");
-  const [playerName, setPlayerName] = useState<string>("");
 
   useEffect(() => {
-    // Initialize WebSocket once
-    socket.current = new WebSocket(WS_URL);
+    if (!socket) return;
 
-    socket.current.addEventListener("open", () => {
-      console.log("WebSocket connected");
-    });
-
-    socket.current.addEventListener("error", (e) => {
-      console.error("WebSocket error:", e);
-    });
-
-    socket.current.addEventListener("message", (event) => {
+    function handleMessage(event: MessageEvent) {
       const message: WSMessage = JSON.parse(event.data);
 
       if (message.type === MessageTypeBoard) {
@@ -37,34 +25,17 @@ function Game() {
         setWhiteName(boardData.whiteName);
         setBlackName(boardData.blackName);
       }
-    });
-
-    // Cleanup on unmount
-    return () => {
-      socket.current?.close();
     };
-  }, []);
+
+    socket.addEventListener("message", handleMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket]);
 
   return (
     <div>
-      <Stack spacing={2} padding={2} width={"300px"}>
-        <TextField label="Name" variant="outlined" onChange={(e) => { setPlayerName(e.target.value) }} />
-
-        <Button
-          variant="contained"
-          disabled={!playerName}
-          onClick={() => {
-            const joinMatchData: JoinMatchData = { playerName };
-            const message: WSMessage = {
-              type: MessageTypeJoinMatch,
-              data: joinMatchData,
-            };
-            socket.current?.send(JSON.stringify(message));
-          }}>
-          Join Matchmaking Queue
-        </Button>
-      </Stack>
-
       <div
         style={{
           display: "flex",
@@ -73,7 +44,7 @@ function Game() {
           flexGrow: 1,
         }}
       >
-        <BoardComponent board={board} legalMoves={legalMoves} socketRef={socket} whiteName={whiteName} blackName={blackName} />
+        <BoardComponent board={board} legalMoves={legalMoves} socket={socket} whiteName={whiteName} blackName={blackName} />
       </div>
     </div >
   );

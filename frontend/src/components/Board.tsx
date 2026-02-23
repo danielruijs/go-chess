@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import { useState } from "react";
 import type { Board } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
@@ -7,13 +7,13 @@ import { coordsToString } from "../utils/chess";
 function BoardComponent({
     board,
     legalMoves,
-    socketRef,
+    socket,
     whiteName,
     blackName,
 }: {
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
-    socketRef: RefObject<WebSocket | null>,
+    socket: WebSocket | null,
     whiteName: string,
     blackName: string,
 }) {
@@ -50,7 +50,7 @@ function BoardComponent({
                 type: MessageTypeMove,
                 data: moveData,
             };
-            socketRef.current?.send(JSON.stringify(message));
+            socket?.send(JSON.stringify(message));
 
             setSelected(null);
             return;
