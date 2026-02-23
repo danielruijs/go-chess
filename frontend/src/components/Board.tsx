@@ -8,10 +8,14 @@ function BoardComponent({
     board,
     legalMoves,
     socketRef,
+    whiteName,
+    blackName,
 }: {
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
-    socketRef: RefObject<WebSocket | null>
+    socketRef: RefObject<WebSocket | null>,
+    whiteName: string,
+    blackName: string,
 }) {
     const [selected, setSelected] = useState<{ file: number; rank: number } | null>(null);
 
@@ -60,52 +64,60 @@ function BoardComponent({
     }
 
     return (
-        <div
-            style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(8, 80px)",
-                gridTemplateRows: "repeat(8, 80px)",
-            }}
-        >
-            {Array.from({ length: 64 }).map((_, index) => {
-                const file = index % 8;                 // a -> h
-                const rank = 7 - Math.floor(index / 8); // 8 -> 1
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ fontSize: "18px", fontWeight: "bold" }}>
+                {blackName}
+            </div>
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(8, 80px)",
+                    gridTemplateRows: "repeat(8, 80px)",
+                }}
+            >
+                {Array.from({ length: 64 }).map((_, index) => {
+                    const file = index % 8;                 // a -> h
+                    const rank = 7 - Math.floor(index / 8); // 8 -> 1
 
-                const piece = board[file][rank];
-                const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
-                const isSelected = selected?.file === file && selected?.rank === rank;
-                const isMoveTarget = selectedMoveTargets.has(coordsToString(file, rank));
-                return (
-                    <div
-                        key={index}
-                        onClick={() => handleClick(file, rank)}
-                        style={{
-                            width: 80,
-                            height: 80,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            position: "relative",
-                            border: isSelected ? "3px solid #1976d2" : "1px solid #000000",
-                            cursor: "pointer",
-                            boxSizing: "border-box",
-                        }}
-                    >
-                        {imgPath && <img src={imgPath} style={{ width: "80px", height: "80px" }} />}
-                        {isMoveTarget && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: "50%",
-                                    backgroundColor: "rgb(255, 0, 0)",
-                                }}
-                            />
-                        )}
-                    </div>
-                );
-            })}
+                    const piece = board[file][rank];
+                    const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
+                    const isSelected = selected?.file === file && selected?.rank === rank;
+                    const isMoveTarget = selectedMoveTargets.has(coordsToString(file, rank));
+                    return (
+                        <div
+                            key={index}
+                            onClick={() => handleClick(file, rank)}
+                            style={{
+                                width: 80,
+                                height: 80,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                position: "relative",
+                                border: isSelected ? "3px solid #1976d2" : "1px solid #000000",
+                                cursor: "pointer",
+                                boxSizing: "border-box",
+                            }}
+                        >
+                            {imgPath && <img src={imgPath} style={{ width: "80px", height: "80px" }} />}
+                            {isMoveTarget && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: "50%",
+                                        backgroundColor: "rgb(255, 0, 0)",
+                                    }}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <div style={{ fontSize: "18px", fontWeight: "bold" }}>
+                {whiteName}
+            </div>
         </div>
     );
 }

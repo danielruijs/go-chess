@@ -57,6 +57,8 @@ func (m *Match) sendPositionUpdate() error {
 		positionData := BoardData{
 			Board:      m.Engine.GetBoard(),
 			LegalMoves: moveListToLegalMoves(legalMovesList),
+			WhiteName:  m.getPlayerByColor(chess.White).Name,
+			BlackName:  m.getPlayerByColor(chess.Black).Name,
 		}
 		data, err := json.Marshal(positionData)
 		if err != nil {
@@ -68,4 +70,11 @@ func (m *Match) sendPositionUpdate() error {
 		}
 	}
 	return nil
+}
+
+func (m *Match) getPlayerByColor(color chess.Color) *Player {
+	if m.Player1.Color == color {
+		return m.Player1
+	}
+	return m.Player2
 }

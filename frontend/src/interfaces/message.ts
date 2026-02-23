@@ -12,6 +12,8 @@ type LegalMove = {
 type BoardData = {
   board: Board;
   legalMoves: Record<string, LegalMove[]>;
+  whiteName: string;
+  blackName: string;
 };
 
 type MoveData = {

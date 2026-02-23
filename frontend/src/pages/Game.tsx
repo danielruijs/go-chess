@@ -11,6 +11,8 @@ function Game() {
   const socket = useRef<WebSocket | null>(null);
   const [board, setBoard] = useState<Board | null>(null)
   const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
+  const [whiteName, setWhiteName] = useState<string>("");
+  const [blackName, setBlackName] = useState<string>("");
   const [playerName, setPlayerName] = useState<string>("");
 
   useEffect(() => {
@@ -32,6 +34,8 @@ function Game() {
         const boardData: BoardData = message.data;
         setBoard(boardData.board);
         setLegalMoves(boardData.legalMoves);
+        setWhiteName(boardData.whiteName);
+        setBlackName(boardData.blackName);
       }
     });
 
@@ -69,7 +73,7 @@ function Game() {
           flexGrow: 1,
         }}
       >
-        <BoardComponent board={board} legalMoves={legalMoves} socketRef={socket} />
+        <BoardComponent board={board} legalMoves={legalMoves} socketRef={socket} whiteName={whiteName} blackName={blackName} />
       </div>
     </div >
   );
