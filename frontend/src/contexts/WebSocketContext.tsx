@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { WSMessage, BoardData, LegalMove, StartMatchData } from "../interfaces/message";
-import { MessageTypeBoard, MessageTypeStartMatch } from "../interfaces/message";
+import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData } from "../interfaces/message";
+import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch } from "../interfaces/message";
 import type { Board } from "../interfaces/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
@@ -14,6 +14,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
+    const [queueLength, setQueueLength] = useState<number | null>(null);
+    const [inQueue, setInQueue] = useState<boolean>(false);
     const navigate = useNavigate();
     const navigateRef = useRef(navigate);
 
@@ -38,15 +40,26 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         socketRef.current.addEventListener("message", (event) => {
             const message: WSMessage = JSON.parse(event.data);
 
-            if (message.type === MessageTypeBoard) {
-                const boardData: BoardData = message.data;
-                setBoard(boardData.board);
-                setLegalMoves(boardData.legalMoves);
-            } else if (message.type === MessageTypeStartMatch) {
-                const startMatchData: StartMatchData = message.data;
-                setWhitePlayerName(startMatchData.whitePlayerName);
-                setBlackPlayerName(startMatchData.blackPlayerName);
-                navigateRef.current("/game");
+            switch (message.type) {
+                case MessageTypeBoard: {
+                    const boardData: BoardData = message.data;
+                    setBoard(boardData.board);
+                    setLegalMoves(boardData.legalMoves);
+                    break;
+                }
+                case MessageTypeStartMatch: {
+                    const startMatchData: StartMatchData = message.data;
+                    setWhitePlayerName(startMatchData.whitePlayerName);
+                    setBlackPlayerName(startMatchData.blackPlayerName);
+                    navigateRef.current("/game");
+                    break;
+                }
+                case MessageTypeMatchmakingUpdate: {
+                    const matchmakingUpdateData: MatchmakingUpdateData = message.data;
+                    setQueueLength(matchmakingUpdateData.queueLength);
+                    setInQueue(matchmakingUpdateData.inQueue);
+                    break;
+                }
             }
         });
 
@@ -67,7 +80,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             board,
             legalMoves,
             whitePlayerName,
-            blackPlayerName
+            blackPlayerName,
+            queueLength,
+            inQueue,
         }}>
             {children}
         </WebSocketContext.Provider>

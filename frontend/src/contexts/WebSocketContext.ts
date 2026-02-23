@@ -10,6 +10,8 @@ export interface WebSocketContextType {
     legalMoves: Record<string, LegalMove[]> | null;
     whitePlayerName: string;
     blackPlayerName: string;
+    queueLength: number | null;
+    inQueue: boolean;
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);

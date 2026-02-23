@@ -4,18 +4,13 @@ import (
 	"go-chess/internal/server"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
 )
 
 func main() {
 	matchmaker := server.NewMatchmaker()
 	go matchmaker.Run()
 
-	webSocketHandler := server.WebSocketHandler{
-		Upgrader:   websocket.Upgrader{},
-		Matchmaker: matchmaker,
-	}
+	webSocketHandler := server.NewWebSocketHandler(matchmaker)
 
 	http.HandleFunc("/ws", webSocketHandler.ServeWS)
 

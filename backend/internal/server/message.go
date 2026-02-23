@@ -8,10 +8,11 @@ import (
 type MessageType string
 
 const (
-	MessageTypeBoard      MessageType = "board"
-	MessageTypeMove       MessageType = "move"
-	MessageTypeJoinMatch  MessageType = "join_match"
-	MessageTypeStartMatch MessageType = "start_match"
+	MessageTypeBoard             MessageType = "board"
+	MessageTypeMove              MessageType = "move"
+	MessageTypeJoinMatch         MessageType = "join_match"
+	MessageTypeStartMatch        MessageType = "start_match"
+	MessageTypeMatchmakingUpdate MessageType = "matchmaking_update"
 )
 
 type WSMessage struct {
@@ -37,6 +38,11 @@ type MoveData struct {
 
 type JoinMatchData struct {
 	PlayerName string `json:"playerName"`
+}
+
+type MatchmakingUpdateData struct {
+	QueueLength int  `json:"queueLength"`
+	InQueue     bool `json:"inQueue"`
 }
 
 type StartMatchData struct {

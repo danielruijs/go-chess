@@ -4,6 +4,7 @@ const MessageTypeBoard = "board";
 const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
 const MessageTypeStartMatch = "start_match";
+const MessageTypeMatchmakingUpdate = "matchmaking_update";
 
 type LegalMove = {
   to: string;
@@ -23,6 +24,11 @@ type MoveData = {
 
 type JoinMatchData = {
   playerName: string;
+};
+
+type MatchmakingUpdateData = {
+  queueLength: number;
+  inQueue: boolean;
 };
 
 type StartMatchData = {
@@ -46,12 +52,17 @@ type WSMessage =
   | {
     type: typeof MessageTypeStartMatch;
     data: StartMatchData;
+  }
+  | {
+    type: typeof MessageTypeMatchmakingUpdate;
+    data: MatchmakingUpdateData;
   };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData };
 export {
   MessageTypeBoard,
   MessageTypeMove,
   MessageTypeJoinMatch,
   MessageTypeStartMatch,
+  MessageTypeMatchmakingUpdate,
 };

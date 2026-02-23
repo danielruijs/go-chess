@@ -8,14 +8,16 @@ import (
 )
 
 type Matchmaker struct {
-	queue   map[*Player]struct{}
-	actions chan func()
+	queue      map[*Player]struct{}
+	actions    chan func()
+	UpdateChan chan struct{}
 }
 
 func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
-		queue:   make(map[*Player]struct{}),
-		actions: make(chan func()),
+		queue:      make(map[*Player]struct{}),
+		actions:    make(chan func()),
+		UpdateChan: make(chan struct{}),
 	}
 }
 
@@ -49,6 +51,11 @@ func (mm *Matchmaker) Leave(player *Player) {
 func (mm *Matchmaker) Run() {
 	for action := range mm.actions {
 		action()
+
+		select {
+		case mm.UpdateChan <- struct{}{}:
+		default:
+		}
 
 		for len(mm.queue) >= 2 {
 			var p1, p2 *Player
