@@ -2,7 +2,7 @@ import { Button, Stack, TextField } from "@mui/material";
 import { MessageTypeJoinMatch } from "../interfaces/message";
 import type { WSMessage, JoinMatchData } from "../interfaces/message";
 import { useState } from "react";
-import { useWebSocket } from "../contexts/WebSocketContext";
+import { useWebSocket } from "../contexts/WebSocketContext.ts";
 
 function Home() {
     const [playerName, setPlayerName] = useState<string>("");

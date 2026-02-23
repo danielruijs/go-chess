@@ -1,21 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { WSMessage, BoardData, LegalMove, StartMatchData } from "../interfaces/message";
 import { MessageTypeBoard, MessageTypeStartMatch } from "../interfaces/message";
 import type { Board } from "../interfaces/chess";
+import { WebSocketContext } from "./WebSocketContext";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
-
-interface WebSocketContextType {
-    isConnected: boolean;
-    sendMessage: (message: WSMessage) => void;
-    board: Board | null;
-    legalMoves: Record<string, LegalMove[]> | null;
-    whitePlayerName: string;
-    blackPlayerName: string;
-}
-
-const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
     const socketRef = useRef<WebSocket | null>(null);
@@ -25,6 +15,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const navigate = useNavigate();
+    const navigateRef = useRef(navigate);
 
     useEffect(() => {
         // Initialize WebSocket once
@@ -55,7 +46,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 const startMatchData: StartMatchData = message.data;
                 setWhitePlayerName(startMatchData.whitePlayerName);
                 setBlackPlayerName(startMatchData.blackPlayerName);
-                navigate("/game");
+                navigateRef.current("/game");
             }
         });
 
@@ -83,10 +74,4 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export function useWebSocket() {
-    const context = useContext(WebSocketContext);
-    if (!context) {
-        throw new Error("useWebSocket must be used within a WebSocketProvider");
-    }
-    return context;
-}
+

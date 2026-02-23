@@ -1,5 +1,5 @@
 import BoardComponent from "../components/Board";
-import { useWebSocket } from "../contexts/WebSocketContext";
+import { useWebSocket } from "../contexts/WebSocketContext.ts";
 
 function Game() {
   const { sendMessage, board, legalMoves, whitePlayerName, blackPlayerName } = useWebSocket();
