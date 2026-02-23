@@ -12,7 +12,6 @@ function Home() {
         <div>
             <Stack spacing={2} padding={2} width={"300px"}>
                 <TextField label="Name" variant="outlined" onChange={(e) => { setPlayerName(e.target.value) }} />
-
                 <Button
                     variant="contained"
                     disabled={!playerName || !isConnected}

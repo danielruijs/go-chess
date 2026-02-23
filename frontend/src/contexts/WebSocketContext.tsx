@@ -1,12 +1,18 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { WSMessage } from "../interfaces/message";
+import { useNavigate } from "react-router-dom";
+import type { WSMessage, BoardData, LegalMove, StartMatchData } from "../interfaces/message";
+import { MessageTypeBoard, MessageTypeStartMatch } from "../interfaces/message";
+import type { Board } from "../interfaces/chess";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 interface WebSocketContextType {
-    socket: WebSocket | null;
     isConnected: boolean;
     sendMessage: (message: WSMessage) => void;
+    board: Board | null;
+    legalMoves: Record<string, LegalMove[]> | null;
+    whitePlayerName: string;
+    blackPlayerName: string;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -14,6 +20,11 @@ const WebSocketContext = createContext<WebSocketContextType | undefined>(undefin
 export function WebSocketProvider({ children }: { children: ReactNode }) {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [board, setBoard] = useState<Board | null>(null);
+    const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
+    const [whitePlayerName, setWhitePlayerName] = useState<string>("");
+    const [blackPlayerName, setBlackPlayerName] = useState<string>("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Initialize WebSocket once
@@ -33,6 +44,21 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             console.error("WebSocket error:", e);
         });
 
+        socketRef.current.addEventListener("message", (event) => {
+            const message: WSMessage = JSON.parse(event.data);
+
+            if (message.type === MessageTypeBoard) {
+                const boardData: BoardData = message.data;
+                setBoard(boardData.board);
+                setLegalMoves(boardData.legalMoves);
+            } else if (message.type === MessageTypeStartMatch) {
+                const startMatchData: StartMatchData = message.data;
+                setWhitePlayerName(startMatchData.whitePlayerName);
+                setBlackPlayerName(startMatchData.blackPlayerName);
+                navigate("/game");
+            }
+        });
+
         // Cleanup on unmount
         return () => {
             socketRef.current?.close();
@@ -44,7 +70,14 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <WebSocketContext.Provider value={{ socket: socketRef.current, isConnected, sendMessage }}>
+        <WebSocketContext.Provider value={{
+            isConnected,
+            sendMessage,
+            board,
+            legalMoves,
+            whitePlayerName,
+            blackPlayerName
+        }}>
             {children}
         </WebSocketContext.Provider>
     );

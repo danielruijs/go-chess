@@ -8,9 +8,10 @@ import (
 type MessageType string
 
 const (
-	MessageTypeBoard     MessageType = "board"
-	MessageTypeMove      MessageType = "move"
-	MessageTypeJoinMatch MessageType = "join_match"
+	MessageTypeBoard      MessageType = "board"
+	MessageTypeMove       MessageType = "move"
+	MessageTypeJoinMatch  MessageType = "join_match"
+	MessageTypeStartMatch MessageType = "start_match"
 )
 
 type WSMessage struct {
@@ -26,8 +27,6 @@ type LegalMove struct {
 type BoardData struct {
 	Board      chess.Board            `json:"board"`
 	LegalMoves map[string][]LegalMove `json:"legalMoves"`
-	WhiteName  string                 `json:"whiteName"`
-	BlackName  string                 `json:"blackName"`
 }
 
 type MoveData struct {
@@ -38,4 +37,9 @@ type MoveData struct {
 
 type JoinMatchData struct {
 	PlayerName string `json:"playerName"`
+}
+
+type StartMatchData struct {
+	WhitePlayerName string `json:"whitePlayerName"`
+	BlackPlayerName string `json:"blackPlayerName"`
 }

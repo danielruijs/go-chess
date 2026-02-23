@@ -6,14 +6,14 @@ import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
 function App() {
 
   return (
-    <WebSocketProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <WebSocketProvider>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/game" element={<Game />} />
         </Routes>
-      </BrowserRouter>
-    </WebSocketProvider>
+      </WebSocketProvider>
+    </BrowserRouter>
   )
 }
 

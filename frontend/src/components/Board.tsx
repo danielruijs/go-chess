@@ -7,13 +7,13 @@ import { coordsToString } from "../utils/chess";
 function BoardComponent({
     board,
     legalMoves,
-    socket,
+    sendMessage,
     whiteName,
     blackName,
 }: {
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
-    socket: WebSocket | null,
+    sendMessage: (message: WSMessage) => void,
     whiteName: string,
     blackName: string,
 }) {
@@ -44,13 +44,12 @@ function BoardComponent({
         if (selectedMoveTargets.has(clickedSquare)) {
             const from = coordsToString(selected.file, selected.rank);
             const to = clickedSquare;
-            console.log(`${from} -> ${to}`);
             const moveData: MoveData = { from: from, to: to, promotion: null };
             const message: WSMessage = {
                 type: MessageTypeMove,
                 data: moveData,
             };
-            socket?.send(JSON.stringify(message));
+            sendMessage(message);
 
             setSelected(null);
             return;
