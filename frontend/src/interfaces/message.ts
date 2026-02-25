@@ -1,10 +1,12 @@
 import type { Board, PieceType } from "./chess";
+import type { Result } from "./result";
 
 const MessageTypeBoard = "board";
 const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
-const MessageTypeStartMatch = "start_match";
 const MessageTypeMatchmakingUpdate = "matchmaking_update";
+const MessageTypeStartMatch = "start_match";
+const MessageTypeEndMatch = "end_match"
 
 type LegalMove = {
   to: string;
@@ -32,8 +34,12 @@ type MatchmakingUpdateData = {
 };
 
 type StartMatchData = {
-	whitePlayerName: string;
-	blackPlayerName: string;
+  whitePlayerName: string;
+  blackPlayerName: string;
+};
+
+type EndMatchData = {
+  result: Result;
 };
 
 type WSMessage =
@@ -56,6 +62,10 @@ type WSMessage =
   | {
     type: typeof MessageTypeMatchmakingUpdate;
     data: MatchmakingUpdateData;
+  }
+  | {
+    type: typeof MessageTypeEndMatch;
+    data: EndMatchData;
   };
 
 export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData };

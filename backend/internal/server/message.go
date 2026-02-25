@@ -11,8 +11,9 @@ const (
 	MessageTypeBoard             MessageType = "board"
 	MessageTypeMove              MessageType = "move"
 	MessageTypeJoinMatch         MessageType = "join_match"
-	MessageTypeStartMatch        MessageType = "start_match"
 	MessageTypeMatchmakingUpdate MessageType = "matchmaking_update"
+	MessageTypeStartMatch        MessageType = "start_match"
+	MessageTypeEndMatch          MessageType = "end_match"
 )
 
 type WSMessage struct {
@@ -48,4 +49,8 @@ type MatchmakingUpdateData struct {
 type StartMatchData struct {
 	WhitePlayerName string `json:"whitePlayerName"`
 	BlackPlayerName string `json:"blackPlayerName"`
+}
+
+type EndMatchData struct {
+	Result chess.Result `json:"result"`
 }

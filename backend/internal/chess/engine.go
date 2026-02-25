@@ -9,14 +9,18 @@ type Engine struct {
 	position  *Position
 	generator *Generator
 	moves     []Move
+	positions map[PositionKey]int
 }
 
 func NewEngine() *Engine {
-	return &Engine{
+	e := &Engine{
 		position:  NewInitialPosition(),
 		generator: NewGenerator(),
 		moves:     []Move{},
+		positions: make(map[PositionKey]int),
 	}
+	e.positions[e.position.Key()]++
+	return e
 }
 
 func (e *Engine) GetBoard() Board {
@@ -30,14 +34,19 @@ func (e *Engine) GetLegalMoves(color Color) []Move {
 	return e.generator.GenerateMoves(e.position, color)
 }
 
-func (e *Engine) ApplyMove(move Move, color Color) error {
+func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	err := e.validateMove(move, color)
 	if err != nil {
-		return fmt.Errorf("illegal move: %w", err)
+		return nil, fmt.Errorf("illegal move: %w", err)
 	}
+
 	e.position.MakeMove(move)
+
+	e.positions[e.position.Key()]++
 	e.moves = append(e.moves, move)
-	return nil
+
+	result := e.GetResult()
+	return result, nil
 }
 
 func (e *Engine) validateMove(move Move, color Color) error {

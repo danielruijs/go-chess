@@ -36,10 +36,19 @@ func (m *Match) Run() {
 				log.Println("invalid move data:", err)
 				continue
 			}
-			err = m.Engine.ApplyMove(move, event.Player.Color)
+			result, err := m.Engine.ApplyMove(move, event.Player.Color)
 			if err != nil {
 				log.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
 				continue
+			}
+			if result != nil {
+				err := m.sendPositionUpdate()
+				if err != nil {
+					log.Println("failed to send position update:", err)
+				}
+				m.sendMatchEnd(*result)
+				close(m.EventChan)
+				return
 			}
 		case EventTypeGameStarted:
 			for _, player := range []*Player{m.Player1, m.Player2} {
@@ -82,6 +91,24 @@ func (m *Match) sendPositionUpdate() error {
 		}
 	}
 	return nil
+}
+
+func (m *Match) sendMatchEnd(result chess.Result) {
+	resultData := EndMatchData{
+		Result: result,
+	}
+	data, err := json.Marshal(resultData)
+	if err != nil {
+		log.Printf("failed to marshal end match data: %v", err)
+		return
+	}
+	for _, player := range []*Player{m.Player1, m.Player2} {
+		player.SendChan <- WSMessage{
+			Type: MessageTypeEndMatch,
+			Data: data,
+		}
+	}
+
 }
 
 func (m *Match) getPlayerByColor(color chess.Color) *Player {

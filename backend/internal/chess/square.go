@@ -41,3 +41,12 @@ func squareMask(sq Square) Bitboard {
 func coordMask(file, rank int) Bitboard {
 	return squareMask(coordsToSquare(file, rank))
 }
+
+func (sq Square) Color() Color {
+	file := sq % 8
+	rank := sq / 8
+	if (rank+file)%2 == 0 {
+		return Black
+	}
+	return White
+}

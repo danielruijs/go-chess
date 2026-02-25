@@ -13,14 +13,15 @@ func TestSquareConversions(t *testing.T) {
 		file   int
 		rank   int
 		mask   Bitboard
+		color  Color
 	}{
-		{0, "a1", 0, 0, 1 << 0},
-		{1, "b1", 1, 0, 1 << 1},
-		{14, "g2", 6, 1, 1 << 14},
-		{27, "d4", 3, 3, 1 << 27},
-		{36, "e5", 4, 4, 1 << 36},
-		{49, "b7", 1, 6, 1 << 49},
-		{63, "h8", 7, 7, 1 << 63},
+		{0, "a1", 0, 0, 1 << 0, Black},
+		{1, "b1", 1, 0, 1 << 1, White},
+		{14, "g2", 6, 1, 1 << 14, White},
+		{27, "d4", 3, 3, 1 << 27, Black},
+		{36, "e5", 4, 4, 1 << 36, Black},
+		{49, "b7", 1, 6, 1 << 49, White},
+		{63, "h8", 7, 7, 1 << 63, Black},
 	}
 
 	for _, tt := range squareTests {
@@ -50,6 +51,11 @@ func TestSquareConversions(t *testing.T) {
 		// coordMask
 		if m := coordMask(tt.file, tt.rank); m != tt.mask {
 			t.Errorf("coordMask(%d,%d) = %d; want %d", tt.file, tt.rank, m, tt.mask)
+		}
+
+		// Color
+		if c := tt.square.Color(); c != tt.color {
+			t.Errorf("Square(%d).Color() = %v; want %v", tt.square, c, tt.color)
 		}
 	}
 }

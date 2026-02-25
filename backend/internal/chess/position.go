@@ -31,6 +31,14 @@ type Position struct {
 	Fullmove       uint           // Fullmove number
 }
 
+type PositionKey struct {
+	WhitePawns, WhiteKnights, WhiteBishops, WhiteRooks, WhiteQueens, WhiteKing Bitboard
+	BlackPawns, BlackKnights, BlackBishops, BlackRooks, BlackQueens, BlackKing Bitboard
+	ActiveColor                                                                Color
+	Castling                                                                   CastlingRights
+	EnPassant                                                                  *Square
+}
+
 func NewInitialPosition() *Position {
 	pos, err := StartingPositionFEN.ToPosition()
 	if err != nil {
@@ -269,4 +277,24 @@ func (p *Position) IsInCheck(g *Generator, color Color) bool {
 
 	kingSq := Square(popLSB(&king))
 	return g.IsSquareAttacked(kingSq, p, color)
+}
+
+func (p *Position) Key() PositionKey {
+	return PositionKey{
+		WhitePawns:   p.WhitePawns,
+		WhiteKnights: p.WhiteKnights,
+		WhiteBishops: p.WhiteBishops,
+		WhiteRooks:   p.WhiteRooks,
+		WhiteQueens:  p.WhiteQueens,
+		WhiteKing:    p.WhiteKing,
+		BlackPawns:   p.BlackPawns,
+		BlackKnights: p.BlackKnights,
+		BlackBishops: p.BlackBishops,
+		BlackRooks:   p.BlackRooks,
+		BlackQueens:  p.BlackQueens,
+		BlackKing:    p.BlackKing,
+		ActiveColor:  p.ActiveColor,
+		Castling:     p.CastlingRights,
+		EnPassant:    p.EnPassant,
+	}
 }
