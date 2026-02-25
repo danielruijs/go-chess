@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:errcheck
 func TestGetResult(t *testing.T) {
 	tests := []struct {
 		name     string
