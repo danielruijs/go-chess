@@ -20,3 +20,19 @@ func (m Move) IsCastling(p *Position) bool {
 	isLongMove := abs(int(m.To)-int(m.From)) > 1
 	return isKing && isLongMove && isSameRank
 }
+
+func samePromotion(a, b *PieceType) bool {
+	// either both are nil or both are not nil and same value
+	return a == b || (a != nil && b != nil && *a == *b)
+}
+
+func ContainsMove(moves []Move, m Move) bool {
+	for _, move := range moves {
+		if move.From == m.From &&
+			move.To == m.To &&
+			samePromotion(move.Promotion, m.Promotion) {
+			return true
+		}
+	}
+	return false
+}

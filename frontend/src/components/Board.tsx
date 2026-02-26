@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@mui/material";
-import type { Board } from "../interfaces/chess";
+import { Button, Dialog, DialogContent } from "@mui/material";
+import type { Board, PieceType } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
@@ -24,6 +24,7 @@ function BoardComponent({
 }) {
     const navigate = useNavigate();
     const [selected, setSelected] = useState<{ file: number; rank: number } | null>(null);
+    const [promotionDialog, setPromotionDialog] = useState<{ from: string; to: string; color: "white" | "black" } | null>(null);
 
     function getResultString() {
         if (!matchResult) return null;
@@ -55,6 +56,23 @@ function BoardComponent({
     const selectedMoves = selectedSquare && legalMoves ? (legalMoves[selectedSquare] ?? []) : [];
     const selectedMoveTargets = new Set(selectedMoves.map((move) => move.to));
 
+    function sendMove(from: string, to: string, promotion: PieceType | null) {
+        const moveData: MoveData = { from, to, promotion };
+        const message: WSMessage = {
+            type: MessageTypeMove,
+            data: moveData,
+        };
+        sendMessage(message);
+    }
+
+    function handlePromotion(pieceType: PieceType) {
+        if (promotionDialog) {
+            sendMove(promotionDialog.from, promotionDialog.to, pieceType);
+            setPromotionDialog(null);
+            setSelected(null);
+        }
+    }
+
     function handleClick(i: number, j: number) {
         const clickedSquare = coordsToString(i, j);
         const clickedPiece = board?.[i][j] ?? null;
@@ -72,14 +90,19 @@ function BoardComponent({
         if (selectedMoveTargets.has(clickedSquare)) {
             const from = coordsToString(selected.file, selected.rank);
             const to = clickedSquare;
-            const moveData: MoveData = { from: from, to: to, promotion: null };
-            const message: WSMessage = {
-                type: MessageTypeMove,
-                data: moveData,
-            };
-            sendMessage(message);
 
-            setSelected(null);
+            const move = selectedMoves.find(m => m.to === to);
+            if (move?.promotion) {
+                // Promotion
+                const piece = board?.[selected.file][selected.rank];
+                if (piece) {
+                    setPromotionDialog({ from, to, color: piece.color });
+                }
+            } else {
+                // Regular move
+                sendMove(from, to, null);
+                setSelected(null);
+            }
             return;
         }
 
@@ -178,6 +201,29 @@ function BoardComponent({
             <div style={{ fontSize: "18px", fontWeight: "bold" }}>
                 {whiteName}
             </div>
+            <Dialog open={!!promotionDialog} onClose={() => setPromotionDialog(null)}>
+                <DialogContent>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                        {(["queen", "rook", "bishop", "knight"] as const).map((pieceType) => (
+                            <div
+                                key={pieceType}
+                                onClick={() => handlePromotion(pieceType)}
+                                style={{
+                                    cursor: "pointer",
+                                    border: "2px solid #1976d2",
+                                    borderRadius: "4px",
+                                    backgroundColor: "#f0f0f0",
+                                }}
+                            >
+                                <img
+                                    src={`/pieces/${promotionDialog?.color}-${pieceType}.png`}
+                                    style={{ width: "80px", height: "80px" }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -193,3 +193,69 @@ func TestIsCastling(t *testing.T) {
 		})
 	}
 }
+
+func TestContainsMove(t *testing.T) {
+	tests := []struct {
+		name     string
+		moves    []Move
+		m        Move
+		expected bool
+	}{
+		{
+			name: "move found in list",
+			moves: []Move{
+				{From: strToSquare("e2"), To: strToSquare("e4")},
+				{From: strToSquare("d2"), To: strToSquare("d4")},
+			},
+			m:        Move{From: strToSquare("e2"), To: strToSquare("e4")},
+			expected: true,
+		},
+		{
+			name: "move not found in list",
+			moves: []Move{
+				{From: strToSquare("e2"), To: strToSquare("e4")},
+				{From: strToSquare("d2"), To: strToSquare("d4")},
+			},
+			m:        Move{From: strToSquare("c2"), To: strToSquare("c4")},
+			expected: false,
+		},
+		{
+			name: "move with promotion found",
+			moves: []Move{
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+				{From: strToSquare("e2"), To: strToSquare("e4")},
+			},
+			m:        Move{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+			expected: true,
+		},
+		{
+			name: "move with different promotion not found",
+			moves: []Move{
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+			},
+			m:        Move{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Rook)},
+			expected: false,
+		},
+		{
+			name: "move without promotion not found when list has promotion",
+			moves: []Move{
+				{From: strToSquare("a7"), To: strToSquare("a8"), Promotion: new(Queen)},
+			},
+			m:        Move{From: strToSquare("a7"), To: strToSquare("a8")},
+			expected: false,
+		},
+		{
+			name:     "empty moves list",
+			moves:    []Move{},
+			m:        Move{From: strToSquare("e2"), To: strToSquare("e4")},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ContainsMove(tt.moves, tt.m)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

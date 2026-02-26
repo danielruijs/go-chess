@@ -2,7 +2,6 @@ package chess
 
 import (
 	"fmt"
-	"slices"
 )
 
 type Engine struct {
@@ -62,7 +61,7 @@ func (e *Engine) validateMove(move Move, color Color) error {
 	}
 
 	moves := e.generator.GeneratePieceMoves(e.position, color, pieceToMove.Type)
-	if !slices.Contains(moves, move) {
+	if !ContainsMove(moves, move) {
 		return fmt.Errorf("move is not legal")
 	}
 	return nil
