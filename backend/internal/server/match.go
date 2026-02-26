@@ -80,6 +80,7 @@ func (m *Match) sendPositionUpdate() error {
 		boardData := BoardData{
 			Board:      m.Engine.GetBoard(),
 			LegalMoves: moveListToLegalMoves(legalMovesList),
+			PGN:        m.Engine.GetPGN(),
 		}
 		data, err := json.Marshal(boardData)
 		if err != nil {
@@ -98,6 +99,7 @@ func (m *Match) sendFinalPositionUpdate() error {
 		boardData := BoardData{
 			Board:      m.Engine.GetBoard(),
 			LegalMoves: map[string][]LegalMove{}, // no legal moves
+			PGN:        m.Engine.GetPGN(),
 		}
 		data, err := json.Marshal(boardData)
 		if err != nil {

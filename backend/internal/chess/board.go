@@ -18,6 +18,15 @@ const (
 	King   PieceType = "king"
 )
 
+var PieceTypeToSAN = map[PieceType]string{
+	Pawn:   "",
+	Knight: "N",
+	Bishop: "B",
+	Rook:   "R",
+	Queen:  "Q",
+	King:   "K",
+}
+
 type Piece struct {
 	Type  PieceType `json:"type"`
 	Color Color     `json:"color"`

@@ -29,6 +29,7 @@ type LegalMove struct {
 type BoardData struct {
 	Board      chess.Board            `json:"board"`
 	LegalMoves map[string][]LegalMove `json:"legalMoves"`
+	PGN        chess.PGN              `json:"pgn"`
 }
 
 type MoveData struct {

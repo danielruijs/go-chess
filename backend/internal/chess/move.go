@@ -36,3 +36,21 @@ func ContainsMove(moves []Move, m Move) bool {
 	}
 	return false
 }
+
+func (m Move) ToSAN(position *Position) string {
+	san := ""
+	piece := position.GetPiece(m.From)
+	san += PieceTypeToSAN[piece.Type]
+
+	// capture
+	if position.GetPiece(m.To) != nil || m.IsEnPassant(position) {
+		if piece.Type == Pawn {
+			// for pawn captures, include the file of the from square
+			san += SquareToStr(m.From)[0:1]
+		}
+		san += "x"
+	}
+
+	san += SquareToStr(m.To)
+	return san
+}

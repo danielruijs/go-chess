@@ -7,7 +7,7 @@ import (
 type Engine struct {
 	position  *Position
 	generator *Generator
-	moves     []Move
+	pgn       PGN
 	positions map[PositionKey]int
 }
 
@@ -15,7 +15,7 @@ func NewEngine() *Engine {
 	e := &Engine{
 		position:  NewInitialPosition(),
 		generator: NewGenerator(),
-		moves:     []Move{},
+		pgn:       "",
 		positions: make(map[PositionKey]int),
 	}
 	e.positions[e.position.Key()]++
@@ -33,6 +33,10 @@ func (e *Engine) GetLegalMoves(color Color) []Move {
 	return e.generator.GenerateMoves(e.position, color)
 }
 
+func (e *Engine) GetPGN() PGN {
+	return e.pgn
+}
+
 func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	err := e.validateMove(move, color)
 	if err != nil {
@@ -42,7 +46,7 @@ func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	e.position.MakeMove(move)
 
 	e.positions[e.position.Key()]++
-	e.moves = append(e.moves, move)
+	e.pgn = e.pgn.AppendMove(move, e.position)
 
 	result := e.GetResult()
 	return result, nil
