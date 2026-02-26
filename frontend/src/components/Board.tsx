@@ -11,15 +11,11 @@ function BoardComponent({
     board,
     legalMoves,
     sendMessage,
-    whiteName,
-    blackName,
     matchResult,
 }: {
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
     sendMessage: (message: WSMessage) => void,
-    whiteName: string,
-    blackName: string,
     matchResult: Result | null,
 }) {
     const navigate = useNavigate();
@@ -115,9 +111,6 @@ function BoardComponent({
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ fontSize: "18px", fontWeight: "bold" }}>
-                {blackName}
-            </div>
             <div
                 style={{
                     position: "relative",
@@ -197,9 +190,6 @@ function BoardComponent({
                         </Button>
                     </div>
                 )}
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: "bold" }}>
-                {whiteName}
             </div>
             <Dialog open={!!promotionDialog} onClose={() => setPromotionDialog(null)}>
                 <DialogContent>
