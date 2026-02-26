@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@mui/material";
 import type { Board } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
+import type { Result } from "../interfaces/result";
 import { coordsToString } from "../utils/chess";
 
 function BoardComponent({
@@ -10,14 +13,39 @@ function BoardComponent({
     sendMessage,
     whiteName,
     blackName,
+    matchResult,
 }: {
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
     sendMessage: (message: WSMessage) => void,
     whiteName: string,
     blackName: string,
+    matchResult: Result | null,
 }) {
+    const navigate = useNavigate();
     const [selected, setSelected] = useState<{ file: number; rank: number } | null>(null);
+
+    function getResultString() {
+        if (!matchResult) return null;
+
+        const outcomeText = {
+            white_win: "White wins",
+            black_win: "Black wins",
+            draw: "Draw",
+        }[matchResult.outcome];
+
+        const reasonText = {
+            checkmate: "by Checkmate",
+            stalemate: "by Stalemate",
+            threefold_repetition: "by Threefold Repetition",
+            fifty_moves_rule: "by Fifty-Move Rule",
+            insufficient_material: "by Insufficient Material",
+        }[matchResult.reason];
+
+        return `${outcomeText} ${reasonText}`;
+    };
+
+    const resultString = getResultString();
 
     if (!board) {
         return <div>Loading board...</div>;
@@ -69,6 +97,7 @@ function BoardComponent({
             </div>
             <div
                 style={{
+                    position: "relative",
                     display: "grid",
                     gridTemplateColumns: "repeat(8, 80px)",
                     gridTemplateRows: "repeat(8, 80px)",
@@ -113,6 +142,38 @@ function BoardComponent({
                         </div>
                     );
                 })}
+                {resultString && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            padding: "20px",
+                            backgroundColor: "#e4e4e4",
+                            border: "2px solid #1976d2",
+                            borderRadius: "4px",
+                            textAlign: "center",
+                            color: "#1976d2",
+                            minWidth: "200px",
+                            zIndex: 10,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "15px",
+                            alignItems: "center",
+                        }}
+                    >
+                        <div>{resultString}</div>
+                        <Button
+                            onClick={() => navigate("/")}
+                            variant="contained"
+                        >
+                            Back to Menu
+                        </Button>
+                    </div>
+                )}
             </div>
             <div style={{ fontSize: "18px", fontWeight: "bold" }}>
                 {whiteName}

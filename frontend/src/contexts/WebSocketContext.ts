@@ -1,6 +1,7 @@
-import { createContext, useContext  } from "react";
-import type { WSMessage, LegalMove,  } from "../interfaces/message";
+import { createContext, useContext } from "react";
+import type { WSMessage, LegalMove, } from "../interfaces/message";
 import type { Board } from "../interfaces/chess";
+import type { Result } from "../interfaces/result";
 
 
 export interface WebSocketContextType {
@@ -12,6 +13,7 @@ export interface WebSocketContextType {
     blackPlayerName: string;
     queueLength: number | null;
     inQueue: boolean;
+    matchResult: Result | null;
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);

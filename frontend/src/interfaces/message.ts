@@ -68,11 +68,12 @@ type WSMessage =
     data: EndMatchData;
   };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData };
 export {
   MessageTypeBoard,
   MessageTypeMove,
   MessageTypeJoinMatch,
   MessageTypeStartMatch,
   MessageTypeMatchmakingUpdate,
+  MessageTypeEndMatch,
 };

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData } from "../interfaces/message";
-import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch } from "../interfaces/message";
+import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData } from "../interfaces/message";
+import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch, MessageTypeEndMatch } from "../interfaces/message";
+import type { Result } from "../interfaces/result";
 import type { Board } from "../interfaces/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
@@ -16,6 +17,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const [queueLength, setQueueLength] = useState<number | null>(null);
     const [inQueue, setInQueue] = useState<boolean>(false);
+    const [matchResult, setMatchResult] = useState<Result | null>(null);
     const navigate = useNavigate();
     const navigateRef = useRef(navigate);
 
@@ -60,6 +62,11 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     setInQueue(matchmakingUpdateData.inQueue);
                     break;
                 }
+                case MessageTypeEndMatch: {
+                    const endMatchData: EndMatchData = message.data;
+                    setMatchResult(endMatchData.result);
+                    break;
+                }
             }
         });
 
@@ -83,6 +90,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             blackPlayerName,
             queueLength,
             inQueue,
+            matchResult,
         }}>
             {children}
         </WebSocketContext.Provider>

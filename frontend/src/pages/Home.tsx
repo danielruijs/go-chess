@@ -10,7 +10,7 @@ function Home() {
     const { sendMessage, isConnected, queueLength, inQueue } = useWebSocket();
 
     return (
-        <div style={{ display: "flex", flexDirection: "row", gap: "50px" }}>
+        <div style={{ display: "flex", flexDirection: "row", gap: "50px", padding: "10px" }}>
             <Stack spacing={2} padding={2} width={"300px"}>
                 <TextField label="Name" variant="outlined" onChange={(e) => { setPlayerName(e.target.value) }} />
                 <Button

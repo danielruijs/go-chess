@@ -42,9 +42,9 @@ func (m *Match) Run() {
 				continue
 			}
 			if result != nil {
-				err := m.sendPositionUpdate()
+				err := m.sendFinalPositionUpdate()
 				if err != nil {
-					log.Println("failed to send position update:", err)
+					log.Println("failed to send final position update:", err)
 				}
 				m.sendMatchEnd(*result)
 				close(m.EventChan)
@@ -80,6 +80,24 @@ func (m *Match) sendPositionUpdate() error {
 		boardData := BoardData{
 			Board:      m.Engine.GetBoard(),
 			LegalMoves: moveListToLegalMoves(legalMovesList),
+		}
+		data, err := json.Marshal(boardData)
+		if err != nil {
+			return fmt.Errorf("failed to marshal board data: %v", err)
+		}
+		player.SendChan <- WSMessage{
+			Type: MessageTypeBoard,
+			Data: data,
+		}
+	}
+	return nil
+}
+
+func (m *Match) sendFinalPositionUpdate() error {
+	for _, player := range []*Player{m.Player1, m.Player2} {
+		boardData := BoardData{
+			Board:      m.Engine.GetBoard(),
+			LegalMoves: map[string][]LegalMove{}, // no legal moves
 		}
 		data, err := json.Marshal(boardData)
 		if err != nil {
