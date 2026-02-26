@@ -196,9 +196,9 @@ func (p *Position) MakeMove(move Move) {
 		// promotion, can be capture
 		if occupied&toMask != 0 {
 			isCapture = true
+			p.removePiece(move.To)
 		}
 		p.removePiece(move.From)
-		p.removePiece(move.To)
 		p.setPiece(move.To, &Piece{Type: *move.Promotion, Color: piece.Color})
 	} else if occupied&toMask != 0 {
 		// captures
