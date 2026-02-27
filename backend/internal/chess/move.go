@@ -16,7 +16,7 @@ func (m Move) IsEnPassant(p *Position) bool {
 func (m Move) IsCastling(p *Position) bool {
 	piece := p.GetPiece(m.From)
 	isKing := piece.Type == King
-	isSameRank := m.From/8 == m.To/8
+	isSameRank := m.From.Rank() == m.To.Rank()
 	isLongMove := abs(int(m.To)-int(m.From)) > 1
 	return isKing && isLongMove && isSameRank
 }
@@ -37,20 +37,86 @@ func ContainsMove(moves []Move, m Move) bool {
 	return false
 }
 
-func (m Move) ToSAN(position *Position) string {
+// returns the move in SAN format, assuming the move has not been made yet
+func (m Move) ToSAN(position *Position, generator *Generator) string {
 	san := ""
-	piece := position.GetPiece(m.From)
-	san += PieceTypeToSAN[piece.Type]
-
-	// capture
-	if position.GetPiece(m.To) != nil || m.IsEnPassant(position) {
-		if piece.Type == Pawn {
-			// for pawn captures, include the file of the from square
-			san += SquareToStr(m.From)[0:1]
+	if m.IsCastling(position) {
+		// castling
+		if m.To > m.From {
+			san += "O-O"
+		} else {
+			san += "O-O-O"
 		}
-		san += "x"
+	} else {
+		piece := position.GetPiece(m.From)
+		san += PieceTypeToSAN[piece.Type]
+
+		// disambiguation
+		if piece.Type != Pawn {
+			san += getDisambiguation(m, position, generator)
+		}
+
+		// capture
+		if position.GetPiece(m.To) != nil || m.IsEnPassant(position) {
+			if piece.Type == Pawn {
+				// for pawn captures, include the file of the from square
+				san += SquareToStr(m.From)[0:1]
+			}
+			san += "x"
+		}
+
+		// to square
+		san += SquareToStr(m.To)
+
+		// promotion
+		if m.Promotion != nil {
+			san += "=" + PieceTypeToSAN[*m.Promotion]
+		}
 	}
 
-	san += SquareToStr(m.To)
+	// check or checkmate
+	posCopy := position.GetCopy()
+	posCopy.MakeMove(m)
+	if posCopy.IsInCheck(generator, posCopy.ActiveColor) {
+		if len(generator.GenerateMoves(&posCopy, posCopy.ActiveColor)) == 0 {
+			san += "#"
+		} else {
+			san += "+"
+		}
+	}
+
 	return san
+}
+
+func getDisambiguation(m Move, position *Position, generator *Generator) string {
+	piece := position.GetPiece(m.From)
+	pieceMoves := generator.GeneratePieceMoves(position, position.ActiveColor, piece.Type)
+
+	var ambiguousMoves []Move
+	for _, move := range pieceMoves {
+		if move.From != m.From && move.To == m.To {
+			ambiguousMoves = append(ambiguousMoves, move)
+		}
+	}
+	if len(ambiguousMoves) == 0 {
+		return ""
+	}
+
+	sameFile := false
+	sameRank := false
+	for _, move := range ambiguousMoves {
+		if move.From.File() == m.From.File() {
+			sameFile = true
+		}
+		if move.From.Rank() == m.From.Rank() {
+			sameRank = true
+		}
+	}
+	if !sameFile {
+		return SquareToStr(m.From)[0:1] // file disambiguates
+	}
+	if !sameRank {
+		return SquareToStr(m.From)[1:2] // rank disambiguates
+	}
+	return SquareToStr(m.From) // full square
 }

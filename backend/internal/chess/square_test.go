@@ -25,6 +25,16 @@ func TestSquareConversions(t *testing.T) {
 	}
 
 	for _, tt := range squareTests {
+		// Rank
+		if r := tt.square.Rank(); r != tt.rank {
+			t.Errorf("Square(%d).Rank() = %d; want %d", tt.square, r, tt.rank)
+		}
+
+		// File
+		if f := tt.square.File(); f != tt.file {
+			t.Errorf("Square(%d).File() = %d; want %d", tt.square, f, tt.file)
+		}
+
 		// StrToSquare
 		sq, err := StrToSquare(tt.str)
 		assert.Nil(t, err)

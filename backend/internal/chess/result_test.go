@@ -55,7 +55,7 @@ func TestGetResult(t *testing.T) {
 				e.position = &Position{
 					WhiteKing:   bitboardFromStrs([]string{"c7"}),
 					BlackKing:   bitboardFromStrs([]string{"a8"}),
-					WhiteQueens: bitboardFromStrs([]string{"c7"}),
+					WhiteQueens: bitboardFromStrs([]string{"b6"}),
 					ActiveColor: Black,
 				}
 				return e

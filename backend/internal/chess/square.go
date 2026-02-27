@@ -4,6 +4,14 @@ import "fmt"
 
 type Square uint8 // 0 -> a1, 1 -> b1, ..., 63 -> h8
 
+func (sq Square) Rank() int {
+	return int(sq) / 8
+}
+
+func (sq Square) File() int {
+	return int(sq) % 8
+}
+
 func StrToSquare(str string) (Square, error) {
 	if !isValidStr(str) {
 		return 0, fmt.Errorf("invalid square string: %s", str)
@@ -23,9 +31,7 @@ func isValidStr(str string) bool {
 }
 
 func SquareToStr(sq Square) string {
-	file := sq % 8
-	rank := sq / 8
-	return fmt.Sprintf("%c%d", 'a'+file, rank+1)
+	return fmt.Sprintf("%c%d", 'a'+sq.File(), sq.Rank()+1)
 }
 
 func coordsToSquare(file, rank int) Square {
@@ -43,9 +49,7 @@ func coordMask(file, rank int) Bitboard {
 }
 
 func (sq Square) Color() Color {
-	file := sq % 8
-	rank := sq / 8
-	if (rank+file)%2 == 0 {
+	if (sq.Rank()+sq.File())%2 == 0 {
 		return Black
 	}
 	return White
