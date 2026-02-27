@@ -38,7 +38,11 @@ func (m *Match) Run() {
 			}
 			result, err := m.Engine.ApplyMove(move, event.Player.Color)
 			if err != nil {
-				log.Printf("failed to apply move %s -> %s, promotion to %v: %v\n", data.From, data.To, *data.Promotion, err)
+				if data.Promotion != nil {
+					log.Printf("failed to apply move %s -> %s with promotion to %v: %v\n", data.From, data.To, *data.Promotion, err)
+				} else {
+					log.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
+				}
 				continue
 			}
 			if result != nil {
