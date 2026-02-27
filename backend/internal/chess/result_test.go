@@ -240,7 +240,7 @@ func TestGetResult(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			engine := tt.setup()
-			result := engine.GetResult()
+			result := getResult(engine.generator, engine.position, engine.positions)
 			if tt.expected == nil {
 				assert.Nil(t, result)
 			} else {

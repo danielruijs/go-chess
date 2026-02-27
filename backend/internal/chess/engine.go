@@ -47,7 +47,10 @@ func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	e.position.MakeMove(move)
 	e.positions[e.position.Key()]++
 
-	result := e.GetResult()
+	result := getResult(e.generator, e.position, e.positions)
+	if result != nil {
+		e.pgn = e.pgn.AppendResult(result)
+	}
 	return result, nil
 }
 

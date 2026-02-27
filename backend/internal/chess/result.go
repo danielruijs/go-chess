@@ -29,27 +29,27 @@ type Result struct {
 }
 
 // Returns a Result if the game has ended and nil otherwise.
-func (e *Engine) GetResult() *Result {
-	legalMoves := e.GetLegalMoves(e.position.ActiveColor)
-	isInCheck := e.position.IsInCheck(e.generator, e.position.ActiveColor)
+func getResult(generator *Generator, position *Position, positions map[PositionKey]int) *Result {
+	legalMoves := generator.GenerateMoves(position, position.ActiveColor)
+	isInCheck := position.IsInCheck(generator, position.ActiveColor)
 
-	if e.position.isCheckmate(isInCheck, legalMoves) {
-		if e.position.ActiveColor == White {
+	if position.isCheckmate(isInCheck, legalMoves) {
+		if position.ActiveColor == White {
 			return &Result{Outcome: BlackWin, Reason: Checkmate}
 		} else {
 			return &Result{Outcome: WhiteWin, Reason: Checkmate}
 		}
 	}
-	if e.position.isStalemate(isInCheck, legalMoves) {
+	if position.isStalemate(isInCheck, legalMoves) {
 		return &Result{Outcome: Draw, Reason: Stalemate}
 	}
-	if e.position.isThreefoldRepetition(e.positions) {
+	if position.isThreefoldRepetition(positions) {
 		return &Result{Outcome: Draw, Reason: ThreefoldRepetition}
 	}
-	if e.position.isFiftyMoveRule() {
+	if position.isFiftyMoveRule() {
 		return &Result{Outcome: Draw, Reason: FiftyMoveRule}
 	}
-	if e.position.isInsufficientMaterial() {
+	if position.isInsufficientMaterial() {
 		return &Result{Outcome: Draw, Reason: InsufficientMaterial}
 	}
 	return nil
