@@ -48,8 +48,9 @@ type MatchmakingUpdateData struct {
 }
 
 type StartMatchData struct {
-	WhitePlayerName string `json:"whitePlayerName"`
-	BlackPlayerName string `json:"blackPlayerName"`
+	Color           chess.Color `json:"color"`
+	WhitePlayerName string      `json:"whitePlayerName"`
+	BlackPlayerName string      `json:"blackPlayerName"`
 }
 
 type EndMatchData struct {

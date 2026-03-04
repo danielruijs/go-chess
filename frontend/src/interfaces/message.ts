@@ -1,4 +1,4 @@
-import type { Board, PieceType } from "./chess";
+import type { Board, Color, PieceType } from "./chess";
 import type { Result } from "./result";
 
 const MessageTypeBoard = "board";
@@ -35,6 +35,7 @@ type MatchmakingUpdateData = {
 };
 
 type StartMatchData = {
+  color: Color;
   whitePlayerName: string;
   blackPlayerName: string;
 };

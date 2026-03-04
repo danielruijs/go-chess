@@ -8,4 +8,4 @@ interface Piece {
 
 type Board = (Piece | null)[][];
 
-export type { Board, PieceType };
+export type { Board, PieceType, Color };

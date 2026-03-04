@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData } from "../interfaces/message";
 import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch, MessageTypeEndMatch } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
-import type { Board } from "../interfaces/chess";
+import type { Color, Board } from "../interfaces/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
@@ -14,6 +14,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [board, setBoard] = useState<Board | null>(null);
     const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
     const [pgn, setPgn] = useState<string>("");
+    const [color, setColor] = useState<Color | null>(null);
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const [queueLength, setQueueLength] = useState<number | null>(null);
@@ -53,6 +54,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 }
                 case MessageTypeStartMatch: {
                     const startMatchData: StartMatchData = message.data;
+                    setColor(startMatchData.color);
                     setWhitePlayerName(startMatchData.whitePlayerName);
                     setBlackPlayerName(startMatchData.blackPlayerName);
                     navigateRef.current("/game");
@@ -88,6 +90,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             sendMessage,
             board,
             legalMoves,
+            color,
             whitePlayerName,
             blackPlayerName,
             queueLength,

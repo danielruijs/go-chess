@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Dialog, DialogContent } from "@mui/material";
-import type { Board, PieceType } from "../interfaces/chess";
+import type { Board, Color, PieceType } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
 import { coordsToString } from "../utils/chess";
 
 function BoardComponent({
+    color,
     board,
     legalMoves,
     sendMessage,
     matchResult,
 }: {
+    color: Color,
     board: Board | null,
     legalMoves: Record<string, LegalMove[]> | null,
     sendMessage: (message: WSMessage) => void,
@@ -120,8 +122,10 @@ function BoardComponent({
                 }}
             >
                 {Array.from({ length: 64 }).map((_, index) => {
-                    const file = index % 8;                 // a -> h
-                    const rank = 7 - Math.floor(index / 8); // 8 -> 1
+                    const displayFile = index % 8;
+                    const displayRow = Math.floor(index / 8);
+                    const file = color === "white" ? displayFile : 7 - displayFile;
+                    const rank = color === "white" ? 7 - displayRow : displayRow;
 
                     const piece = board[file][rank];
                     const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
@@ -141,6 +145,7 @@ function BoardComponent({
                                 border: isSelected ? "3px solid #1976d2" : "1px solid #000000",
                                 cursor: "pointer",
                                 boxSizing: "border-box",
+                                backgroundColor: (file + rank) % 2 === 0 ? "#C8C4BE" : "#F5F3F0",
                             }}
                         >
                             {imgPath && <img src={imgPath} style={{ width: "80px", height: "80px" }} />}

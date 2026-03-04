@@ -57,6 +57,7 @@ func (m *Match) Run() {
 		case EventTypeGameStarted:
 			for _, player := range []*Player{m.Player1, m.Player2} {
 				startMatchData := StartMatchData{
+					Color:           player.Color,
 					WhitePlayerName: m.getPlayerByColor(chess.White).Name,
 					BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
 				}
