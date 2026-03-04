@@ -18,9 +18,9 @@ const (
 	ThreefoldRepetition  Reason = "threefold_repetition"
 	FiftyMoveRule        Reason = "fifty_move_rule"
 	InsufficientMaterial Reason = "insufficient_material"
+	Resignation          Reason = "resignation"
+	AgreedDraw           Reason = "AGREED_DRAW"
 	// Timeout              Reason = "TIMEOUT"
-	// Resignation Reason = "resignation"
-	// AgreedDraw           Reason = "AGREED_DRAW"
 )
 
 type Result struct {

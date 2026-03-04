@@ -20,6 +20,8 @@ type Match struct {
 
 	Engine    *chess.Engine
 	EventChan chan Event
+
+	DrawOfferedBy *Player
 }
 
 func (m *Match) Run() {
@@ -46,12 +48,7 @@ func (m *Match) Run() {
 				continue
 			}
 			if result != nil {
-				err := m.sendFinalPositionUpdate()
-				if err != nil {
-					log.Println("failed to send final position update:", err)
-				}
-				m.sendMatchEnd(*result)
-				close(m.EventChan)
+				m.end(result)
 				return
 			}
 		case EventTypeGameStarted:
@@ -71,6 +68,62 @@ func (m *Match) Run() {
 					Data: data,
 				}
 			}
+		case EventTypeResign:
+			var result *chess.Result
+			if event.Player.Color == chess.White {
+				result = &chess.Result{Outcome: chess.BlackWin, Reason: chess.Resignation}
+			} else {
+				result = &chess.Result{Outcome: chess.WhiteWin, Reason: chess.Resignation}
+			}
+			m.end(result)
+			return
+		case EventTypeOfferDraw:
+			if m.DrawOfferedBy != nil {
+				log.Println("draw offer already pending")
+				continue
+			}
+			m.DrawOfferedBy = event.Player
+			if m.Player1 == event.Player {
+				m.Player2.SendChan <- WSMessage{
+					Type: MessageTypeDrawOffered,
+				}
+			} else {
+				m.Player1.SendChan <- WSMessage{
+					Type: MessageTypeDrawOffered,
+				}
+			}
+		case EventTypeRespondDraw:
+			data, ok := event.Data.(RespondDrawData)
+			if !ok {
+				log.Println("invalid respond draw data format")
+				continue
+			}
+			if m.DrawOfferedBy == nil {
+				log.Println("no draw offer to respond to")
+				continue
+			}
+			if m.DrawOfferedBy == event.Player {
+				log.Println("player cannot respond to their own draw offer")
+				continue
+			}
+			if !data.Accept {
+				// notify opponent that the draw offer was declined
+				if m.Player1 == event.Player {
+					m.Player2.SendChan <- WSMessage{
+						Type: MessageTypeDrawDeclined,
+					}
+				} else {
+					m.Player1.SendChan <- WSMessage{
+						Type: MessageTypeDrawDeclined,
+					}
+				}
+				m.DrawOfferedBy = nil
+				continue
+			}
+			// accepted draw
+			result := &chess.Result{Outcome: chess.Draw, Reason: chess.AgreedDraw}
+			m.end(result)
+			return
 		}
 		err := m.sendPositionUpdate()
 		if err != nil {
@@ -116,6 +169,16 @@ func (m *Match) sendFinalPositionUpdate() error {
 		}
 	}
 	return nil
+}
+
+func (m *Match) end(result *chess.Result) {
+	m.Engine.ApplyResult(result)
+	err := m.sendFinalPositionUpdate()
+	if err != nil {
+		log.Println("failed to send final position update:", err)
+	}
+	m.sendMatchEnd(*result)
+	close(m.EventChan)
 }
 
 func (m *Match) sendMatchEnd(result chess.Result) {

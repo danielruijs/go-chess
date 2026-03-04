@@ -25,14 +25,29 @@ func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
 
 		switch message.Type {
 		case MessageTypeJoinMatch:
-			err := c.handleJoinMatch(message, matchmaker)
+			err := c.handleJoinMatch(message.Data, matchmaker)
 			if err != nil {
 				log.Println("Error handling join match:", err)
 			}
 		case MessageTypeMove:
-			err := c.handleMove(message)
+			err := c.handleMove(message.Data)
 			if err != nil {
 				log.Println("Error handling move:", err)
+			}
+		case MessageTypeResign:
+			err := c.handleResign()
+			if err != nil {
+				log.Println("Error handling resign:", err)
+			}
+		case MessageTypeOfferDraw:
+			err := c.handleOfferDraw()
+			if err != nil {
+				log.Println("Error handling offer draw:", err)
+			}
+		case MessageTypeRespondDraw:
+			err := c.handleRespondDraw(message.Data)
+			if err != nil {
+				log.Println("Error handling respond draw:", err)
 			}
 		default:
 			log.Println("Unsupported message type:", message.Type)

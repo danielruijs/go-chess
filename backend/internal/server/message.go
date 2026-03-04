@@ -13,9 +13,14 @@ const (
 	MessageTypeMatchmakingUpdate MessageType = "matchmaking_update"
 	MessageTypeStartMatch        MessageType = "start_match"
 	MessageTypeEndMatch          MessageType = "end_match"
+	MessageTypeDrawOffered       MessageType = "draw_offered"
+	MessageTypeDrawDeclined      MessageType = "draw_declined"
 	// inbound
-	MessageTypeJoinMatch MessageType = "join_match"
-	MessageTypeMove      MessageType = "move"
+	MessageTypeJoinMatch   MessageType = "join_match"
+	MessageTypeMove        MessageType = "move"
+	MessageTypeResign      MessageType = "resign"
+	MessageTypeOfferDraw   MessageType = "offer_draw"
+	MessageTypeRespondDraw MessageType = "respond_draw"
 )
 
 type WSMessage struct {
@@ -59,4 +64,8 @@ type MoveData struct {
 	From      string           `json:"from"`
 	To        string           `json:"to"`
 	Promotion *chess.PieceType `json:"promotion,omitempty"`
+}
+
+type RespondDrawData struct {
+	Accept bool `json:"accept"`
 }

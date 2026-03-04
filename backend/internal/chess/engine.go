@@ -48,9 +48,6 @@ func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	e.positions[e.position.Key()]++
 
 	result := getResult(e.generator, e.position, e.positions)
-	if result != nil {
-		e.pgn = e.pgn.AppendResult(result)
-	}
 	return result, nil
 }
 
@@ -71,4 +68,11 @@ func (e *Engine) validateMove(move Move, color Color) error {
 		return fmt.Errorf("move is not legal")
 	}
 	return nil
+}
+
+func (e *Engine) ApplyResult(result *Result) {
+	if result == nil {
+		return
+	}
+	e.pgn = e.pgn.AppendResult(result)
 }
