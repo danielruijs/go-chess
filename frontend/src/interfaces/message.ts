@@ -7,8 +7,11 @@ const MessageTypeMatchmakingUpdate = "matchmaking_update";
 const MessageTypeStartMatch = "start_match";
 const MessageTypeEndMatch = "end_match"
 // outbound
-const MessageTypeMove = "move";
 const MessageTypeJoinMatch = "join_match";
+const MessageTypeMove = "move";
+const MessageTypeResign = "resign";
+const MessageTypeOfferDraw = "offer_draw";
+const MessageTypeRespondDraw = "respond_draw";
 
 // inbound
 type LegalMove = {
@@ -48,6 +51,10 @@ type MoveData = {
   promotion: PieceType | null;
 };
 
+type RespondDrawData = {
+  accept: boolean;
+};
+
 type WSMessage =
   // inbound
   | {
@@ -74,6 +81,16 @@ type WSMessage =
   | {
     type: typeof MessageTypeMove;
     data: MoveData;
+  }
+  | {
+    type: typeof MessageTypeResign;
+  }
+  | {
+    type: typeof MessageTypeOfferDraw;
+  }
+  | {
+    type: typeof MessageTypeRespondDraw;
+    data: RespondDrawData;
   };
 
 export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData };
@@ -84,4 +101,7 @@ export {
   MessageTypeStartMatch,
   MessageTypeMatchmakingUpdate,
   MessageTypeEndMatch,
+  MessageTypeResign,
+  MessageTypeOfferDraw,
+  MessageTypeRespondDraw
 };
