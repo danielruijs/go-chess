@@ -8,12 +8,14 @@ import (
 type MessageType string
 
 const (
+	// outbound
 	MessageTypeBoard             MessageType = "board"
-	MessageTypeMove              MessageType = "move"
-	MessageTypeJoinMatch         MessageType = "join_match"
 	MessageTypeMatchmakingUpdate MessageType = "matchmaking_update"
 	MessageTypeStartMatch        MessageType = "start_match"
 	MessageTypeEndMatch          MessageType = "end_match"
+	// inbound
+	MessageTypeJoinMatch MessageType = "join_match"
+	MessageTypeMove      MessageType = "move"
 )
 
 type WSMessage struct {
@@ -21,6 +23,7 @@ type WSMessage struct {
 	Data json.RawMessage `json:"data"`
 }
 
+// outbound
 type LegalMove struct {
 	To        string           `json:"to"`
 	Promotion *chess.PieceType `json:"promotion,omitempty"`
@@ -30,16 +33,6 @@ type BoardData struct {
 	Board      chess.Board            `json:"board"`
 	LegalMoves map[string][]LegalMove `json:"legalMoves"`
 	PGN        chess.PGN              `json:"pgn"`
-}
-
-type MoveData struct {
-	From      string           `json:"from"`
-	To        string           `json:"to"`
-	Promotion *chess.PieceType `json:"promotion,omitempty"`
-}
-
-type JoinMatchData struct {
-	PlayerName string `json:"playerName"`
 }
 
 type MatchmakingUpdateData struct {
@@ -55,4 +48,15 @@ type StartMatchData struct {
 
 type EndMatchData struct {
 	Result chess.Result `json:"result"`
+}
+
+// inbound
+type JoinMatchData struct {
+	PlayerName string `json:"playerName"`
+}
+
+type MoveData struct {
+	From      string           `json:"from"`
+	To        string           `json:"to"`
+	Promotion *chess.PieceType `json:"promotion,omitempty"`
 }
