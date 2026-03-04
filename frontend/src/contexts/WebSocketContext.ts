@@ -9,6 +9,7 @@ export interface WebSocketContextType {
     sendMessage: (message: WSMessage) => void;
     board: Board | null;
     legalMoves: Record<string, LegalMove[]> | null;
+    pgn: string;
     whitePlayerName: string;
     blackPlayerName: string;
     queueLength: number | null;

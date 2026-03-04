@@ -13,6 +13,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [isConnected, setIsConnected] = useState(false);
     const [board, setBoard] = useState<Board | null>(null);
     const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
+    const [pgn, setPgn] = useState<string>("");
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const [queueLength, setQueueLength] = useState<number | null>(null);
@@ -47,6 +48,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     const boardData: BoardData = message.data;
                     setBoard(boardData.board);
                     setLegalMoves(boardData.legalMoves);
+                    setPgn(boardData.pgn);
                     break;
                 }
                 case MessageTypeStartMatch: {
@@ -91,6 +93,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             queueLength,
             inQueue,
             matchResult,
+            pgn,
         }}>
             {children}
         </WebSocketContext.Provider>

@@ -16,6 +16,7 @@ type LegalMove = {
 type BoardData = {
   board: Board;
   legalMoves: Record<string, LegalMove[]>;
+  pgn: string;
 };
 
 type MoveData = {
