@@ -181,6 +181,7 @@ func (m *Match) end(result *chess.Result) {
 	close(m.EventChan)
 	m.Player1.Match = nil
 	m.Player2.Match = nil
+	log.Printf("ended match between %s and %s with result: %s\n", m.Player1.Name, m.Player2.Name, result.Outcome)
 }
 
 func (m *Match) sendMatchEnd(result chess.Result) {

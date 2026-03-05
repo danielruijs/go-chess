@@ -38,6 +38,18 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         setIsDrawDeclinedNoticeOpen(false);
     }
 
+    function resetMatchState() {
+        setBoard(null);
+        setLegalMoves(null);
+        setPgn("");
+        setColor(null);
+        setWhitePlayerName("");
+        setBlackPlayerName("");
+        setMatchResult(null);
+        setIsDrawOfferPending(false);
+        setIsDrawDeclinedNoticeOpen(false);
+    }
+
     function sendMessage(message: WSMessage) {
         socketRef.current?.send(JSON.stringify(message));
     }
@@ -73,6 +85,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 }
                 case MessageTypeStartMatch: {
                     const startMatchData: StartMatchData = message.data;
+                    resetMatchState();
                     setColor(startMatchData.color);
                     setWhitePlayerName(startMatchData.whitePlayerName);
                     setBlackPlayerName(startMatchData.blackPlayerName);
