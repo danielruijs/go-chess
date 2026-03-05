@@ -15,6 +15,7 @@ export interface WebSocketContextType {
     blackPlayerName: string;
     queueLength: number | null;
     inQueue: boolean;
+    inMatch: boolean;
     matchResult: Result | null;
     isDrawOfferPending: boolean;
     isDrawDeclinedNoticeOpen: boolean;

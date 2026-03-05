@@ -19,6 +19,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const [queueLength, setQueueLength] = useState<number | null>(null);
     const [inQueue, setInQueue] = useState<boolean>(false);
+    const [inMatch, setInMatch] = useState<boolean>(false);
     const [matchResult, setMatchResult] = useState<Result | null>(null);
     const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
     const [isDrawDeclinedNoticeOpen, setIsDrawDeclinedNoticeOpen] = useState(false);
@@ -45,6 +46,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         setColor(null);
         setWhitePlayerName("");
         setBlackPlayerName("");
+        setInMatch(false);
         setMatchResult(null);
         setIsDrawOfferPending(false);
         setIsDrawDeclinedNoticeOpen(false);
@@ -86,6 +88,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 case MessageTypeStartMatch: {
                     const startMatchData: StartMatchData = message.data;
                     resetMatchState();
+                    setInMatch(true);
                     setColor(startMatchData.color);
                     setWhitePlayerName(startMatchData.whitePlayerName);
                     setBlackPlayerName(startMatchData.blackPlayerName);
@@ -101,6 +104,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 case MessageTypeEndMatch: {
                     const endMatchData: EndMatchData = message.data;
                     setMatchResult(endMatchData.result);
+                    setInMatch(false);
                     break;
                 }
                 case MessageTypeDrawOffered: {
@@ -131,6 +135,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             blackPlayerName,
             queueLength,
             inQueue,
+            inMatch,
             matchResult,
             pgn,
             isDrawOfferPending,

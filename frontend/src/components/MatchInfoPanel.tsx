@@ -4,7 +4,7 @@ import { MessageTypeOfferDraw, MessageTypeResign, type WSMessage } from "../inte
 import { useWebSocket } from "../contexts/WebSocketContext";
 
 function MatchInfoPanel({ pgn }: { pgn: string }) {
-    const { sendMessage, isDrawOfferPending, respondToDrawOffer } = useWebSocket();
+    const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch } = useWebSocket();
     const moves = parsePgn(pgn);
     const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
     for (let i = 0; i < moves.length; i += 2) {
@@ -65,6 +65,7 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
                         <Button
                             sx={{ width: "100px" }}
                             variant="contained"
+                            disabled={!inMatch}
                             onClick={() => {
                                 const message: WSMessage = {
                                     type: MessageTypeResign,
@@ -77,6 +78,7 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
                         <Button
                             sx={{ width: "100px" }}
                             variant="contained"
+                            disabled={!inMatch}
                             onClick={() => {
                                 const message: WSMessage = {
                                     type: MessageTypeOfferDraw,
