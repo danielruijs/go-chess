@@ -39,6 +39,8 @@ function BoardComponent({
             threefold_repetition: "by Threefold Repetition",
             fifty_moves_rule: "by Fifty-Move Rule",
             insufficient_material: "by Insufficient Material",
+            resignation: "by Resignation",
+            agreed_draw: "by Agreement",
         }[matchResult.reason];
 
         return `${outcomeText} ${reasonText}`;

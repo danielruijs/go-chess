@@ -4,7 +4,7 @@ import { MessageTypeOfferDraw, MessageTypeResign, type WSMessage } from "../inte
 import { useWebSocket } from "../contexts/WebSocketContext";
 
 function MatchInfoPanel({ pgn }: { pgn: string }) {
-    const { sendMessage } = useWebSocket();
+    const { sendMessage, isDrawOfferPending, respondToDrawOffer } = useWebSocket();
     const moves = parsePgn(pgn);
     const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
     for (let i = 0; i < moves.length; i += 2) {
@@ -37,31 +37,57 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
                     </tbody>
                 </table>
             </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "10px" }}>
-                <Button
-                    sx={{ width: "100px" }}
-                    variant="contained"
-                    onClick={() => {
-                        const message: WSMessage = {
-                            type: MessageTypeResign,
-                        };
-                        sendMessage(message);
-                    }}
-                >
-                    Resign
-                </Button>
-                <Button
-                    sx={{ width: "100px" }}
-                    variant="contained"
-                    onClick={() => {
-                        const message: WSMessage = {
-                            type: MessageTypeOfferDraw,
-                        };
-                        sendMessage(message);
-                    }}
-                >
-                    Draw
-                </Button>
+            <div style={{ marginTop: "10px" }}>
+                {isDrawOfferPending ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                        <div style={{ fontSize: "16px", fontWeight: 600 }}>Draw offered</div>
+                        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                            <Button
+                                sx={{ width: "40px", height: "30px", fontSize: "22px" }}
+                                variant="contained"
+                                color="success"
+                                onClick={() => respondToDrawOffer(true)}
+                            >
+                                ✓
+                            </Button>
+                            <Button
+                                sx={{ width: "40px", height: "30px", fontSize: "22px" }}
+                                variant="contained"
+                                color="error"
+                                onClick={() => respondToDrawOffer(false)}
+                            >
+                                ✕
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                        <Button
+                            sx={{ width: "100px" }}
+                            variant="contained"
+                            onClick={() => {
+                                const message: WSMessage = {
+                                    type: MessageTypeResign,
+                                };
+                                sendMessage(message);
+                            }}
+                        >
+                            Resign
+                        </Button>
+                        <Button
+                            sx={{ width: "100px" }}
+                            variant="contained"
+                            onClick={() => {
+                                const message: WSMessage = {
+                                    type: MessageTypeOfferDraw,
+                                };
+                                sendMessage(message);
+                            }}
+                        >
+                            Draw
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );

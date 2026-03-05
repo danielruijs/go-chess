@@ -5,7 +5,9 @@ type Reason =
     | "stalemate"
     | "threefold_repetition"
     | "fifty_moves_rule"
-    | "insufficient_material";
+    | "insufficient_material"
+    | "resignation"
+    | "agreed_draw";
 
 type Result = {
     outcome: Outcome;

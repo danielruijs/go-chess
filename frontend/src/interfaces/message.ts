@@ -6,6 +6,8 @@ const MessageTypeBoard = "board";
 const MessageTypeMatchmakingUpdate = "matchmaking_update";
 const MessageTypeStartMatch = "start_match";
 const MessageTypeEndMatch = "end_match"
+const MessageTypeDrawOffered = "draw_offered";
+const MessageTypeDrawDeclined = "draw_declined";
 // outbound
 const MessageTypeJoinMatch = "join_match";
 const MessageTypeMove = "move";
@@ -73,6 +75,12 @@ type WSMessage =
     type: typeof MessageTypeEndMatch;
     data: EndMatchData;
   }
+  | {
+    type: typeof MessageTypeDrawOffered;
+  }
+  | {
+    type: typeof MessageTypeDrawDeclined;
+  }
   // outbound
   | {
     type: typeof MessageTypeJoinMatch;
@@ -101,6 +109,8 @@ export {
   MessageTypeStartMatch,
   MessageTypeMatchmakingUpdate,
   MessageTypeEndMatch,
+  MessageTypeDrawOffered,
+  MessageTypeDrawDeclined,
   MessageTypeResign,
   MessageTypeOfferDraw,
   MessageTypeRespondDraw

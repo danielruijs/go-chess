@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData } from "../interfaces/message";
-import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch, MessageTypeEndMatch } from "../interfaces/message";
+import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch, MessageTypeEndMatch, MessageTypeDrawOffered, MessageTypeDrawDeclined, MessageTypeRespondDraw } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
 import type { Color, Board } from "../interfaces/chess";
 import { WebSocketContext } from "./WebSocketContext";
@@ -20,8 +20,27 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [queueLength, setQueueLength] = useState<number | null>(null);
     const [inQueue, setInQueue] = useState<boolean>(false);
     const [matchResult, setMatchResult] = useState<Result | null>(null);
+    const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
+    const [isDrawDeclinedNoticeOpen, setIsDrawDeclinedNoticeOpen] = useState(false);
     const navigate = useNavigate();
     const navigateRef = useRef(navigate);
+
+    function respondToDrawOffer(accept: boolean) {
+        const responseMessage: WSMessage = {
+            type: MessageTypeRespondDraw,
+            data: { accept },
+        };
+        sendMessage(responseMessage);
+        setIsDrawOfferPending(false);
+    }
+
+    function closeDrawDeclinedNotice() {
+        setIsDrawDeclinedNoticeOpen(false);
+    }
+
+    function sendMessage(message: WSMessage) {
+        socketRef.current?.send(JSON.stringify(message));
+    }
 
     useEffect(() => {
         // Initialize WebSocket once
@@ -71,6 +90,14 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     setMatchResult(endMatchData.result);
                     break;
                 }
+                case MessageTypeDrawOffered: {
+                    setIsDrawOfferPending(true);
+                    break;
+                }
+                case MessageTypeDrawDeclined: {
+                    setIsDrawDeclinedNoticeOpen(true);
+                    break;
+                }
             }
         });
 
@@ -79,10 +106,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             socketRef.current?.close();
         };
     }, []);
-
-    const sendMessage = (message: WSMessage) => {
-        socketRef.current?.send(JSON.stringify(message));
-    };
 
     return (
         <WebSocketContext.Provider value={{
@@ -97,6 +120,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             inQueue,
             matchResult,
             pgn,
+            isDrawOfferPending,
+            isDrawDeclinedNoticeOpen,
+            respondToDrawOffer,
+            closeDrawDeclinedNotice,
         }}>
             {children}
         </WebSocketContext.Provider>

@@ -19,7 +19,7 @@ const (
 	FiftyMoveRule        Reason = "fifty_move_rule"
 	InsufficientMaterial Reason = "insufficient_material"
 	Resignation          Reason = "resignation"
-	AgreedDraw           Reason = "AGREED_DRAW"
+	AgreedDraw           Reason = "agreed_draw"
 	// Timeout              Reason = "TIMEOUT"
 )
 

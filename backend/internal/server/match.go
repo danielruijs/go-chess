@@ -179,6 +179,8 @@ func (m *Match) end(result *chess.Result) {
 	}
 	m.sendMatchEnd(*result)
 	close(m.EventChan)
+	m.Player1.Match = nil
+	m.Player2.Match = nil
 }
 
 func (m *Match) sendMatchEnd(result chess.Result) {
