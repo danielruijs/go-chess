@@ -171,27 +171,20 @@ function BoardComponent({
     }
 
     function tryMove(from: Square, to: Square, sourceColor: Color) {
-        const fromSquareString = coordsToString(from);
-        const toSquareString = coordsToString(to);
-
-        if (!legalMoves || (from.file === to.file && from.rank === to.rank)) {
-            setSelected(null);
-            return;
-        }
-
-        const move = selectedMoves.find(m => m.to === toSquareString);
+        const fromStr = coordsToString(from);
+        const toStr = coordsToString(to);
+        const move = selectedMoves.find(m => m.to === toStr);
         if (!move) {
             setSelected(null);
             return;
         }
 
         if (move.promotion) {
-            setPromotionDialog({ from: fromSquareString, to: toSquareString, color: sourceColor });
-            return;
+            setPromotionDialog({ from: fromStr, to: toStr, color: sourceColor });
+        } else {
+            sendMove(fromStr, toStr, null);
+            setSelected(null);
         }
-
-        sendMove(fromSquareString, toSquareString, null);
-        setSelected(null);
     }
 
     function handlePromotion(pieceType: PieceType) {
@@ -203,29 +196,20 @@ function BoardComponent({
     }
 
     function handleClick(square: Square, isMoveTarget: boolean) {
-        const clickedPiece = currentBoard[square.file][square.rank];
-        const clickedPieceHasMoves = clickedPiece && hasLegalMoves(square);
+        const piece = currentBoard[square.file][square.rank];
+        const isSameSquare = selected && selected.file === square.file && selected.rank === square.rank;
 
-        // Nothing selected
-        if (!selected) {
-            if (clickedPieceHasMoves) {
-                setSelected(square);
-            }
-            return;
-        }
-
-        // Move piece if the target square is legal
-        if (isMoveTarget) {
+        if (selected && isMoveTarget) {
             const sourcePiece = currentBoard[selected.file][selected.rank];
-            if (sourcePiece) {
-                tryMove(selected, square, sourcePiece.color);
-                return;
-            }
+            tryMove(selected, square, sourcePiece!.color);
         }
-
-        if (clickedPieceHasMoves && !(selected.file === square.file && selected.rank === square.rank)) {
-            setSelected(square);
-        } else {
+        else if (isSameSquare) {
+            setSelected(null); // deselect if clicking the same square again
+        }
+        else if (piece && hasLegalMoves(square)) {
+            setSelected(square); // nothing selected, select piece with legal moves
+        }
+        else {
             setSelected(null);
         }
     }
