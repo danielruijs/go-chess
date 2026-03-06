@@ -8,4 +8,9 @@ interface Piece {
 
 type Board = (Piece | null)[][];
 
-export type { Board, PieceType, Color };
+/**
+ * (0,0) is a1, (1,0) is b1, (7,7) is h8
+ */
+type Square = { file: number; rank: number };
+
+export type { Board, PieceType, Color, Square };
