@@ -1,4 +1,4 @@
-import { coordsToString, parsePgn, displayIndexToSquare } from "../utils/chess";
+import { coordsToString, pgnToMoves, displayIndexToSquare } from "../utils/chess";
 
 describe("coordsToString", () => {
     it("converts (0,0) to a1", () => {
@@ -15,11 +15,16 @@ describe("coordsToString", () => {
     });
 });
 
-describe("parsePgn", () => {
+describe("pgnToMoves", () => {
     it("parses simple PGN", () => {
         const pgn = "1.d4 d5 2.c4 c5 3.b4 b5 4.bxc5 Bd7 5.c6 Bxc6 ";
-        const moves = parsePgn(pgn);
+        const moves = pgnToMoves(pgn);
         expect(moves).toEqual(["d4", "d5", "c4", "c5", "b4", "b5", "bxc5", "Bd7", "c6", "Bxc6"]);
+    });
+    it("parses PGN with result", () => {
+        const pgn = "1.d4 e5 0-1";
+        const moves = pgnToMoves(pgn);
+        expect(moves).toEqual(["d4", "e5"]);
     });
 });
 

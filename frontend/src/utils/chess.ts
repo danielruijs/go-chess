@@ -6,11 +6,12 @@ function coordsToString(square: Square): string {
     return fileChar + rankChar;
 }
 
-function parsePgn(pgn: string): string[] {
+function pgnToMoves(pgn: string): string[] {
     const moves: string[] = [];
     const tokens = pgn.split(/\s+/); // split on whitespace
     for (const token of tokens) {
         if (token.trim() === "") continue; // skip empty tokens
+        if (token.includes("-") || token.includes("*")) continue; // skip result tokens
         if (token.includes(".")) {
             const parts = token.split(".");
             if (parts.length === 2) {
@@ -32,4 +33,4 @@ function displayIndexToSquare(index: number, color: Color): Square {
     return { file, rank };
 }
 
-export { coordsToString, parsePgn, displayIndexToSquare };
+export { coordsToString, pgnToMoves, displayIndexToSquare };

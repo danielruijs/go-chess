@@ -1,11 +1,12 @@
 import { Button } from "@mui/material";
-import { parsePgn } from "../utils/chess";
+import { pgnToMoves } from "../utils/chess";
 import { MessageTypeOfferDraw, MessageTypeResign, type WSMessage } from "../interfaces/message";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
 function MatchInfoPanel({ pgn }: { pgn: string }) {
     const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch } = useWebSocket();
-    const moves = parsePgn(pgn);
+    console.log("PGN in MatchInfoPanel:", pgn);
+    const moves = pgnToMoves(pgn);
     const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
     for (let i = 0; i < moves.length; i += 2) {
         groupedMoves.push({
