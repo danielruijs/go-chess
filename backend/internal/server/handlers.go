@@ -11,7 +11,7 @@ func (c Client) handleJoinMatch(messageData json.RawMessage, matchmaker *Matchma
 		return fmt.Errorf("invalid join match data format: %w", err)
 	}
 
-	if c.Player.Match != nil {
+	if matchmaker.GetMatch(c.Player) != nil {
 		return fmt.Errorf("player is already in a match")
 	}
 
@@ -24,17 +24,18 @@ func (c Client) handleJoinMatch(messageData json.RawMessage, matchmaker *Matchma
 	return nil
 }
 
-func (c Client) handleMove(messageData json.RawMessage) error {
+func (c Client) handleMove(messageData json.RawMessage, matchmaker *Matchmaker) error {
 	var data MoveData
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid move data format: %w", err)
 	}
 
-	if c.Player.Match == nil {
+	match := matchmaker.GetMatch(c.Player)
+	if match == nil {
 		return fmt.Errorf("player is not in a match")
 	}
 
-	c.Player.Match.EventChan <- Event{
+	match.EventChan <- Event{
 		Player: c.Player,
 		Type:   EventTypeMove,
 		Data:   data,
@@ -43,12 +44,13 @@ func (c Client) handleMove(messageData json.RawMessage) error {
 	return nil
 }
 
-func (c Client) handleResign() error {
-	if c.Player.Match == nil {
+func (c Client) handleResign(matchmaker *Matchmaker) error {
+	match := matchmaker.GetMatch(c.Player)
+	if match == nil {
 		return fmt.Errorf("player is not in a match")
 	}
 
-	c.Player.Match.EventChan <- Event{
+	match.EventChan <- Event{
 		Player: c.Player,
 		Type:   EventTypeResign,
 	}
@@ -56,12 +58,13 @@ func (c Client) handleResign() error {
 	return nil
 }
 
-func (c Client) handleOfferDraw() error {
-	if c.Player.Match == nil {
+func (c Client) handleOfferDraw(matchmaker *Matchmaker) error {
+	match := matchmaker.GetMatch(c.Player)
+	if match == nil {
 		return fmt.Errorf("player is not in a match")
 	}
 
-	c.Player.Match.EventChan <- Event{
+	match.EventChan <- Event{
 		Player: c.Player,
 		Type:   EventTypeOfferDraw,
 	}
@@ -69,17 +72,18 @@ func (c Client) handleOfferDraw() error {
 	return nil
 }
 
-func (c Client) handleRespondDraw(messageData json.RawMessage) error {
+func (c Client) handleRespondDraw(messageData json.RawMessage, matchmaker *Matchmaker) error {
 	var data RespondDrawData
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid respond draw data format: %w", err)
 	}
 
-	if c.Player.Match == nil {
+	match := matchmaker.GetMatch(c.Player)
+	if match == nil {
 		return fmt.Errorf("player is not in a match")
 	}
 
-	c.Player.Match.EventChan <- Event{
+	match.EventChan <- Event{
 		Player: c.Player,
 		Type:   EventTypeRespondDraw,
 		Data:   data,

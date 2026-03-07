@@ -30,22 +30,22 @@ func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
 				log.Println("Error handling join match:", err)
 			}
 		case MessageTypeMove:
-			err := c.handleMove(message.Data)
+			err := c.handleMove(message.Data, matchmaker)
 			if err != nil {
 				log.Println("Error handling move:", err)
 			}
 		case MessageTypeResign:
-			err := c.handleResign()
+			err := c.handleResign(matchmaker)
 			if err != nil {
 				log.Println("Error handling resign:", err)
 			}
 		case MessageTypeOfferDraw:
-			err := c.handleOfferDraw()
+			err := c.handleOfferDraw(matchmaker)
 			if err != nil {
 				log.Println("Error handling offer draw:", err)
 			}
 		case MessageTypeRespondDraw:
-			err := c.handleRespondDraw(message.Data)
+			err := c.handleRespondDraw(message.Data, matchmaker)
 			if err != nil {
 				log.Println("Error handling respond draw:", err)
 			}

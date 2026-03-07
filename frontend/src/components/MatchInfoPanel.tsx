@@ -5,7 +5,6 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 
 function MatchInfoPanel({ pgn }: { pgn: string }) {
     const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch } = useWebSocket();
-    console.log("PGN in MatchInfoPanel:", pgn);
     const moves = pgnToMoves(pgn);
     const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
     for (let i = 0; i < moves.length; i += 2) {

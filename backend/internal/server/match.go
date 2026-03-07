@@ -9,7 +9,6 @@ import (
 
 type Player struct {
 	Name     string
-	Match    *Match
 	SendChan chan WSMessage
 	Color    chess.Color
 }
@@ -18,8 +17,9 @@ type Match struct {
 	Player1 *Player
 	Player2 *Player
 
-	Engine    *chess.Engine
-	EventChan chan Event
+	Engine     *chess.Engine
+	EventChan  chan Event
+	MatchEnded chan<- *Match
 
 	DrawOfferedBy *Player
 }
@@ -179,8 +179,7 @@ func (m *Match) end(result *chess.Result) {
 	}
 	m.sendMatchEnd(*result)
 	close(m.EventChan)
-	m.Player1.Match = nil
-	m.Player2.Match = nil
+	m.MatchEnded <- m
 	log.Printf("ended match between %s and %s with result: %s\n", m.Player1.Name, m.Player2.Name, result.Outcome)
 }
 
