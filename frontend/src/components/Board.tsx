@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Dialog, DialogContent } from "@mui/material";
 import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
@@ -7,7 +7,7 @@ import type { Board, Color, PieceType, Square } from "../interfaces/chess";
 import { MessageTypeMove } from "../interfaces/message";
 import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
-import { coordsToString } from "../utils/chess";
+import { coordsToString, displayIndexToSquare } from "../utils/chess";
 
 const OUTCOME_TEXT = {
     white_win: "White wins",
@@ -135,6 +135,12 @@ function BoardComponent({
     const navigate = useNavigate();
     const [selected, setSelected] = useState<Square | null>(null);
     const [promotionDialog, setPromotionDialog] = useState<{ from: string; to: string; color: Color } | null>(null);
+    const { selectedMoves, selectedMoveTargets } = useMemo(() => {
+        const selectedSquareString = selected ? coordsToString(selected) : null;
+        const selectedMoves = selectedSquareString && legalMoves ? (legalMoves[selectedSquareString] ?? []) : [];
+        const selectedMoveTargets = new Set(selectedMoves.map((move) => move.to));
+        return { selectedMoves, selectedMoveTargets };
+    }, [selected, legalMoves]);
 
     if (!board) {
         return <div>Loading board...</div>;
@@ -151,10 +157,6 @@ function BoardComponent({
     }
 
     const resultString = getResultString();
-
-    const selectedSquareString = selected ? coordsToString(selected) : null;
-    const selectedMoves = selectedSquareString && legalMoves ? (legalMoves[selectedSquareString] ?? []) : [];
-    const selectedMoveTargets = new Set(selectedMoves.map((move) => move.to));
 
     function hasLegalMoves(square: Square) {
         const squareString = coordsToString(square);
@@ -249,15 +251,11 @@ function BoardComponent({
                     }}
                 >
                     {Array.from({ length: 64 }).map((_, index) => {
-                        const displayFile = index % 8;
-                        const displayRow = Math.floor(index / 8);
-                        const file = color === "white" ? displayFile : 7 - displayFile;
-                        const rank = color === "white" ? 7 - displayRow : displayRow;
-                        const square: Square = { file, rank };
+                        const square = displayIndexToSquare(index, color);
 
-                        const piece = board[file][rank];
+                        const piece = board[square.file][square.rank];
                         const imgPath = piece ? `/pieces/${piece.color}-${piece.type}.png` : null;
-                        const isSelected = selected?.file === file && selected?.rank === rank;
+                        const isSelected = selected?.file === square.file && selected?.rank === square.rank;
                         const isMoveTarget = selectedMoveTargets.has(coordsToString(square));
                         const canDragPiece = piece && hasLegalMoves(square);
 

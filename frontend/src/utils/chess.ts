@@ -1,4 +1,4 @@
-import type { Square } from "../interfaces/chess";
+import type { Square, Color } from "../interfaces/chess";
 
 function coordsToString(square: Square): string {
     const fileChar = String.fromCharCode("a".charCodeAt(0) + square.file);
@@ -24,4 +24,12 @@ function parsePgn(pgn: string): string[] {
     return moves;
 }
 
-export { coordsToString, parsePgn };
+function displayIndexToSquare(index: number, color: Color): Square {
+    const displayFile = index % 8;
+    const displayRow = Math.floor(index / 8);
+    const file = color === "white" ? displayFile : 7 - displayFile;
+    const rank = color === "white" ? 7 - displayRow : displayRow;
+    return { file, rank };
+}
+
+export { coordsToString, parsePgn, displayIndexToSquare };
