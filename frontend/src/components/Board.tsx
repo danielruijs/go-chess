@@ -51,13 +51,10 @@ function DraggablePiece({
         <img
             ref={ref}
             src={imgPath}
+            className="select-none"
             style={{
-                width: "80px",
-                height: "80px",
                 opacity: isDragging ? 0.55 : 1,
                 cursor: disabled ? "pointer" : "grab",
-                userSelect: "none",
-                WebkitUserSelect: "none",
             }}
             draggable={false}
         />
@@ -86,34 +83,18 @@ function BoardSquare({
         <div
             ref={ref}
             onClick={onClick}
+            className={`w-full h-full flex items-center justify-center relative box-border select-none }`}
             style={{
-                width: 80,
-                height: 80,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
                 border: isSelected ? "3px solid #1976d2" : "1px solid #000000",
                 cursor: "pointer",
-                boxSizing: "border-box",
                 backgroundColor: (square.file + square.rank) % 2 === 0 ? "#C8C4BE" : "#F5F3F0",
                 outline: isDropTarget ? "2px dashed #1976d2" : "none",
                 outlineOffset: isDropTarget ? "-2px" : 0,
-                userSelect: "none",
-                WebkitUserSelect: "none",
             }}
         >
             {children}
             {isMoveTarget && (
-                <div
-                    style={{
-                        position: "absolute",
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        backgroundColor: "rgb(255, 0, 0)",
-                    }}
-                />
+                <div className="absolute w-[25%] h-[25%] rounded-full bg-red-600" />
             )}
         </div>
     );
@@ -240,16 +221,9 @@ function BoardComponent({
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="flex flex-col gap-2.5">
             <DragDropProvider onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                <div
-                    style={{
-                        position: "relative",
-                        display: "grid",
-                        gridTemplateColumns: "repeat(8, 80px)",
-                        gridTemplateRows: "repeat(8, 80px)",
-                    }}
-                >
+                <div className="relative grid grid-cols-8 grid-rows-8 max-w-[80vh] shadow-xl">
                     {Array.from({ length: 64 }).map((_, index) => {
                         const square = displayIndexToSquare(index, color);
 
@@ -279,28 +253,13 @@ function BoardComponent({
                         );
                     })}
                     {resultString && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: "translate(-50%, -50%)",
-                                fontSize: "18px",
-                                fontWeight: "bold",
-                                padding: "20px",
-                                backgroundColor: "#e4e4e4",
-                                border: "2px solid #1976d2",
-                                borderRadius: "4px",
-                                textAlign: "center",
-                                color: "#1976d2",
-                                minWidth: "200px",
-                                zIndex: 10,
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "15px",
-                                alignItems: "center",
-                            }}
-                        >
+                        <div className={`
+                            absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                            z-10 p-5
+                            bg-gray-200 border-2 border-blue-600 rounded
+                            text-blue-600 text-lg font-bold text-center
+                            flex flex-col gap-3 items-center
+                        `}>
                             <div>{resultString}</div>
                             <Button
                                 onClick={() => navigate("/")}
@@ -314,21 +273,19 @@ function BoardComponent({
             </DragDropProvider>
             <Dialog open={!!promotionDialog} onClose={() => setPromotionDialog(null)}>
                 <DialogContent>
-                    <div style={{ display: "flex", gap: "10px" }}>
+                    <div className="flex gap-2">
                         {PROMOTION_PIECES.map((pieceType) => (
                             <div
                                 key={pieceType}
                                 onClick={() => handlePromotion(pieceType)}
-                                style={{
-                                    cursor: "pointer",
-                                    border: "2px solid #1976d2",
-                                    borderRadius: "4px",
-                                    backgroundColor: "#f0f0f0",
-                                }}
+                                className={`
+                                    cursor-pointer border-2 border-blue-600 rounded bg-gray-100
+                                    w-[15vw] h-[15vw] max-w-[100px] max-h-[100px]
+                                `}
                             >
                                 <img
                                     src={`/pieces/${promotionDialog?.color}-${pieceType}.png`}
-                                    style={{ width: "80px", height: "80px" }}
+                                    className="w-full h-full"
                                 />
                             </div>
                         ))}

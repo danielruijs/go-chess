@@ -12,7 +12,7 @@ function Home() {
     const navigate = useNavigate();
 
     return (
-        <div style={{ display: "flex", flexDirection: "row", gap: "50px", padding: "10px" }}>
+        <div className="flex flex-row gap-12 p-2">
             <Stack spacing={2} padding={2} width={"300px"}>
                 <TextField label="Name" variant="outlined" onChange={(e) => { setPlayerName(e.target.value) }} />
                 <Button

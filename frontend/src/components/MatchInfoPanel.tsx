@@ -16,19 +16,19 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
     }
 
     return (
-        <div style={{ padding: "10px", border: "1px solid #ccc", height: "300px", width: "200px", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
-            <div style={{ flex: 1, overflowY: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="p-2 border border-gray-600 h-72 w-48 flex flex-col box-border">
+            <div className="flex-1 overflow-y-auto">
+                <table className="w-full border-collapse">
                     <thead>
                         <tr>
-                            <th style={{ textAlign: "left", width: "16%" }}>#</th>
-                            <th style={{ textAlign: "left", width: "42%" }}>White</th>
-                            <th style={{ textAlign: "left", width: "42%" }}>Black</th>
+                            <th className="text-left w-1/6">#</th>
+                            <th className="text-left w-2/5">White</th>
+                            <th className="text-left w-2/5">Black</th>
                         </tr>
                     </thead>
                     <tbody>
                         {groupedMoves.map(({ moveNumber, whiteMove, blackMove }, index) => (
-                            <tr key={moveNumber} style={{ backgroundColor: index % 2 === 0 ? "#d5d5d5" : "transparent" }}>
+                            <tr key={moveNumber} className={index % 2 === 0 ? "bg-gray-200" : ""}>
                                 <td>{moveNumber}.</td>
                                 <td>{whiteMove}</td>
                                 <td>{blackMove}</td>
@@ -37,11 +37,11 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
                     </tbody>
                 </table>
             </div>
-            <div style={{ marginTop: "10px" }}>
+            <div className="mt-2">
                 {isDrawOfferPending ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-                        <div style={{ fontSize: "16px", fontWeight: 600 }}>Draw offered</div>
-                        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="text-base font-semibold">Draw offered</div>
+                        <div className="flex justify-center gap-2">
                             <Button
                                 sx={{ width: "40px", height: "30px", fontSize: "22px" }}
                                 variant="contained"
@@ -61,7 +61,7 @@ function MatchInfoPanel({ pgn }: { pgn: string }) {
                         </div>
                     </div>
                 ) : (
-                    <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                    <div className="flex justify-center gap-2">
                         <Button
                             sx={{ width: "100px" }}
                             variant="contained"

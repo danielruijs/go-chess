@@ -6,14 +6,10 @@ function Game() {
   const { sendMessage, board, legalMoves, pgn, color, whitePlayerName, blackPlayerName, matchResult } = useWebSocket();
 
   return color && whitePlayerName && blackPlayerName ? (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      height: "100vh",
-    }}>
-      <div style={{ display: "flex", gap: "15px", alignItems: "center", justifyContent: "center", width: "100%" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ fontSize: "18px", fontWeight: "bold" }}>
+    <div className="flex items-center h-screen">
+      <div className="flex gap-4 items-center justify-center w-full">
+        <div className="flex flex-col gap-2.5">
+          <div className="text-lg font-bold">
             {color === "white" ? blackPlayerName : whitePlayerName}
           </div>
           <BoardComponent
@@ -23,7 +19,7 @@ function Game() {
             sendMessage={sendMessage}
             matchResult={matchResult}
           />
-          <div style={{ fontSize: "18px", fontWeight: "bold" }}>
+          <div className="text-lg font-bold">
             {color === "white" ? whitePlayerName : blackPlayerName}
           </div>
         </div>
