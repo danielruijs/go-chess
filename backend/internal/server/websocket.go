@@ -79,9 +79,15 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 		log.Printf("failed to marshal matchmaking update data: %v", err)
 		return
 	}
-	client.Player.SendChan <- WSMessage{
+	msg := WSMessage{
 		Type: MessageTypeMatchmakingUpdate,
 		Data: data,
+	}
+	select {
+	case client.Player.SendChan <- msg:
+	case <-client.Done: // Disconnected
+	default:
+		log.Printf("Skipping update for %s", client.Player.Name)
 	}
 }
 
@@ -94,18 +100,13 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{
-		Conn: conn,
-		Player: &Player{
-			Name:     "",
-			SendChan: make(chan WSMessage, 100),
-		},
-	}
+	client := NewClient(conn)
 
 	wsh.RegisterClient(client)
 	log.Println("New WebSocket connection established")
 
 	defer func() {
+		close(client.Done)
 		wsh.matchmaker.Leave(client.Player)
 		wsh.UnregisterClient(client)
 		_ = client.Conn.Close()

@@ -9,6 +9,15 @@ import (
 type Client struct {
 	Conn   *websocket.Conn
 	Player *Player
+	Done   chan struct{}
+}
+
+func NewClient(conn *websocket.Conn) *Client {
+	return &Client{
+		Conn:   conn,
+		Player: NewPlayer(""),
+		Done:   make(chan struct{}),
+	}
 }
 
 func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
@@ -56,11 +65,15 @@ func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
 }
 
 func (c Client) SendMessages() {
-	for message := range c.Player.SendChan {
-		err := c.Conn.WriteJSON(message)
-		if err != nil {
-			log.Println("Error sending message:", err)
-			break
+	for {
+		select {
+		case message := <-c.Player.SendChan:
+			err := c.Conn.WriteJSON(message)
+			if err != nil {
+				log.Println("Error sending message:", err)
+			}
+		case <-c.Done:
+			return
 		}
 	}
 }
