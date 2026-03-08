@@ -1,24 +1,42 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"go-chess/internal/chess"
+	"log"
 	"sync"
+	"time"
 )
 
 type Player struct {
-	Name     string
-	SendChan chan WSMessage
+	Name  string
+	color chess.Color
+
 	queues   map[TimeFormat]struct{}
 	queuesMu sync.RWMutex
-	Color    chess.Color
+
+	sendChan chan WSMessage
+	done     chan struct{}
 }
 
-func NewPlayer(name string) *Player {
+func NewPlayer(name string, done chan struct{}) *Player {
 	return &Player{
 		Name:     name,
-		SendChan: make(chan WSMessage, 100),
 		queues:   make(map[TimeFormat]struct{}),
+		sendChan: make(chan WSMessage, 100),
+		done:     done,
 	}
+}
+
+func (p *Player) SetColor(color chess.Color) {
+	p.color = color
+}
+
+func (p *Player) GetColor() chess.Color {
+	return p.color
 }
 
 func (p *Player) JoinQueue(timeFormat TimeFormat) {
@@ -40,4 +58,48 @@ func (p *Player) IsInQueue(timeFormat TimeFormat) bool {
 	return inQueue
 }
 
-// TODO: add methods for sending messages etc.
+func (p *Player) GetSendChannel() chan WSMessage {
+	return p.sendChan
+}
+
+func (p *Player) SendInformational(msgType MessageType, data any) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
+		return
+	}
+	msg := WSMessage{
+		Type: msgType,
+		Data: jsonData,
+	}
+
+	select {
+	case p.sendChan <- msg:
+	case <-p.done:
+	default:
+		log.Printf("Skipping message for %s", p.Name)
+	}
+}
+
+func (p *Player) SendCritical(msgType MessageType, data any) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
+	}
+	msg := WSMessage{
+		Type: msgType,
+		Data: jsonData,
+	}
+
+	select {
+	case p.sendChan <- msg:
+		return nil
+	case <-p.done:
+		return errors.New("player disconnected")
+	case <-ctx.Done():
+		return errors.New("timeout sending message")
+	}
+}

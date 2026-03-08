@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"go-chess/internal/chess"
 	"log"
@@ -57,7 +56,7 @@ func (m *Match) Run() {
 					log.Println("invalid move data:", err)
 					continue
 				}
-				result, err := m.Engine.ApplyMove(move, event.Player.Color)
+				result, err := m.Engine.ApplyMove(move, event.Player.GetColor())
 				if err != nil {
 					if data.Promotion != nil {
 						log.Printf("failed to apply move %s -> %s with promotion to %v: %v\n", data.From, data.To, *data.Promotion, err)
@@ -81,24 +80,20 @@ func (m *Match) Run() {
 				m.Clock.Start()
 				for _, player := range []*Player{m.Player1, m.Player2} {
 					startMatchData := StartMatchData{
-						Color:           player.Color,
+						Color:           player.GetColor(),
 						WhitePlayerName: m.getPlayerByColor(chess.White).Name,
 						BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
 						Clock:           m.Clock.Snapshot(),
 					}
-					data, err := json.Marshal(startMatchData)
+					err := player.SendCritical(MessageTypeStartMatch, startMatchData)
 					if err != nil {
-						log.Printf("failed to marshal start match data: %v", err)
+						log.Printf("failed to send start match message to %s: %v", player.Name, err)
 						continue
-					}
-					player.SendChan <- WSMessage{
-						Type: MessageTypeStartMatch,
-						Data: data,
 					}
 				}
 			case EventTypeResign:
 				var result *chess.Result
-				if event.Player.Color == chess.White {
+				if event.Player.GetColor() == chess.White {
 					result = &chess.Result{Outcome: chess.BlackWin, Reason: chess.Resignation}
 				} else {
 					result = &chess.Result{Outcome: chess.WhiteWin, Reason: chess.Resignation}
@@ -111,14 +106,14 @@ func (m *Match) Run() {
 					continue
 				}
 				m.DrawOfferedBy = event.Player
-				if m.Player1 == event.Player {
-					m.Player2.SendChan <- WSMessage{
-						Type: MessageTypeDrawOffered,
-					}
-				} else {
-					m.Player1.SendChan <- WSMessage{
-						Type: MessageTypeDrawOffered,
-					}
+
+				receivingPlayer := m.Player1
+				if event.Player == m.Player1 {
+					receivingPlayer = m.Player2
+				}
+				err := receivingPlayer.SendCritical(MessageTypeDrawOffered, nil)
+				if err != nil {
+					log.Printf("failed to send draw offered message to %s: %v", receivingPlayer.Name, err)
 				}
 			case EventTypeRespondDraw:
 				data, ok := event.Data.(RespondDrawData)
@@ -136,14 +131,13 @@ func (m *Match) Run() {
 				}
 				if !data.Accept {
 					// notify opponent that the draw offer was declined
-					if m.Player1 == event.Player {
-						m.Player2.SendChan <- WSMessage{
-							Type: MessageTypeDrawDeclined,
-						}
-					} else {
-						m.Player1.SendChan <- WSMessage{
-							Type: MessageTypeDrawDeclined,
-						}
+					receivingPlayer := m.Player1
+					if event.Player == m.Player1 {
+						receivingPlayer = m.Player2
+					}
+					err := receivingPlayer.SendCritical(MessageTypeDrawDeclined, nil)
+					if err != nil {
+						log.Printf("failed to send draw declined message to %s: %v", receivingPlayer.Name, err)
 					}
 					m.DrawOfferedBy = nil
 					continue
@@ -154,7 +148,7 @@ func (m *Match) Run() {
 				return
 			}
 
-			err := m.sendPositionUpdate()
+			err := m.sendPositionUpdate(true)
 			if err != nil {
 				log.Println("failed to send position update:", err)
 			}
@@ -171,7 +165,7 @@ func (m *Match) Run() {
 			if !m.Clock.IsRunning() {
 				continue
 			}
-			err := m.sendPositionUpdate()
+			err := m.sendPositionUpdate(false)
 			if err != nil {
 				log.Println("failed to send position update:", err)
 			}
@@ -179,22 +173,22 @@ func (m *Match) Run() {
 	}
 }
 
-func (m *Match) sendPositionUpdate() error {
+func (m *Match) sendPositionUpdate(isCritical bool) error {
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		legalMovesList := m.Engine.GetLegalMoves(player.Color)
+		legalMovesList := m.Engine.GetLegalMoves(player.GetColor())
 		boardData := BoardData{
 			Board:      m.Engine.GetBoard(),
 			LegalMoves: moveListToLegalMoves(legalMovesList),
 			PGN:        m.Engine.GetPGN(),
 			Clock:      m.Clock.Snapshot(),
 		}
-		data, err := json.Marshal(boardData)
-		if err != nil {
-			return fmt.Errorf("failed to marshal board data: %v", err)
-		}
-		player.SendChan <- WSMessage{
-			Type: MessageTypeBoard,
-			Data: data,
+		if isCritical {
+			err := player.SendCritical(MessageTypeBoard, boardData)
+			if err != nil {
+				return fmt.Errorf("failed to send board data to %s: %v", player.Name, err)
+			}
+		} else {
+			player.SendInformational(MessageTypeBoard, boardData)
 		}
 	}
 	return nil
@@ -208,13 +202,9 @@ func (m *Match) sendFinalPositionUpdate() error {
 			PGN:        m.Engine.GetPGN(),
 			Clock:      m.Clock.Snapshot(),
 		}
-		data, err := json.Marshal(boardData)
+		err := player.SendCritical(MessageTypeBoard, boardData)
 		if err != nil {
-			return fmt.Errorf("failed to marshal board data: %v", err)
-		}
-		player.SendChan <- WSMessage{
-			Type: MessageTypeBoard,
-			Data: data,
+			return fmt.Errorf("failed to send final board data to %s: %v", player.Name, err)
 		}
 	}
 	return nil
@@ -244,22 +234,17 @@ func (m *Match) sendMatchEnd(result chess.Result) {
 	resultData := EndMatchData{
 		Result: result,
 	}
-	data, err := json.Marshal(resultData)
-	if err != nil {
-		log.Printf("failed to marshal end match data: %v", err)
-		return
-	}
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		player.SendChan <- WSMessage{
-			Type: MessageTypeEndMatch,
-			Data: data,
+		err := player.SendCritical(MessageTypeEndMatch, resultData)
+		if err != nil {
+			log.Printf("failed to send end match message to %s: %v", player.Name, err)
 		}
 	}
 
 }
 
 func (m *Match) getPlayerByColor(color chess.Color) *Player {
-	if m.Player1.Color == color {
+	if m.Player1.GetColor() == color {
 		return m.Player1
 	}
 	return m.Player2

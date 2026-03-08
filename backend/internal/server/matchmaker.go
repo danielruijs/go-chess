@@ -150,14 +150,16 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 
 	// Randomly assign colors
 	if rand.Intn(2) == 0 {
-		player1.Color, player2.Color = chess.White, chess.Black
+		player1.SetColor(chess.White)
+		player2.SetColor(chess.Black)
 	} else {
-		player1.Color, player2.Color = chess.Black, chess.White
+		player1.SetColor(chess.Black)
+		player2.SetColor(chess.White)
 	}
 
 	mm.RegisterMatch(match)
 
-	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.Color, player2.Name, player2.Color)
+	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.GetColor(), player2.Name, player2.GetColor())
 
 	go match.Run()
 

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -74,21 +73,7 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 		})
 	}
 	updateData := MatchmakingUpdateData{Queues: queues}
-	data, err := json.Marshal(updateData)
-	if err != nil {
-		log.Printf("failed to marshal matchmaking update data: %v", err)
-		return
-	}
-	msg := WSMessage{
-		Type: MessageTypeMatchmakingUpdate,
-		Data: data,
-	}
-	select {
-	case client.Player.SendChan <- msg:
-	case <-client.Done: // Disconnected
-	default:
-		log.Printf("Skipping update for %s", client.Player.Name)
-	}
+	client.Player.SendInformational(MessageTypeMatchmakingUpdate, updateData)
 }
 
 func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
