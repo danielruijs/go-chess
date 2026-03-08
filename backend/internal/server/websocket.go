@@ -47,11 +47,7 @@ func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {
 }
 
 func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client) {
-	_, inQueue := wsh.matchmaker.queue[client.Player]
-	updateData := MatchmakingUpdateData{
-		QueueLength: len(wsh.matchmaker.queue),
-		InQueue:     inQueue,
-	}
+	updateData := wsh.matchmaker.GetMatchmakingUpdate(client.Player)
 	data, err := json.Marshal(updateData)
 	if err != nil {
 		log.Printf("failed to marshal matchmaking update data: %v", err)

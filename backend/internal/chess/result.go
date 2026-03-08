@@ -20,7 +20,7 @@ const (
 	InsufficientMaterial Reason = "insufficient_material"
 	Resignation          Reason = "resignation"
 	AgreedDraw           Reason = "agreed_draw"
-	// Timeout              Reason = "TIMEOUT"
+	Timeout              Reason = "timeout"
 )
 
 type Result struct {

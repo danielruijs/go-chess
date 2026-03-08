@@ -334,15 +334,13 @@ func (g *Generator) IsSquareAttacked(sq Square, pos *Position, color Color) bool
 	sqMask := squareMask(sq)
 
 	var forwardOffset int
-	var opponentColor Color
 	if color == White {
 		forwardOffset = 8
-		opponentColor = Black
 	} else {
 		forwardOffset = -8
-		opponentColor = White
 	}
 
+	opponentColor := GetOppositeColor(color)
 	pawns := *pos.GetPieceBitboard(opponentColor, Pawn)
 	knights := *pos.GetPieceBitboard(opponentColor, Knight)
 	bishops := *pos.GetPieceBitboard(opponentColor, Bishop)

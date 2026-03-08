@@ -9,7 +9,7 @@ import (
 )
 
 type Matchmaker struct {
-	queue      map[*Player]struct{}
+	queue      map[TimeFormat]map[*Player]struct{}
 	actions    chan func()
 	UpdateChan chan struct{}
 	matchEnded chan *Match
@@ -20,7 +20,7 @@ type Matchmaker struct {
 
 func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
-		queue:         make(map[*Player]struct{}),
+		queue:         make(map[TimeFormat]map[*Player]struct{}),
 		actions:       make(chan func()),
 		UpdateChan:    make(chan struct{}),
 		matchEnded:    make(chan *Match),
@@ -48,16 +48,19 @@ func (mm *Matchmaker) UnregisterMatch(match *Match) {
 	delete(mm.activeMatches, match.Player2)
 }
 
-func (mm *Matchmaker) Join(player *Player) error {
+func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 	errChan := make(chan error)
 	mm.actions <- func() {
-		if _, ok := mm.queue[player]; ok {
+		if _, ok := mm.queue[timeFormat][player]; ok {
 			errChan <- errors.New("player is already in the matchmaking queue")
 			return
 		}
 
-		mm.queue[player] = struct{}{}
-		log.Printf("Player %s joined. Queue size: %d\n", player.Name, len(mm.queue))
+		if _, ok := mm.queue[timeFormat]; !ok {
+			mm.queue[timeFormat] = make(map[*Player]struct{})
+		}
+		mm.queue[timeFormat][player] = struct{}{}
+		log.Printf("Player %s joined %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
 
 		errChan <- nil
 	}
@@ -66,12 +69,27 @@ func (mm *Matchmaker) Join(player *Player) error {
 
 func (mm *Matchmaker) Leave(player *Player) {
 	mm.actions <- func() {
-		if _, ok := mm.queue[player]; !ok {
-			return
+		for timeFormat := range mm.queue {
+			if _, ok := mm.queue[timeFormat][player]; ok {
+				delete(mm.queue[timeFormat], player)
+				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+			}
 		}
-		delete(mm.queue, player)
+	}
+}
 
-		log.Printf("Player %s left. Queue size: %d\n", player.Name, len(mm.queue))
+func (mm *Matchmaker) GetMatchmakingUpdate(player *Player) MatchmakingUpdateData {
+	queues := make(map[TimeFormat]QueueData)
+	for timeFormat, players := range mm.queue {
+		_, inQueue := mm.queue[timeFormat][player]
+		queues[timeFormat] = QueueData{
+			QueueLength: len(players),
+			InQueue:     inQueue,
+		}
+	}
+
+	return MatchmakingUpdateData{
+		Queues: queues,
 	}
 }
 
@@ -86,20 +104,15 @@ func (mm *Matchmaker) Run() {
 			default:
 			}
 
-			for len(mm.queue) >= 2 {
-				var p1, p2 *Player
-				for p := range mm.queue {
-					if p1 == nil {
-						p1 = p
-					} else {
-						p2 = p
-						break
-					}
+			for timeFormat := range mm.queue {
+				p1, p2 := mm.matchPlayers(timeFormat)
+				if p1 == nil || p2 == nil {
+					continue
 				}
-				delete(mm.queue, p1)
-				delete(mm.queue, p2)
+				delete(mm.queue[timeFormat], p1)
+				delete(mm.queue[timeFormat], p2)
 
-				mm.startMatch(p1, p2)
+				mm.startMatch(p1, p2, timeFormat)
 			}
 		case match := <-mm.matchEnded:
 			mm.UnregisterMatch(match)
@@ -107,11 +120,28 @@ func (mm *Matchmaker) Run() {
 	}
 }
 
-func (mm *Matchmaker) startMatch(player1, player2 *Player) {
+func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
+	if len(mm.queue[timeFormat]) < 2 {
+		return nil, nil
+	}
+	var p1, p2 *Player
+	for p := range mm.queue[timeFormat] {
+		if p1 == nil {
+			p1 = p
+		} else {
+			p2 = p
+			break
+		}
+	}
+	return p1, p2
+}
+
+func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat) {
 	match := &Match{
 		Player1:    player1,
 		Player2:    player2,
 		Engine:     chess.NewEngine(),
+		Clock:      NewMatchClock(timeFormat),
 		EventChan:  make(chan Event),
 		MatchEnded: mm.matchEnded,
 	}

@@ -126,3 +126,29 @@ func TestPopLSB(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOppositeColor(t *testing.T) {
+	tests := []struct {
+		name     string
+		color    Color
+		expected Color
+	}{
+		{
+			name:     "opposite of white is black",
+			color:    White,
+			expected: Black,
+		},
+		{
+			name:     "opposite of black is white",
+			color:    Black,
+			expected: White,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := GetOppositeColor(tt.color)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

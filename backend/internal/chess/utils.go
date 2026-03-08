@@ -23,3 +23,10 @@ func popLSB(b *Bitboard) int {
 	*b &= *b - 1
 	return index
 }
+
+func GetOppositeColor(color Color) Color {
+	if color == White {
+		return Black
+	}
+	return White
+}

@@ -34,21 +34,33 @@ type LegalMove struct {
 	Promotion *chess.PieceType `json:"promotion,omitempty"`
 }
 
+type ClockData struct {
+	WhiteTimeMs int64 `json:"whiteTimeMs"`
+	BlackTimeMs int64 `json:"blackTimeMs"`
+	IncrementMs int64 `json:"incrementMs"`
+}
+
 type BoardData struct {
 	Board      chess.Board            `json:"board"`
 	LegalMoves map[string][]LegalMove `json:"legalMoves"`
 	PGN        chess.PGN              `json:"pgn"`
+	Clock      ClockData              `json:"clock"`
+}
+
+type QueueData struct {
+	QueueLength int  `json:"queueLength"`
+	InQueue     bool `json:"inQueue"`
 }
 
 type MatchmakingUpdateData struct {
-	QueueLength int  `json:"queueLength"`
-	InQueue     bool `json:"inQueue"`
+	Queues map[TimeFormat]QueueData `json:"queues"`
 }
 
 type StartMatchData struct {
 	Color           chess.Color `json:"color"`
 	WhitePlayerName string      `json:"whitePlayerName"`
 	BlackPlayerName string      `json:"blackPlayerName"`
+	Clock           ClockData   `json:"clock"`
 }
 
 type EndMatchData struct {
@@ -57,7 +69,8 @@ type EndMatchData struct {
 
 // inbound
 type JoinMatchData struct {
-	PlayerName string `json:"playerName"`
+	PlayerName string     `json:"playerName"`
+	TimeFormat TimeFormat `json:"timeFormat"`
 }
 
 type MoveData struct {

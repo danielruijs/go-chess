@@ -261,11 +261,7 @@ func (p *Position) MakeMove(move Move) {
 	}
 
 	// switch active color
-	if piece.Color == White {
-		p.ActiveColor = Black
-	} else {
-		p.ActiveColor = White
-	}
+	p.ActiveColor = GetOppositeColor(p.ActiveColor)
 }
 
 func (p *Position) IsInCheck(g *Generator, color Color) bool {
