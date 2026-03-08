@@ -13,12 +13,6 @@ const (
 	clockBroadcastInterval = 1 * time.Second
 )
 
-type Player struct {
-	Name     string
-	SendChan chan WSMessage
-	Color    chess.Color
-}
-
 type Match struct {
 	Player1 *Player
 	Player2 *Player

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -12,6 +13,7 @@ type WebSocketHandler struct {
 	upgrader   websocket.Upgrader
 	matchmaker *Matchmaker
 	clients    map[*Client]struct{}
+	clientsMu  sync.RWMutex
 }
 
 func NewWebSocketHandler(matchmaker *Matchmaker) *WebSocketHandler {
@@ -31,23 +33,47 @@ func NewWebSocketHandler(matchmaker *Matchmaker) *WebSocketHandler {
 }
 
 func (wsh *WebSocketHandler) RegisterClient(client *Client) {
+	wsh.clientsMu.Lock()
+	defer wsh.clientsMu.Unlock()
 	wsh.clients[client] = struct{}{}
 	log.Printf("Client registered. Total clients: %d\n", len(wsh.clients))
 }
 
 func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
+	wsh.clientsMu.Lock()
+	defer wsh.clientsMu.Unlock()
 	delete(wsh.clients, client)
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
 func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {
-	for client := range wsh.clients {
-		wsh.sendMatchmakingUpdate(client)
+	queueStats := wsh.matchmaker.GetQueueStats()
+	for _, client := range wsh.getClientsSnapshot() {
+		wsh.sendMatchmakingUpdate(client, queueStats)
 	}
 }
 
-func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client) {
-	updateData := wsh.matchmaker.GetMatchmakingUpdate(client.Player)
+func (wsh *WebSocketHandler) getClientsSnapshot() []*Client {
+	wsh.clientsMu.RLock()
+	defer wsh.clientsMu.RUnlock()
+
+	clients := make([]*Client, 0, len(wsh.clients))
+	for client := range wsh.clients {
+		clients = append(clients, client)
+	}
+	return clients
+}
+
+func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats map[TimeFormat]int) {
+	queues := make([]QueueData, 0, len(queueStats))
+	for timeFormat, queueLength := range queueStats {
+		queues = append(queues, QueueData{
+			TimeFormat:  timeFormat,
+			QueueLength: queueLength,
+			InQueue:     client.Player.IsInQueue(timeFormat),
+		})
+	}
+	updateData := MatchmakingUpdateData{Queues: queues}
 	data, err := json.Marshal(updateData)
 	if err != nil {
 		log.Printf("failed to marshal matchmaking update data: %v", err)
@@ -72,7 +98,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		Conn: conn,
 		Player: &Player{
 			Name:     "",
-			SendChan: make(chan WSMessage),
+			SendChan: make(chan WSMessage, 100),
 		},
 	}
 
@@ -82,11 +108,11 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		wsh.matchmaker.Leave(client.Player)
 		wsh.UnregisterClient(client)
-		close(client.Player.SendChan)
 		_ = client.Conn.Close()
 	}()
 
 	go client.SendMessages()
-	wsh.sendMatchmakingUpdate(client)
+	queueStats := wsh.matchmaker.GetQueueStats()
+	wsh.sendMatchmakingUpdate(client, queueStats)
 	client.ReceiveMessages(wsh.matchmaker)
 }

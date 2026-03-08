@@ -49,7 +49,7 @@ func (mm *Matchmaker) UnregisterMatch(match *Match) {
 }
 
 func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	mm.actions <- func() {
 		if _, ok := mm.queue[timeFormat][player]; ok {
 			errChan <- errors.New("player is already in the matchmaking queue")
@@ -69,6 +69,7 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 
 func (mm *Matchmaker) Leave(player *Player) {
 	mm.actions <- func() {
+		player.LeaveQueues()
 		for timeFormat := range mm.queue {
 			if _, ok := mm.queue[timeFormat][player]; ok {
 				delete(mm.queue[timeFormat], player)
@@ -78,20 +79,17 @@ func (mm *Matchmaker) Leave(player *Player) {
 	}
 }
 
-func (mm *Matchmaker) GetMatchmakingUpdate(player *Player) MatchmakingUpdateData {
-	queues := make([]QueueData, 0, len(mm.queue))
-	for timeFormat, players := range mm.queue {
-		_, inQueue := mm.queue[timeFormat][player]
-		queues = append(queues, QueueData{
-			TimeFormat:  timeFormat,
-			QueueLength: len(players),
-			InQueue:     inQueue,
-		})
+// Returns a snapshot of queue lengths for each time format
+func (mm *Matchmaker) GetQueueStats() map[TimeFormat]int {
+	update := make(chan map[TimeFormat]int, 1)
+	mm.actions <- func() {
+		queueStats := make(map[TimeFormat]int)
+		for timeFormat, players := range mm.queue {
+			queueStats[timeFormat] = len(players)
+		}
+		update <- queueStats
 	}
-
-	return MatchmakingUpdateData{
-		Queues: queues,
-	}
+	return <-update
 }
 
 func (mm *Matchmaker) Run() {
@@ -146,6 +144,9 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 		EventChan:  make(chan Event),
 		MatchEnded: mm.matchEnded,
 	}
+
+	player1.LeaveQueues()
+	player2.LeaveQueues()
 
 	// Randomly assign colors
 	if rand.Intn(2) == 0 {
