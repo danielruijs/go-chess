@@ -48,12 +48,13 @@ type BoardData struct {
 }
 
 type QueueData struct {
-	QueueLength int  `json:"queueLength"`
-	InQueue     bool `json:"inQueue"`
+	TimeFormat  TimeFormat `json:"timeFormat"`
+	QueueLength int        `json:"queueLength"`
+	InQueue     bool       `json:"inQueue"`
 }
 
 type MatchmakingUpdateData struct {
-	Queues map[TimeFormat]QueueData `json:"queues"`
+	Queues []QueueData `json:"queues"`
 }
 
 type StartMatchData struct {

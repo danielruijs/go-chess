@@ -79,13 +79,14 @@ func (mm *Matchmaker) Leave(player *Player) {
 }
 
 func (mm *Matchmaker) GetMatchmakingUpdate(player *Player) MatchmakingUpdateData {
-	queues := make(map[TimeFormat]QueueData)
+	queues := make([]QueueData, 0, len(mm.queue))
 	for timeFormat, players := range mm.queue {
 		_, inQueue := mm.queue[timeFormat][player]
-		queues[timeFormat] = QueueData{
+		queues = append(queues, QueueData{
+			TimeFormat:  timeFormat,
 			QueueLength: len(players),
 			InQueue:     inQueue,
-		}
+		})
 	}
 
 	return MatchmakingUpdateData{
