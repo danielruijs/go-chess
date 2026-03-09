@@ -1,4 +1,5 @@
-import type { Square, Color } from "../interfaces/chess";
+import type { Square, Color, TimeFormat } from "../interfaces/chess";
+import type { QueueData } from "../interfaces/message";
 
 function coordsToString(square: Square): string {
     const fileChar = String.fromCharCode("a".charCodeAt(0) + square.file);
@@ -33,4 +34,12 @@ function displayIndexToSquare(index: number, color: Color): Square {
     return { file, rank };
 }
 
-export { coordsToString, pgnToMoves, displayIndexToSquare };
+function getQueueData(queues: QueueData[] | null, timeFormat: TimeFormat): QueueData | undefined {
+    return queues?.find(
+        (q) =>
+            q.timeFormat.initialMs === timeFormat.initialMs &&
+            q.timeFormat.incrementMs === timeFormat.incrementMs
+    );
+};
+
+export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData };

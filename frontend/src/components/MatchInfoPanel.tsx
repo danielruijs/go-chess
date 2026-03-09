@@ -3,8 +3,8 @@ import { pgnToMoves } from "../utils/chess";
 import { MessageTypeOfferDraw, MessageTypeResign, type WSMessage } from "../interfaces/message";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
-function MatchInfoPanel({ pgn }: { pgn: string }) {
-    const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch } = useWebSocket();
+function MatchInfoPanel() {
+    const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch, pgn } = useWebSocket();
     const moves = pgnToMoves(pgn);
     const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
     for (let i = 0; i < moves.length; i += 2) {

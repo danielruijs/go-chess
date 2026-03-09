@@ -14,7 +14,6 @@ type TimeFormat struct {
 type MatchClock struct {
 	remaining   map[chess.Color]time.Duration
 	increment   time.Duration
-	activeColor chess.Color
 	lastUpdated time.Time
 	running     bool
 }
@@ -25,9 +24,8 @@ func NewMatchClock(timeFormat TimeFormat) *MatchClock {
 			chess.White: timeFormat.initial,
 			chess.Black: timeFormat.initial,
 		},
-		increment:   timeFormat.increment,
-		activeColor: chess.White,
-		running:     false,
+		increment: timeFormat.increment,
+		running:   false,
 	}
 }
 
@@ -36,9 +34,9 @@ func (c *MatchClock) Start() {
 	c.running = true
 }
 
-func (c *MatchClock) Stop() {
+func (c *MatchClock) Stop(activeColor chess.Color) {
 	if c.running {
-		c.update()
+		c.update(activeColor)
 		c.running = false
 	}
 }
@@ -48,28 +46,27 @@ func (c *MatchClock) IsRunning() bool {
 }
 
 // Returns the color of the player who ran out of time, or nil if no one ran out of time
-func (c *MatchClock) BeforeMove() (*chess.Color, error) {
+func (c *MatchClock) BeforeMove(moverColor chess.Color) (*chess.Color, error) {
 	if !c.running {
 		return nil, fmt.Errorf("clock is not running")
 	}
-	return c.Advance(), nil
+	return c.Advance(moverColor), nil
 }
 
 // Updates the clock after a move is made
-func (c *MatchClock) AfterMove() error {
+func (c *MatchClock) AfterMove(moverColor chess.Color) error {
 	if !c.running {
 		return fmt.Errorf("clock is not running")
 	}
 
-	c.remaining[c.activeColor] += c.increment
+	c.remaining[moverColor] += c.increment
 	c.lastUpdated = time.Now()
-	c.activeColor = chess.GetOppositeColor(c.activeColor)
 
 	return nil
 }
 
-func (c *MatchClock) Snapshot() ClockData {
-	c.update()
+func (c *MatchClock) Snapshot(activeColor chess.Color) ClockData {
+	c.update(activeColor)
 
 	return ClockData{
 		WhiteTimeMs: c.remaining[chess.White].Milliseconds(),
@@ -79,21 +76,21 @@ func (c *MatchClock) Snapshot() ClockData {
 }
 
 // Updates the clock and return the color of the player who ran out of time, or nil if no one ran out of time
-func (c *MatchClock) Advance() *chess.Color {
-	c.update()
+func (c *MatchClock) Advance(activeColor chess.Color) *chess.Color {
+	c.update(activeColor)
 	return c.getTimeout()
 }
 
-func (c *MatchClock) update() {
+func (c *MatchClock) update(activeColor chess.Color) {
 	now := time.Now()
 	elapsed := now.Sub(c.lastUpdated)
 	if elapsed <= 0 {
 		return
 	}
 
-	c.remaining[c.activeColor] -= elapsed
-	if c.remaining[c.activeColor] < 0 {
-		c.remaining[c.activeColor] = 0
+	c.remaining[activeColor] -= elapsed
+	if c.remaining[activeColor] < 0 {
+		c.remaining[activeColor] = 0
 	}
 	c.lastUpdated = now
 }
@@ -108,4 +105,22 @@ func (c *MatchClock) getTimeout() *chess.Color {
 		}
 	}
 	return nil
+}
+
+func (tf TimeFormat) String() string {
+	return fmt.Sprintf("%d+%d", int(tf.initial.Minutes()), int(tf.increment.Seconds()))
+}
+
+func TimeFormatToMs(tf TimeFormat) TimeFormatMs {
+	return TimeFormatMs{
+		InitialMs:   tf.initial.Milliseconds(),
+		IncrementMs: tf.increment.Milliseconds(),
+	}
+}
+
+func MsToTimeFormat(tf TimeFormatMs) TimeFormat {
+	return TimeFormat{
+		initial:   time.Duration(tf.InitialMs) * time.Millisecond,
+		increment: time.Duration(tf.IncrementMs) * time.Millisecond,
+	}
 }

@@ -1,4 +1,5 @@
-import { coordsToString, pgnToMoves, displayIndexToSquare } from "../utils/chess";
+import type { QueueData } from "../interfaces/message";
+import { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData } from "../utils/chess";
 
 describe("coordsToString", () => {
     it("converts (0,0) to a1", () => {
@@ -57,5 +58,29 @@ describe("displayIndexToSquare", () => {
     it("index 63 black -> a8", () => {
         const sq = displayIndexToSquare(63, "black");
         expect(coordsToString(sq)).toBe("a8");
+    });
+});
+
+describe("getQueueData", () => {
+    it("returns the matching queue data", () => {
+        const queues: QueueData[] = [
+            { timeFormat: { initialMs: 60000, incrementMs: 0 } } as QueueData,
+            { timeFormat: { initialMs: 300000, incrementMs: 3000 } } as QueueData,
+        ];
+        const result = getQueueData(queues, { initialMs: 300000, incrementMs: 3000 });
+        expect(result).toEqual(queues[1]);
+    });
+
+    it("returns undefined when no queue matches", () => {
+        const queues: QueueData[] = [
+            { timeFormat: { initialMs: 60000, incrementMs: 0 } } as QueueData,
+        ];
+        const result = getQueueData(queues, { initialMs: 300000, incrementMs: 3000 });
+        expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when queues is null", () => {
+        const result = getQueueData(null, { initialMs: 60000, incrementMs: 0 });
+        expect(result).toBeUndefined();
     });
 });

@@ -1,4 +1,4 @@
-import type { Board, Color, PieceType } from "./chess";
+import type { Board, Color, PieceType, TimeFormat } from "./chess";
 import type { Result } from "./result";
 
 // inbound
@@ -21,21 +21,35 @@ type LegalMove = {
   promotion: PieceType | null;
 };
 
+type ClockData = {
+  whiteTimeMs: number;
+  blackTimeMs: number;
+  incrementMs: number;
+};
+
 type BoardData = {
   board: Board;
   legalMoves: Record<string, LegalMove[]>;
   pgn: string;
+  activeColor: Color;
+  clock: ClockData;
+};
+
+type QueueData = {
+  timeFormat: TimeFormat;
+  queueLength: number;
+  inQueue: boolean;
 };
 
 type MatchmakingUpdateData = {
-  queueLength: number;
-  inQueue: boolean;
+  queues: QueueData[];
 };
 
 type StartMatchData = {
   color: Color;
   whitePlayerName: string;
   blackPlayerName: string;
+  clock: ClockData;
 };
 
 type EndMatchData = {
@@ -45,6 +59,7 @@ type EndMatchData = {
 // outbound
 type JoinMatchData = {
   playerName: string;
+  timeFormat: TimeFormat;
 };
 
 type MoveData = {
@@ -101,7 +116,7 @@ type WSMessage =
     data: RespondDrawData;
   };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData };
+export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData, ClockData, QueueData };
 export {
   MessageTypeBoard,
   MessageTypeMove,

@@ -16,8 +16,9 @@ func (c Client) handleJoinMatch(messageData json.RawMessage, matchmaker *Matchma
 	}
 
 	c.Player.Name = data.PlayerName
-	err := matchmaker.Join(c.Player, data.TimeFormat)
-	c.Player.JoinQueue(data.TimeFormat)
+	timeFormat := MsToTimeFormat(data.TimeFormat)
+	err := matchmaker.Join(c.Player, timeFormat)
+	c.Player.JoinQueue(timeFormat)
 	if err != nil {
 		return fmt.Errorf("failed to join matchmaking queue: %w", err)
 	}

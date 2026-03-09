@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData } from "../interfaces/message";
+import type { WSMessage, BoardData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData, ClockData, QueueData } from "../interfaces/message";
 import { MessageTypeBoard, MessageTypeMatchmakingUpdate, MessageTypeStartMatch, MessageTypeEndMatch, MessageTypeDrawOffered, MessageTypeDrawDeclined, MessageTypeRespondDraw } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
 import type { Color, Board } from "../interfaces/chess";
@@ -14,11 +14,12 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [board, setBoard] = useState<Board | null>(null);
     const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
     const [pgn, setPgn] = useState<string>("");
+    const [activeColor, setActiveColor] = useState<Color | null>(null);
+    const [clock, setClock] = useState<ClockData | null>(null);
     const [color, setColor] = useState<Color | null>(null);
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
-    const [queueLength, setQueueLength] = useState<number | null>(null);
-    const [inQueue, setInQueue] = useState<boolean>(false);
+    const [queues, setQueues] = useState<QueueData[] | null>(null);
     const [inMatch, setInMatch] = useState<boolean>(false);
     const [matchResult, setMatchResult] = useState<Result | null>(null);
     const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
@@ -83,6 +84,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     setBoard(boardData.board);
                     setLegalMoves(boardData.legalMoves);
                     setPgn(boardData.pgn);
+                    setActiveColor(boardData.activeColor);
+                    setClock(boardData.clock);
                     break;
                 }
                 case MessageTypeStartMatch: {
@@ -92,13 +95,16 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     setColor(startMatchData.color);
                     setWhitePlayerName(startMatchData.whitePlayerName);
                     setBlackPlayerName(startMatchData.blackPlayerName);
+                    setClock(startMatchData.clock);
                     navigateRef.current("/game");
                     break;
                 }
                 case MessageTypeMatchmakingUpdate: {
                     const matchmakingUpdateData: MatchmakingUpdateData = message.data;
-                    setQueueLength(matchmakingUpdateData.queueLength);
-                    setInQueue(matchmakingUpdateData.inQueue);
+                    setQueues(matchmakingUpdateData.queues);
+                    console.log(message.data)
+                    console.log(matchmakingUpdateData)
+                    console.log("ququeu", matchmakingUpdateData.queues)
                     break;
                 }
                 case MessageTypeEndMatch: {
@@ -133,8 +139,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             color,
             whitePlayerName,
             blackPlayerName,
-            queueLength,
-            inQueue,
+            queues,
             inMatch,
             matchResult,
             pgn,

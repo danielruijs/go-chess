@@ -67,7 +67,7 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 	queues := make([]QueueData, 0, len(queueStats))
 	for timeFormat, queueLength := range queueStats {
 		queues = append(queues, QueueData{
-			TimeFormat:  timeFormat,
+			TimeFormat:  TimeFormatToMs(timeFormat),
 			QueueLength: queueLength,
 			InQueue:     client.Player.IsInQueue(timeFormat),
 		})

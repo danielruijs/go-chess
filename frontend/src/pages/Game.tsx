@@ -3,7 +3,7 @@ import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 
 function Game() {
-  const { sendMessage, board, legalMoves, pgn, color, whitePlayerName, blackPlayerName, matchResult } = useWebSocket();
+  const { sendMessage, board, legalMoves, color, whitePlayerName, blackPlayerName, matchResult } = useWebSocket();
 
   return color && whitePlayerName && blackPlayerName ? (
     <div className="flex items-center h-screen">
@@ -23,7 +23,7 @@ function Game() {
             {color === "white" ? whitePlayerName : blackPlayerName}
           </div>
         </div>
-        <MatchInfoPanel pgn={pgn}></MatchInfoPanel>
+        <MatchInfoPanel></MatchInfoPanel>
       </div>
     </div>
   ) : "Starting match...";

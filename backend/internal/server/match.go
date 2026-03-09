@@ -41,7 +41,7 @@ func (m *Match) Run() {
 					continue
 				}
 
-				loserByTimeout, err := m.Clock.BeforeMove()
+				loserByTimeout, err := m.Clock.BeforeMove(m.Engine.GetActiveColor())
 				if err != nil {
 					log.Println("failed to check match clock before move:", err)
 					continue
@@ -66,7 +66,7 @@ func (m *Match) Run() {
 					continue
 				}
 
-				err = m.Clock.AfterMove()
+				err = m.Clock.AfterMove(chess.GetOppositeColor(m.Engine.GetActiveColor()))
 				if err != nil {
 					log.Println("failed to update match clock after move:", err)
 					continue
@@ -83,7 +83,7 @@ func (m *Match) Run() {
 						Color:           player.GetColor(),
 						WhitePlayerName: m.getPlayerByColor(chess.White).Name,
 						BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
-						Clock:           m.Clock.Snapshot(),
+						Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
 					}
 					err := player.SendCritical(MessageTypeStartMatch, startMatchData)
 					if err != nil {
@@ -156,7 +156,7 @@ func (m *Match) Run() {
 			if !m.Clock.IsRunning() {
 				continue
 			}
-			loser := m.Clock.Advance()
+			loser := m.Clock.Advance(m.Engine.GetActiveColor())
 			if loser != nil {
 				m.end(getTimeoutResult(*loser))
 				return
@@ -177,10 +177,11 @@ func (m *Match) sendPositionUpdate(isCritical bool) error {
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		legalMovesList := m.Engine.GetLegalMoves(player.GetColor())
 		boardData := BoardData{
-			Board:      m.Engine.GetBoard(),
-			LegalMoves: moveListToLegalMoves(legalMovesList),
-			PGN:        m.Engine.GetPGN(),
-			Clock:      m.Clock.Snapshot(),
+			Board:       m.Engine.GetBoard(),
+			LegalMoves:  moveListToLegalMoves(legalMovesList),
+			PGN:         m.Engine.GetPGN(),
+			ActiveColor: m.Engine.GetActiveColor(),
+			Clock:       m.Clock.Snapshot(m.Engine.GetActiveColor()),
 		}
 		if isCritical {
 			err := player.SendCritical(MessageTypeBoard, boardData)
@@ -197,10 +198,11 @@ func (m *Match) sendPositionUpdate(isCritical bool) error {
 func (m *Match) sendFinalPositionUpdate() error {
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		boardData := BoardData{
-			Board:      m.Engine.GetBoard(),
-			LegalMoves: map[string][]LegalMove{}, // no legal moves
-			PGN:        m.Engine.GetPGN(),
-			Clock:      m.Clock.Snapshot(),
+			Board:       m.Engine.GetBoard(),
+			LegalMoves:  map[string][]LegalMove{}, // no legal moves
+			PGN:         m.Engine.GetPGN(),
+			ActiveColor: m.Engine.GetActiveColor(),
+			Clock:       m.Clock.Snapshot(m.Engine.GetActiveColor()),
 		}
 		err := player.SendCritical(MessageTypeBoard, boardData)
 		if err != nil {
@@ -211,7 +213,7 @@ func (m *Match) sendFinalPositionUpdate() error {
 }
 
 func (m *Match) end(result *chess.Result) {
-	m.Clock.Stop()
+	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
 	err := m.sendFinalPositionUpdate()
 	if err != nil {

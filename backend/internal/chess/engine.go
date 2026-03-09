@@ -37,6 +37,10 @@ func (e *Engine) GetPGN() PGN {
 	return e.pgn
 }
 
+func (e *Engine) GetActiveColor() Color {
+	return e.position.ActiveColor
+}
+
 func (e *Engine) ApplyMove(move Move, color Color) (*Result, error) {
 	err := e.validateMove(move, color)
 	if err != nil {

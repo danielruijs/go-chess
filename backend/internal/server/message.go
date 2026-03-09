@@ -41,16 +41,22 @@ type ClockData struct {
 }
 
 type BoardData struct {
-	Board      chess.Board            `json:"board"`
-	LegalMoves map[string][]LegalMove `json:"legalMoves"`
-	PGN        chess.PGN              `json:"pgn"`
-	Clock      ClockData              `json:"clock"`
+	Board       chess.Board            `json:"board"`
+	LegalMoves  map[string][]LegalMove `json:"legalMoves"`
+	PGN         chess.PGN              `json:"pgn"`
+	ActiveColor chess.Color            `json:"activeColor"`
+	Clock       ClockData              `json:"clock"`
+}
+
+type TimeFormatMs struct {
+	InitialMs   int64 `json:"initialMs"`
+	IncrementMs int64 `json:"incrementMs"`
 }
 
 type QueueData struct {
-	TimeFormat  TimeFormat `json:"timeFormat"`
-	QueueLength int        `json:"queueLength"`
-	InQueue     bool       `json:"inQueue"`
+	TimeFormat  TimeFormatMs `json:"timeFormat"`
+	QueueLength int          `json:"queueLength"`
+	InQueue     bool         `json:"inQueue"`
 }
 
 type MatchmakingUpdateData struct {
@@ -70,8 +76,8 @@ type EndMatchData struct {
 
 // inbound
 type JoinMatchData struct {
-	PlayerName string     `json:"playerName"`
-	TimeFormat TimeFormat `json:"timeFormat"`
+	PlayerName string       `json:"playerName"`
+	TimeFormat TimeFormatMs `json:"timeFormat"`
 }
 
 type MoveData struct {
