@@ -104,12 +104,10 @@ func (mm *Matchmaker) Run() {
 			}
 
 			for timeFormat := range mm.queue {
-				p1, p2 := mm.matchPlayers(timeFormat)
-				if p1 == nil || p2 == nil {
+				if len(mm.queue[timeFormat]) < 2 {
 					continue
 				}
-				delete(mm.queue[timeFormat], p1)
-				delete(mm.queue[timeFormat], p2)
+				p1, p2 := mm.matchPlayers(timeFormat)
 
 				mm.startMatch(p1, p2, timeFormat)
 			}
@@ -120,9 +118,6 @@ func (mm *Matchmaker) Run() {
 }
 
 func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
-	if len(mm.queue[timeFormat]) < 2 {
-		return nil, nil
-	}
 	var p1, p2 *Player
 	for p := range mm.queue[timeFormat] {
 		if p1 == nil {
@@ -132,6 +127,12 @@ func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
 			break
 		}
 	}
+	for timeFormat := range mm.queue {
+		delete(mm.queue[timeFormat], p1)
+		delete(mm.queue[timeFormat], p2)
+	}
+	p1.LeaveQueues()
+	p2.LeaveQueues()
 	return p1, p2
 }
 
@@ -144,9 +145,6 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 		EventChan:  make(chan Event),
 		MatchEnded: mm.matchEnded,
 	}
-
-	player1.LeaveQueues()
-	player2.LeaveQueues()
 
 	// Randomly assign colors
 	if rand.Intn(2) == 0 {
