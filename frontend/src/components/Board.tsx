@@ -23,6 +23,7 @@ const REASON_TEXT = {
     insufficient_material: "by Insufficient Material",
     resignation: "by Resignation",
     agreed_draw: "by Agreement",
+    timeout: "by Timeout",
 } as const;
 
 const PROMOTION_PIECES = ["queen", "rook", "bishop", "knight"] as const;

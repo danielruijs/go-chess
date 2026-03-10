@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { WSMessage, LegalMove, QueueData, } from "../interfaces/message";
+import type { WSMessage, LegalMove, QueueData, ClockData, } from "../interfaces/message";
 import type { Board, Color } from "../interfaces/chess";
 import type { Result } from "../interfaces/result";
 
@@ -10,7 +10,9 @@ export interface WebSocketContextType {
     board: Board | null;
     legalMoves: Record<string, LegalMove[]> | null;
     pgn: string;
-    color: Color | null;
+    activeColor: Color | null;
+    clock: ClockData | null;
+    playerColor: Color | null;
     whitePlayerName: string;
     blackPlayerName: string;
     queues: QueueData[] | null;

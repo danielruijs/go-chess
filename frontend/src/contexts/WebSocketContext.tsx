@@ -16,7 +16,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     const [pgn, setPgn] = useState<string>("");
     const [activeColor, setActiveColor] = useState<Color | null>(null);
     const [clock, setClock] = useState<ClockData | null>(null);
-    const [color, setColor] = useState<Color | null>(null);
+    const [playerColor, setPlayerColor] = useState<Color | null>(null);
     const [whitePlayerName, setWhitePlayerName] = useState<string>("");
     const [blackPlayerName, setBlackPlayerName] = useState<string>("");
     const [queues, setQueues] = useState<QueueData[] | null>(null);
@@ -44,7 +44,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         setBoard(null);
         setLegalMoves(null);
         setPgn("");
-        setColor(null);
+        setPlayerColor(null);
         setWhitePlayerName("");
         setBlackPlayerName("");
         setInMatch(false);
@@ -92,7 +92,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                     const startMatchData: StartMatchData = message.data;
                     resetMatchState();
                     setInMatch(true);
-                    setColor(startMatchData.color);
+                    setPlayerColor(startMatchData.color);
                     setWhitePlayerName(startMatchData.whitePlayerName);
                     setBlackPlayerName(startMatchData.blackPlayerName);
                     setClock(startMatchData.clock);
@@ -136,13 +136,15 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             sendMessage,
             board,
             legalMoves,
-            color,
+            playerColor,
             whitePlayerName,
             blackPlayerName,
             queues,
             inMatch,
             matchResult,
             pgn,
+            activeColor,
+            clock,
             isDrawOfferPending,
             isDrawDeclinedNoticeOpen,
             respondToDrawOffer,

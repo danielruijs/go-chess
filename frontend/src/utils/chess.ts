@@ -42,4 +42,16 @@ function getQueueData(queues: QueueData[] | null, timeFormat: TimeFormat): Queue
     );
 };
 
-export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData };
+function formatTime(ms: number): string {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+
+    if (ms > 0 && minutes === 0 && seconds < 10) {
+        const tenths = Math.floor((ms % 1000) / 100);
+        return `${minutes}:${seconds.toString().padStart(2, "0")}.${tenths}`;
+    }
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData, formatTime };
