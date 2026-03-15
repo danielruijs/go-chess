@@ -119,9 +119,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         case MessageTypeMatchmakingUpdate: {
           const matchmakingUpdateData: MatchmakingUpdateData = message.data;
           setQueues(matchmakingUpdateData.queues);
-          console.log(message.data);
-          console.log(matchmakingUpdateData);
-          console.log("ququeu", matchmakingUpdateData.queues);
           break;
         }
         case MessageTypeEndMatch: {

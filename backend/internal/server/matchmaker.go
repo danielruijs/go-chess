@@ -60,6 +60,7 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 			mm.queue[timeFormat] = make(map[*Player]struct{})
 		}
 		mm.queue[timeFormat][player] = struct{}{}
+		player.JoinQueue(timeFormat)
 		log.Printf("Player %s joined %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
 
 		errChan <- nil
@@ -98,11 +99,6 @@ func (mm *Matchmaker) Run() {
 		case action := <-mm.actions:
 			action()
 
-			select {
-			case mm.UpdateChan <- struct{}{}:
-			default:
-			}
-
 			for timeFormat := range mm.queue {
 				if len(mm.queue[timeFormat]) < 2 {
 					continue
@@ -110,6 +106,11 @@ func (mm *Matchmaker) Run() {
 				p1, p2 := mm.matchPlayers(timeFormat)
 
 				mm.startMatch(p1, p2, timeFormat)
+			}
+
+			select {
+			case mm.UpdateChan <- struct{}{}:
+			default:
 			}
 		case match := <-mm.matchEnded:
 			mm.UnregisterMatch(match)
