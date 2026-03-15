@@ -1,20 +1,27 @@
 import { Button } from "@mui/material";
-import { pgnToMoves } from "../utils/chess";
-import { MessageTypeOfferDraw, MessageTypeResign, type WSMessage } from "../interfaces/message";
-import { useWebSocket } from "../contexts/WebSocketContext";
+type MoveRow = {
+  moveNumber: number;
+  whiteMove: string;
+  blackMove: string;
+};
 
-function MatchInfoPanel() {
-  const { sendMessage, isDrawOfferPending, respondToDrawOffer, inMatch, pgn } = useWebSocket();
-  const moves = pgnToMoves(pgn);
-  const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    groupedMoves.push({
-      moveNumber: Math.floor(i / 2) + 1,
-      whiteMove: moves[i],
-      blackMove: moves[i + 1] || "",
-    });
-  }
+type MatchInfoPanelProps = {
+  groupedMoves: MoveRow[];
+  isDrawOfferPending: boolean;
+  inMatch: boolean;
+  onRespondToDrawOffer: (accept: boolean) => void;
+  onResign: () => void;
+  onOfferDraw: () => void;
+};
 
+function MatchInfoPanel({
+  groupedMoves,
+  isDrawOfferPending,
+  inMatch,
+  onRespondToDrawOffer,
+  onResign,
+  onOfferDraw,
+}: MatchInfoPanelProps) {
   return (
     <div className="p-2 border border-gray-600 h-72 w-48 flex flex-col box-border">
       <div className="flex-1 overflow-y-auto">
@@ -46,7 +53,7 @@ function MatchInfoPanel() {
                 sx={{ width: "40px", height: "30px", fontSize: "22px" }}
                 variant="contained"
                 color="success"
-                onClick={() => respondToDrawOffer(true)}
+                onClick={() => onRespondToDrawOffer(true)}
               >
                 ✓
               </Button>
@@ -54,7 +61,7 @@ function MatchInfoPanel() {
                 sx={{ width: "40px", height: "30px", fontSize: "22px" }}
                 variant="contained"
                 color="error"
-                onClick={() => respondToDrawOffer(false)}
+                onClick={() => onRespondToDrawOffer(false)}
               >
                 ✕
               </Button>
@@ -66,12 +73,7 @@ function MatchInfoPanel() {
               sx={{ width: "100px" }}
               variant="contained"
               disabled={!inMatch}
-              onClick={() => {
-                const message: WSMessage = {
-                  type: MessageTypeResign,
-                };
-                sendMessage(message);
-              }}
+              onClick={onResign}
             >
               Resign
             </Button>
@@ -79,12 +81,7 @@ function MatchInfoPanel() {
               sx={{ width: "100px" }}
               variant="contained"
               disabled={!inMatch}
-              onClick={() => {
-                const message: WSMessage = {
-                  type: MessageTypeOfferDraw,
-                };
-                sendMessage(message);
-              }}
+              onClick={onOfferDraw}
             >
               Draw
             </Button>

@@ -1,11 +1,9 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button, Dialog, DialogContent } from "@mui/material";
 import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
 import type { Board, Color, PieceType, Square } from "../interfaces/chess";
-import { MessageTypeMove } from "../interfaces/message";
-import type { LegalMove, WSMessage, MoveData } from "../interfaces/message";
+import type { LegalMove } from "../interfaces/message";
 import type { Result } from "../interfaces/result";
 import { coordsToString, displayIndexToSquare } from "../utils/chess";
 
@@ -99,20 +97,23 @@ function BoardSquare({
   );
 }
 
+type BoardComponentProps = {
+  color: Color;
+  board: Board | null;
+  legalMoves: Record<string, LegalMove[]> | null;
+  matchResult: Result | null;
+  sendMoveMessage: (from: string, to: string, promotion: PieceType | null) => void;
+  onBackToMenu: () => void;
+};
+
 function BoardComponent({
   color,
   board,
   legalMoves,
-  sendMessage,
   matchResult,
-}: {
-  color: Color;
-  board: Board | null;
-  legalMoves: Record<string, LegalMove[]> | null;
-  sendMessage: (message: WSMessage) => void;
-  matchResult: Result | null;
-}) {
-  const navigate = useNavigate();
+  sendMoveMessage,
+  onBackToMenu,
+}: BoardComponentProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const [promotionDialog, setPromotionDialog] = useState<{
     from: string;
@@ -148,15 +149,6 @@ function BoardComponent({
     return (legalMoves?.[squareString]?.length ?? 0) > 0;
   }
 
-  function sendMove(from: string, to: string, promotion: PieceType | null) {
-    const moveData: MoveData = { from, to, promotion };
-    const message: WSMessage = {
-      type: MessageTypeMove,
-      data: moveData,
-    };
-    sendMessage(message);
-  }
-
   function tryMove(from: Square, to: Square, sourceColor: Color) {
     const fromStr = coordsToString(from);
     const toStr = coordsToString(to);
@@ -169,14 +161,14 @@ function BoardComponent({
     if (move.promotion) {
       setPromotionDialog({ from: fromStr, to: toStr, color: sourceColor });
     } else {
-      sendMove(fromStr, toStr, null);
+      sendMoveMessage(fromStr, toStr, null);
       setSelected(null);
     }
   }
 
   function handlePromotion(pieceType: PieceType) {
     if (promotionDialog) {
-      sendMove(promotionDialog.from, promotionDialog.to, pieceType);
+      sendMoveMessage(promotionDialog.from, promotionDialog.to, pieceType);
       setPromotionDialog(null);
       setSelected(null);
     }
@@ -264,7 +256,7 @@ function BoardComponent({
                         `}
             >
               <div>{resultString}</div>
-              <Button onClick={() => navigate("/")} variant="contained">
+              <Button onClick={onBackToMenu} variant="contained">
                 Back to Menu
               </Button>
             </div>

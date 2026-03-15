@@ -1,32 +1,28 @@
-import { MessageTypeJoinMatch } from "../interfaces/message";
-import type { WSMessage, JoinMatchData } from "../interfaces/message";
 import type { QueueData } from "../interfaces/message";
-import type { TimeFormat } from "../interfaces/chess";
-import { useWebSocket } from "../contexts/WebSocketContext";
+import type { MouseEventHandler } from "react";
 import { formatTimeFormat } from "../utils/time";
+import type { TimeFormat } from "../interfaces/chess";
 
 type MatchmakingComponentProps = {
   timeFormat: TimeFormat;
   queueData: QueueData | undefined;
   playerName: string;
+  isConnected: boolean;
+  inMatch: boolean;
+  onJoinQueue: MouseEventHandler<HTMLDivElement>;
 };
 
-function MatchmakingComponent({ timeFormat, queueData, playerName }: MatchmakingComponentProps) {
-  const { isConnected, sendMessage, inMatch } = useWebSocket();
+function MatchmakingComponent({
+  timeFormat,
+  queueData,
+  playerName,
+  isConnected,
+  inMatch,
+  onJoinQueue,
+}: MatchmakingComponentProps) {
   const queueLength = queueData?.queueLength ?? 0;
   const inQueue = queueData?.inQueue ?? false;
   const disabled = !playerName || !isConnected || inQueue || inMatch;
-
-  function joinQueue() {
-    if (disabled) return;
-
-    const joinMatchData: JoinMatchData = { playerName, timeFormat };
-    const message: WSMessage = {
-      type: MessageTypeJoinMatch,
-      data: joinMatchData,
-    };
-    sendMessage(message);
-  }
 
   return (
     <div className="flex justify-center items-center relative">
@@ -38,7 +34,7 @@ function MatchmakingComponent({ timeFormat, queueData, playerName }: Matchmaking
       )}
 
       <div
-        onClick={joinQueue}
+        onClick={onJoinQueue}
         className={[
           "w-60 p-5 rounded-2xl backdrop-blur-xl border text-slate-800",
           "flex flex-col items-center gap-4 transition shadow-xl shadow-slate-400/40 relative",

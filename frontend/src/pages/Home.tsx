@@ -5,11 +5,31 @@ import MatchmakingComponent from "../components/Matchmaking.tsx";
 import { useNavigate } from "react-router-dom";
 import { timeFormats } from "../interfaces/chess.ts";
 import { getQueueData } from "../utils/chess.ts";
+import {
+  MessageTypeJoinMatch,
+  type WSMessage,
+  type JoinMatchData,
+  type QueueData,
+} from "../interfaces/message.ts";
+import type { TimeFormat } from "../interfaces/chess.ts";
 
 function Home() {
   const [playerName, setPlayerName] = useState<string>("");
-  const { isConnected, queues, inMatch } = useWebSocket();
+  const { isConnected, queues, inMatch, sendMessage } = useWebSocket();
   const navigate = useNavigate();
+
+  function handleJoinQueue(timeFormat: TimeFormat, queueData: QueueData | undefined) {
+    if (!playerName || !isConnected || inMatch || queueData?.inQueue) {
+      return;
+    }
+
+    const joinMatchData: JoinMatchData = { playerName, timeFormat };
+    const message: WSMessage = {
+      type: MessageTypeJoinMatch,
+      data: joinMatchData,
+    };
+    sendMessage(message);
+  }
 
   return (
     <div className="min-h-screen flex flex-row gap-12 p-2">
@@ -35,13 +55,20 @@ function Home() {
       <div className="flex flex-col gap-6">
         {timeFormats.map((group, groupIdx) => (
           <div key={groupIdx} className="flex flex-wrap gap-4">
-            {group.map((timeFormat) => (
-              <MatchmakingComponent
-                timeFormat={timeFormat}
-                queueData={getQueueData(queues, timeFormat)}
-                playerName={playerName}
-              />
-            ))}
+            {group.map((timeFormat) => {
+              const queueData = getQueueData(queues, timeFormat);
+              return (
+                <MatchmakingComponent
+                  key={`${timeFormat.initialMs}-${timeFormat.incrementMs}`}
+                  timeFormat={timeFormat}
+                  queueData={queueData}
+                  playerName={playerName}
+                  isConnected={isConnected}
+                  inMatch={inMatch}
+                  onJoinQueue={() => handleJoinQueue(timeFormat, queueData)}
+                />
+              );
+            })}
           </div>
         ))}
       </div>
