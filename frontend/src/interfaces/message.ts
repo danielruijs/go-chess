@@ -5,7 +5,7 @@ import type { Result } from "./result";
 const MessageTypeBoard = "board";
 const MessageTypeMatchmakingUpdate = "matchmaking_update";
 const MessageTypeStartMatch = "start_match";
-const MessageTypeEndMatch = "end_match"
+const MessageTypeEndMatch = "end_match";
 const MessageTypeDrawOffered = "draw_offered";
 const MessageTypeDrawDeclined = "draw_declined";
 // outbound
@@ -75,48 +75,59 @@ type RespondDrawData = {
 type WSMessage =
   // inbound
   | {
-    type: typeof MessageTypeBoard;
-    data: BoardData;
-  }
+      type: typeof MessageTypeBoard;
+      data: BoardData;
+    }
   | {
-    type: typeof MessageTypeStartMatch;
-    data: StartMatchData;
-  }
+      type: typeof MessageTypeStartMatch;
+      data: StartMatchData;
+    }
   | {
-    type: typeof MessageTypeMatchmakingUpdate;
-    data: MatchmakingUpdateData;
-  }
+      type: typeof MessageTypeMatchmakingUpdate;
+      data: MatchmakingUpdateData;
+    }
   | {
-    type: typeof MessageTypeEndMatch;
-    data: EndMatchData;
-  }
+      type: typeof MessageTypeEndMatch;
+      data: EndMatchData;
+    }
   | {
-    type: typeof MessageTypeDrawOffered;
-  }
+      type: typeof MessageTypeDrawOffered;
+    }
   | {
-    type: typeof MessageTypeDrawDeclined;
-  }
+      type: typeof MessageTypeDrawDeclined;
+    }
   // outbound
   | {
-    type: typeof MessageTypeJoinMatch;
-    data: JoinMatchData;
-  }
+      type: typeof MessageTypeJoinMatch;
+      data: JoinMatchData;
+    }
   | {
-    type: typeof MessageTypeMove;
-    data: MoveData;
-  }
+      type: typeof MessageTypeMove;
+      data: MoveData;
+    }
   | {
-    type: typeof MessageTypeResign;
-  }
+      type: typeof MessageTypeResign;
+    }
   | {
-    type: typeof MessageTypeOfferDraw;
-  }
+      type: typeof MessageTypeOfferDraw;
+    }
   | {
-    type: typeof MessageTypeRespondDraw;
-    data: RespondDrawData;
-  };
+      type: typeof MessageTypeRespondDraw;
+      data: RespondDrawData;
+    };
 
-export type { WSMessage, MoveData, BoardData, JoinMatchData, LegalMove, StartMatchData, MatchmakingUpdateData, EndMatchData, ClockData, QueueData };
+export type {
+  WSMessage,
+  MoveData,
+  BoardData,
+  JoinMatchData,
+  LegalMove,
+  StartMatchData,
+  MatchmakingUpdateData,
+  EndMatchData,
+  ClockData,
+  QueueData,
+};
 export {
   MessageTypeBoard,
   MessageTypeMove,
@@ -128,5 +139,5 @@ export {
   MessageTypeDrawDeclined,
   MessageTypeResign,
   MessageTypeOfferDraw,
-  MessageTypeRespondDraw
+  MessageTypeRespondDraw,
 };

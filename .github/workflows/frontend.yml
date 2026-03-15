@@ -3,46 +3,49 @@ name: Frontend
 on:
   push:
     paths:
-      - 'frontend/**'
+      - "frontend/**"
   pull_request:
     paths:
-      - 'frontend/**'
+      - "frontend/**"
 
 jobs:
-    lint:
-          name: Lint
-          runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
 
-          steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v6
-              with:
-                node-version: '24'
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
 
-            - name: Install dependencies
-              run: cd frontend && npm install
+      - name: Install dependencies
+        run: cd frontend && npm install
 
-            - name: Lint
-              run: cd frontend && npx eslint '**/*.ts' '**/*.tsx'
+      - name: Lint
+        run: cd frontend && npx eslint '**/*.ts' '**/*.tsx'
 
-    test:
-        name: Test
-        runs-on: ubuntu-latest
+      - name: Format
+        run: cd frontend && npm run format:check
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+  test:
+    name: Test
+    runs-on: ubuntu-latest
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v6
-              with:
-                node-version: '24'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-            - name: Install dependencies
-              run: cd frontend && npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
 
-            - name: Test
-              run: cd frontend && npm test
+      - name: Install dependencies
+        run: cd frontend && npm install
+
+      - name: Test
+        run: cd frontend && npm test

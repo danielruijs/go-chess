@@ -33,14 +33,11 @@ function displayIndexToSquare(index: number, color: Color): Square {
   return { file, rank };
 }
 
-function getQueueData(
-  queues: QueueData[] | null,
-  timeFormat: TimeFormat,
-): QueueData | undefined {
+function getQueueData(queues: QueueData[] | null, timeFormat: TimeFormat): QueueData | undefined {
   return queues?.find(
     (q) =>
       q.timeFormat.initialMs === timeFormat.initialMs &&
-      q.timeFormat.incrementMs === timeFormat.incrementMs,
+      q.timeFormat.incrementMs === timeFormat.incrementMs
   );
 }
 

@@ -11,11 +11,7 @@ type MatchmakingComponentProps = {
   playerName: string;
 };
 
-function MatchmakingComponent({
-  timeFormat,
-  queueData,
-  playerName,
-}: MatchmakingComponentProps) {
+function MatchmakingComponent({ timeFormat, queueData, playerName }: MatchmakingComponentProps) {
   const { isConnected, sendMessage, inMatch } = useWebSocket();
   const queueLength = queueData?.queueLength ?? 0;
   const inQueue = queueData?.inQueue ?? false;

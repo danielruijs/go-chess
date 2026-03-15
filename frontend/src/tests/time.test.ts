@@ -72,20 +72,14 @@ describe("formatMatchTime", () => {
 
 describe("formatTimeFormat", () => {
   it("formats 3min initial and 0s increment as 3+0", () => {
-    expect(formatTimeFormat({ initialMs: 180 * 1000, incrementMs: 0 })).toBe(
-      "3+0",
-    );
+    expect(formatTimeFormat({ initialMs: 180 * 1000, incrementMs: 0 })).toBe("3+0");
   });
 
   it("formats 1min initial and 1s increment as 1+1", () => {
-    expect(formatTimeFormat({ initialMs: 60 * 1000, incrementMs: 1000 })).toBe(
-      "1+1",
-    );
+    expect(formatTimeFormat({ initialMs: 60 * 1000, incrementMs: 1000 })).toBe("1+1");
   });
 
   it("formats 15min initial and 10s increment as 15+10", () => {
-    expect(
-      formatTimeFormat({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 }),
-    ).toBe("15+10");
+    expect(formatTimeFormat({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 })).toBe("15+10");
   });
 });

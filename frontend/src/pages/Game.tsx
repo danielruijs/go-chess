@@ -4,13 +4,23 @@ import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 
 function Game() {
-  const { sendMessage, board, legalMoves, playerColor, activeColor, clock, whitePlayerName, blackPlayerName, matchResult } = useWebSocket();
+  const {
+    sendMessage,
+    board,
+    legalMoves,
+    playerColor,
+    activeColor,
+    clock,
+    whitePlayerName,
+    blackPlayerName,
+    matchResult,
+  } = useWebSocket();
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
     return "Starting match...";
   }
 
-  const ownTimeRemainingMs = playerColor === "white" ? clock.whiteTimeMs : clock.blackTimeMs
-  const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs
+  const ownTimeRemainingMs = playerColor === "white" ? clock.whiteTimeMs : clock.blackTimeMs;
+  const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs;
 
   return (
     <div className="flex items-center h-screen">

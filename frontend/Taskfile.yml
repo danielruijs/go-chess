@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 
 tasks:
   deps:
     desc: "Download npm dependencies"
     cmds:
       - npm install
-    
+
   test:
     desc: "Run tests"
     cmds:

@@ -1,12 +1,6 @@
 import { formatMatchTime } from "../utils/time";
 
-function MatchClock({
-  timeMs,
-  isActive,
-}: {
-  timeMs: number;
-  isActive: boolean;
-}) {
+function MatchClock({ timeMs, isActive }: { timeMs: number; isActive: boolean }) {
   return (
     <div
       className={[
@@ -16,9 +10,7 @@ function MatchClock({
           : "border-slate-700 bg-slate-800 text-slate-400",
       ].join(" ")}
     >
-      <div className="text-2xl font-bold tabular-nums">
-        {formatMatchTime(timeMs)}
-      </div>
+      <div className="text-2xl font-bold tabular-nums">{formatMatchTime(timeMs)}</div>
     </div>
   );
 }
