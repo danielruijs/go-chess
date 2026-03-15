@@ -1,42 +1,61 @@
-import Button from "@mui/material/Button";
 import { MessageTypeJoinMatch } from "../interfaces/message";
 import type { WSMessage, JoinMatchData } from "../interfaces/message";
 import type { QueueData } from "../interfaces/message";
 import type { TimeFormat } from "../interfaces/chess";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { formatTimeFormat } from "../utils/time";
 
-function MatchmakingComponent({ timeFormat, queueData, playerName }: { timeFormat: TimeFormat, queueData: QueueData | undefined; playerName: string }) {
-    const { isConnected, sendMessage, inMatch } = useWebSocket();
-    const queueLength = queueData ? queueData.queueLength : null;
-    const inQueue = queueData ? queueData.inQueue : false;
+type MatchmakingComponentProps = {
+  timeFormat: TimeFormat;
+  queueData: QueueData | undefined;
+  playerName: string;
+};
 
-    return (
-        <div className="p-2">
-            <p className="text-2xl font-bold mb-4">{`${timeFormat.initialMs / 1000}+${timeFormat.incrementMs / 1000}`}</p>
-            <Button
-                variant="contained"
-                disabled={!playerName || !isConnected || inQueue || inMatch}
-                onClick={() => {
-                    const joinMatchData: JoinMatchData = { playerName, timeFormat };
-                    const message: WSMessage = {
-                        type: MessageTypeJoinMatch,
-                        data: joinMatchData,
-                    };
-                    sendMessage(message);
-                }}>
-                Join Matchmaking Queue
-            </Button>
-            <div className="text-xl font-semibold mb-2">Matchmaking Queue</div>
-            {queueLength !== null ? (
-                <p>Current queue length: {queueLength}</p>
-            ) : (
-                <p>Loading queue length...</p>
-            )}
-            {inQueue && (
-                <p className="mt-2 text-gray-600">You are in the matchmaking queue.</p>
-            )}
+function MatchmakingComponent({
+  timeFormat,
+  queueData,
+  playerName,
+}: MatchmakingComponentProps) {
+  const { isConnected, sendMessage, inMatch } = useWebSocket();
+  const queueLength = queueData?.queueLength ?? 0;
+  const inQueue = queueData?.inQueue ?? false;
+  const disabled = !playerName || !isConnected || inQueue || inMatch;
+
+  function joinQueue() {
+    if (disabled) return;
+
+    const joinMatchData: JoinMatchData = { playerName, timeFormat };
+    const message: WSMessage = {
+      type: MessageTypeJoinMatch,
+      data: joinMatchData,
+    };
+    sendMessage(message);
+  }
+
+  return (
+    <div className="flex justify-center items-center relative">
+      {inQueue && (
+        <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          In Queue
         </div>
-    );
+      )}
+
+      <div
+        onClick={joinQueue}
+        className={[
+          "w-60 p-5 rounded-2xl backdrop-blur-xl border text-slate-800",
+          "flex flex-col items-center gap-4 transition shadow-xl shadow-slate-400/40 relative",
+          disabled
+            ? "bg-white/50 border-white/60 cursor-not-allowed opacity-70"
+            : "bg-white/70 border-white/80 cursor-pointer hover:shadow-2xl hover:-translate-y-1 hover:bg-white/80",
+        ].join(" ")}
+      >
+        <p className="text-3xl font-bold">{formatTimeFormat(timeFormat)}</p>
+        <p className="text-sm text-slate-600">Queue length: {queueLength}</p>
+      </div>
+    </div>
+  );
 }
 
 export default MatchmakingComponent;
