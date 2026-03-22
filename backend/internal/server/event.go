@@ -103,13 +103,10 @@ func (m *Match) handleOfferDrawEvent(event Event) {
 	}
 	m.DrawOfferedBy = event.Player
 
-	receivingPlayer := m.Player1
-	if event.Player == m.Player1 {
-		receivingPlayer = m.Player2
-	}
-	err := receivingPlayer.SendCritical(MessageTypeDrawOffered, nil)
+	opponent := m.getOpponent(event.Player)
+	err := opponent.SendCritical(MessageTypeDrawOffered, nil)
 	if err != nil {
-		log.Printf("failed to send draw offered message to %s: %v", receivingPlayer.Name, err)
+		log.Printf("failed to send draw offered message to %s: %v", opponent.Name, err)
 	}
 }
 
@@ -129,13 +126,10 @@ func (m *Match) handleRespondDrawEvent(event Event) (ended bool) {
 	}
 	if !data.Accept {
 		// notify opponent that the draw offer was declined
-		receivingPlayer := m.Player1
-		if event.Player == m.Player1 {
-			receivingPlayer = m.Player2
-		}
-		err := receivingPlayer.SendCritical(MessageTypeDrawDeclined, nil)
+		opponent := m.getOpponent(event.Player)
+		err := opponent.SendCritical(MessageTypeDrawDeclined, nil)
 		if err != nil {
-			log.Printf("failed to send draw declined message to %s: %v", receivingPlayer.Name, err)
+			log.Printf("failed to send draw declined message to %s: %v", opponent.Name, err)
 		}
 		m.DrawOfferedBy = nil
 		return false
@@ -144,4 +138,11 @@ func (m *Match) handleRespondDrawEvent(event Event) (ended bool) {
 	result := &chess.Result{Outcome: chess.Draw, Reason: chess.AgreedDraw}
 	m.end(result)
 	return true
+}
+
+func (m *Match) getOpponent(p *Player) *Player {
+	if p == m.Player1 {
+		return m.Player2
+	}
+	return m.Player1
 }
