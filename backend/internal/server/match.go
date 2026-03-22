@@ -33,26 +33,15 @@ func (m *Match) Run() {
 	for {
 		select {
 		case event := <-m.EventChan:
-			switch event.Type {
-			case EventTypeMove:
-				ended := m.handleMoveEvent(event)
-				if ended {
-					return
-				}
-			case EventTypeGameStarted:
-				m.handleGameStartedEvent()
-			case EventTypeResign:
-				ended := m.handleResignEvent(event)
-				if ended {
-					return
-				}
-			case EventTypeOfferDraw:
-				m.handleOfferDrawEvent(event)
-			case EventTypeRespondDraw:
-				ended := m.handleRespondDrawEvent(event)
-				if ended {
-					return
-				}
+			handler, ok := eventHandlers[event.Type]
+			if !ok {
+				log.Println("unknown event type:", event.Type)
+				continue
+			}
+
+			ended := handler.Handle(m, event)
+			if ended {
+				return
 			}
 
 			err := m.sendPositionUpdate(true)
@@ -157,4 +146,11 @@ func (m *Match) getPlayerByColor(color chess.Color) *Player {
 		return m.Player1
 	}
 	return m.Player2
+}
+
+func (m *Match) getOpponent(p *Player) *Player {
+	if p == m.Player1 {
+		return m.Player2
+	}
+	return m.Player1
 }

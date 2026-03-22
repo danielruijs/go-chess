@@ -22,7 +22,21 @@ type Event struct {
 	Data   eventData
 }
 
-func (m *Match) handleMoveEvent(event Event) (ended bool) {
+type EventHandler interface {
+	Handle(m *Match, event Event) (ended bool)
+}
+
+var eventHandlers = map[eventType]EventHandler{
+	EventTypeMove:        MoveEventHandler{},
+	EventTypeGameStarted: GameStartedEventHandler{},
+	EventTypeResign:      ResignEventHandler{},
+	EventTypeOfferDraw:   OfferDrawEventHandler{},
+	EventTypeRespondDraw: RespondDrawEventHandler{},
+}
+
+type MoveEventHandler struct{}
+
+func (h MoveEventHandler) Handle(m *Match, event Event) (ended bool) {
 	data, ok := event.Data.(MoveData)
 	if !ok {
 		log.Println("invalid move data format")
@@ -68,7 +82,9 @@ func (m *Match) handleMoveEvent(event Event) (ended bool) {
 	return false
 }
 
-func (m *Match) handleGameStartedEvent() {
+type GameStartedEventHandler struct{}
+
+func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.Clock.Start()
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		startMatchData := StartMatchData{
@@ -83,9 +99,12 @@ func (m *Match) handleGameStartedEvent() {
 			continue
 		}
 	}
+	return false
 }
 
-func (m *Match) handleResignEvent(event Event) (ended bool) {
+type ResignEventHandler struct{}
+
+func (h ResignEventHandler) Handle(m *Match, event Event) (ended bool) {
 	var result *chess.Result
 	if event.Player.GetColor() == chess.White {
 		result = &chess.Result{Outcome: chess.BlackWin, Reason: chess.Resignation}
@@ -96,10 +115,12 @@ func (m *Match) handleResignEvent(event Event) (ended bool) {
 	return true
 }
 
-func (m *Match) handleOfferDrawEvent(event Event) {
+type OfferDrawEventHandler struct{}
+
+func (h OfferDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	if m.DrawOfferedBy != nil {
 		log.Println("draw offer already pending")
-		return
+		return false
 	}
 	m.DrawOfferedBy = event.Player
 
@@ -108,9 +129,12 @@ func (m *Match) handleOfferDrawEvent(event Event) {
 	if err != nil {
 		log.Printf("failed to send draw offered message to %s: %v", opponent.Name, err)
 	}
+	return false
 }
 
-func (m *Match) handleRespondDrawEvent(event Event) (ended bool) {
+type RespondDrawEventHandler struct{}
+
+func (h RespondDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	data, ok := event.Data.(RespondDrawData)
 	if !ok {
 		log.Println("invalid respond draw data format")
@@ -138,11 +162,4 @@ func (m *Match) handleRespondDrawEvent(event Event) (ended bool) {
 	result := &chess.Result{Outcome: chess.Draw, Reason: chess.AgreedDraw}
 	m.end(result)
 	return true
-}
-
-func (m *Match) getOpponent(p *Player) *Player {
-	if p == m.Player1 {
-		return m.Player2
-	}
-	return m.Player1
 }
