@@ -35,117 +35,24 @@ func (m *Match) Run() {
 		case event := <-m.EventChan:
 			switch event.Type {
 			case EventTypeMove:
-				data, ok := event.Data.(MoveData)
-				if !ok {
-					log.Println("invalid move data format")
-					continue
-				}
-
-				loserByTimeout, err := m.Clock.BeforeMove(m.Engine.GetActiveColor())
-				if err != nil {
-					log.Println("failed to check match clock before move:", err)
-					continue
-				}
-				if loserByTimeout != nil {
-					m.end(getTimeoutResult(*loserByTimeout))
-					return
-				}
-
-				move, err := moveDataToMove(data)
-				if err != nil {
-					log.Println("invalid move data:", err)
-					continue
-				}
-				result, err := m.Engine.ApplyMove(move, event.Player.GetColor())
-				if err != nil {
-					if data.Promotion != nil {
-						log.Printf("failed to apply move %s -> %s with promotion to %v: %v\n", data.From, data.To, *data.Promotion, err)
-					} else {
-						log.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
-					}
-					continue
-				}
-
-				err = m.Clock.AfterMove(chess.GetOppositeColor(m.Engine.GetActiveColor()))
-				if err != nil {
-					log.Println("failed to update match clock after move:", err)
-					continue
-				}
-
-				if result != nil {
-					m.end(result)
+				ended := m.handleMoveEvent(event)
+				if ended {
 					return
 				}
 			case EventTypeGameStarted:
-				m.Clock.Start()
-				for _, player := range []*Player{m.Player1, m.Player2} {
-					startMatchData := StartMatchData{
-						Color:           player.GetColor(),
-						WhitePlayerName: m.getPlayerByColor(chess.White).Name,
-						BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
-						Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
-					}
-					err := player.SendCritical(MessageTypeStartMatch, startMatchData)
-					if err != nil {
-						log.Printf("failed to send start match message to %s: %v", player.Name, err)
-						continue
-					}
-				}
+				m.handleGameStartedEvent()
 			case EventTypeResign:
-				var result *chess.Result
-				if event.Player.GetColor() == chess.White {
-					result = &chess.Result{Outcome: chess.BlackWin, Reason: chess.Resignation}
-				} else {
-					result = &chess.Result{Outcome: chess.WhiteWin, Reason: chess.Resignation}
+				ended := m.handleResignEvent(event)
+				if ended {
+					return
 				}
-				m.end(result)
-				return
 			case EventTypeOfferDraw:
-				if m.DrawOfferedBy != nil {
-					log.Println("draw offer already pending")
-					continue
-				}
-				m.DrawOfferedBy = event.Player
-
-				receivingPlayer := m.Player1
-				if event.Player == m.Player1 {
-					receivingPlayer = m.Player2
-				}
-				err := receivingPlayer.SendCritical(MessageTypeDrawOffered, nil)
-				if err != nil {
-					log.Printf("failed to send draw offered message to %s: %v", receivingPlayer.Name, err)
-				}
+				m.handleOfferDrawEvent(event)
 			case EventTypeRespondDraw:
-				data, ok := event.Data.(RespondDrawData)
-				if !ok {
-					log.Println("invalid respond draw data format")
-					continue
+				ended := m.handleRespondDrawEvent(event)
+				if ended {
+					return
 				}
-				if m.DrawOfferedBy == nil {
-					log.Println("no draw offer to respond to")
-					continue
-				}
-				if m.DrawOfferedBy == event.Player {
-					log.Println("player cannot respond to their own draw offer")
-					continue
-				}
-				if !data.Accept {
-					// notify opponent that the draw offer was declined
-					receivingPlayer := m.Player1
-					if event.Player == m.Player1 {
-						receivingPlayer = m.Player2
-					}
-					err := receivingPlayer.SendCritical(MessageTypeDrawDeclined, nil)
-					if err != nil {
-						log.Printf("failed to send draw declined message to %s: %v", receivingPlayer.Name, err)
-					}
-					m.DrawOfferedBy = nil
-					continue
-				}
-				// accepted draw
-				result := &chess.Result{Outcome: chess.Draw, Reason: chess.AgreedDraw}
-				m.end(result)
-				return
 			}
 
 			err := m.sendPositionUpdate(true)
