@@ -5,7 +5,21 @@ import (
 	"fmt"
 )
 
-func (c Client) handleJoinMatch(messageData json.RawMessage, matchmaker *Matchmaker) error {
+type MessageHandler interface {
+	Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error
+}
+
+var messageHandlers = map[MessageType]MessageHandler{
+	MessageTypeJoinMatch:   JoinMatchMessageHandler{},
+	MessageTypeMove:        MoveMessageHandler{},
+	MessageTypeResign:      ResignMessageHandler{},
+	MessageTypeOfferDraw:   OfferDrawMessageHandler{},
+	MessageTypeRespondDraw: RespondDrawMessageHandler{},
+}
+
+type JoinMatchMessageHandler struct{}
+
+func (h JoinMatchMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
 	var data JoinMatchData
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid join match data format: %w", err)
@@ -25,7 +39,9 @@ func (c Client) handleJoinMatch(messageData json.RawMessage, matchmaker *Matchma
 	return nil
 }
 
-func (c Client) handleMove(messageData json.RawMessage, matchmaker *Matchmaker) error {
+type MoveMessageHandler struct{}
+
+func (h MoveMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
 	var data MoveData
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid move data format: %w", err)
@@ -45,7 +61,9 @@ func (c Client) handleMove(messageData json.RawMessage, matchmaker *Matchmaker) 
 	return nil
 }
 
-func (c Client) handleResign(matchmaker *Matchmaker) error {
+type ResignMessageHandler struct{}
+
+func (h ResignMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
 	match := matchmaker.GetMatch(c.Player)
 	if match == nil {
 		return fmt.Errorf("player is not in a match")
@@ -59,7 +77,9 @@ func (c Client) handleResign(matchmaker *Matchmaker) error {
 	return nil
 }
 
-func (c Client) handleOfferDraw(matchmaker *Matchmaker) error {
+type OfferDrawMessageHandler struct{}
+
+func (h OfferDrawMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
 	match := matchmaker.GetMatch(c.Player)
 	if match == nil {
 		return fmt.Errorf("player is not in a match")
@@ -73,7 +93,9 @@ func (c Client) handleOfferDraw(matchmaker *Matchmaker) error {
 	return nil
 }
 
-func (c Client) handleRespondDraw(messageData json.RawMessage, matchmaker *Matchmaker) error {
+type RespondDrawMessageHandler struct{}
+
+func (h RespondDrawMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
 	var data RespondDrawData
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid respond draw data format: %w", err)

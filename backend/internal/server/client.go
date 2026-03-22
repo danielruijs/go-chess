@@ -23,7 +23,7 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
+func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 	for {
 		var message WSMessage
 		err := c.Conn.ReadJSON(&message)
@@ -35,39 +35,20 @@ func (c Client) ReceiveMessages(matchmaker *Matchmaker) {
 			return
 		}
 
-		switch message.Type {
-		case MessageTypeJoinMatch:
-			err := c.handleJoinMatch(message.Data, matchmaker)
-			if err != nil {
-				log.Println("Error handling join match:", err)
-			}
-		case MessageTypeMove:
-			err := c.handleMove(message.Data, matchmaker)
-			if err != nil {
-				log.Println("Error handling move:", err)
-			}
-		case MessageTypeResign:
-			err := c.handleResign(matchmaker)
-			if err != nil {
-				log.Println("Error handling resign:", err)
-			}
-		case MessageTypeOfferDraw:
-			err := c.handleOfferDraw(matchmaker)
-			if err != nil {
-				log.Println("Error handling offer draw:", err)
-			}
-		case MessageTypeRespondDraw:
-			err := c.handleRespondDraw(message.Data, matchmaker)
-			if err != nil {
-				log.Println("Error handling respond draw:", err)
-			}
-		default:
+		handler, ok := messageHandlers[message.Type]
+		if !ok {
 			log.Println("Unsupported message type:", message.Type)
+			continue
+		}
+
+		err = handler.Handle(c, message.Data, matchmaker)
+		if err != nil {
+			log.Printf("Error handling message with type %v: %v\n", message.Type, err)
 		}
 	}
 }
 
-func (c Client) SendMessages() {
+func (c *Client) SendMessages() {
 	ch := c.Player.GetSendChannel()
 	for {
 		select {
