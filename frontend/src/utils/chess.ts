@@ -49,7 +49,15 @@ function getQueueData(queues: QueueData[] | null, timeFormat: TimeFormat): Queue
   );
 }
 
-function getMaterialDiff(board: Board): MaterialDiff {
+function getMaterialDiff(board: Board | null): MaterialDiff {
+  const materialDiff: MaterialDiff = {
+    score: 0,
+    extraPieces: { white: {}, black: {} },
+  };
+  if (!board) {
+    return materialDiff;
+  }
+
   const counts: Record<Color, Record<PieceType, number>> = {
     white: { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 },
     black: { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 },
@@ -57,11 +65,6 @@ function getMaterialDiff(board: Board): MaterialDiff {
   board.flat().forEach((piece) => {
     if (piece) counts[piece.color][piece.type]++;
   });
-
-  const materialDiff: MaterialDiff = {
-    score: 0,
-    extraPieces: { white: {}, black: {} },
-  };
 
   for (const [type, value] of Object.entries(pieceValues) as [PieceType, number][]) {
     const diff = counts.white[type] - counts.black[type];

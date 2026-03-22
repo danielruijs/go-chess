@@ -165,4 +165,11 @@ describe("getMaterialDiff", () => {
     expect(result.extraPieces.white).toEqual({ knight: 1 });
     expect(result.extraPieces.black).toEqual({ bishop: 1 });
   });
+
+  it("handles null board", () => {
+    const result = getMaterialDiff(null);
+    expect(result.score).toBe(0);
+    expect(result.extraPieces.white).toEqual({});
+    expect(result.extraPieces.black).toEqual({});
+  });
 });

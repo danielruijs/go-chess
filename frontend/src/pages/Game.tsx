@@ -32,6 +32,8 @@ function Game() {
     respondToDrawOffer,
     inMatch,
   } = useWebSocket();
+  const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
+
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
     return "Starting match...";
   }
@@ -74,8 +76,6 @@ function Game() {
 
   const ownTimeRemainingMs = playerColor === "white" ? clock.whiteTimeMs : clock.blackTimeMs;
   const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs;
-
-  const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
 
   return (
     <div className="flex items-center h-screen">
