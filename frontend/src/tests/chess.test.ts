@@ -153,4 +153,16 @@ describe("getMaterialDiff", () => {
     expect(result.score).toBe(1);
     expect(result.extraPieces.white).toEqual({ pawn: 1 });
   });
+
+  it("handles material difference but different pieces", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    board[1][0] = { color: "white", type: "knight" };
+    board[2][0] = { color: "black", type: "bishop" };
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(0);
+    expect(result.extraPieces.white).toEqual({ knight: 1 });
+    expect(result.extraPieces.black).toEqual({ bishop: 1 });
+  });
 });

@@ -14,7 +14,7 @@ const pieceValues: Record<PieceType, number> = {
   bishop: 3,
   rook: 5,
   queen: 9,
-  king: 1000,
+  king: 0,
 };
 
 type MaterialDiff = {

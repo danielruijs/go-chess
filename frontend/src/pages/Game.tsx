@@ -13,6 +13,7 @@ import {
 import { MessageTypeMove } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
 import { useMemo } from "react";
+import PlayerInfo from "../components/PlayerInfo.tsx";
 
 function Game() {
   const navigate = useNavigate();
@@ -75,15 +76,16 @@ function Game() {
   const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs;
 
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
-  console.log(materialDiff);
 
   return (
     <div className="flex items-center h-screen">
       <div className="flex gap-4 items-center justify-center w-full">
         <div className="flex flex-col gap-2.5">
-          <div className="text-lg font-bold">
-            {playerColor === "white" ? blackPlayerName : whitePlayerName}
-          </div>
+          <PlayerInfo
+            color={playerColor === "white" ? "black" : "white"}
+            name={playerColor === "white" ? blackPlayerName : whitePlayerName}
+            materialDiff={materialDiff}
+          />
           <div className="flex gap-4">
             <BoardComponent
               color={playerColor}
@@ -106,9 +108,11 @@ function Game() {
               <MatchClock timeMs={ownTimeRemainingMs} isActive={playerColor === activeColor} />
             </div>
           </div>
-          <div className="text-lg font-bold">
-            {playerColor === "white" ? whitePlayerName : blackPlayerName}
-          </div>
+          <PlayerInfo
+            color={playerColor}
+            name={playerColor === "white" ? whitePlayerName : blackPlayerName}
+            materialDiff={materialDiff}
+          />
         </div>
       </div>
     </div>
