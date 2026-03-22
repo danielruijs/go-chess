@@ -3,15 +3,15 @@ import { useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 import MatchmakingComponent from "../components/Matchmaking.tsx";
 import { useNavigate } from "react-router-dom";
-import { timeFormats } from "../interfaces/chess.ts";
+import { timeFormats } from "../types/chess.ts";
 import { getQueueData } from "../utils/chess.ts";
 import {
   MessageTypeJoinMatch,
   type WSMessage,
   type JoinMatchData,
   type QueueData,
-} from "../interfaces/message.ts";
-import type { TimeFormat } from "../interfaces/chess.ts";
+} from "../types/message.ts";
+import type { TimeFormat } from "../types/chess.ts";
 
 function Home() {
   const [playerName, setPlayerName] = useState<string>("");
@@ -32,8 +32,8 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-row gap-12 p-2">
-      <Stack spacing={2} padding={2} width={"300px"}>
+    <div className="min-h-screen flex flex-row gap-12 p-4">
+      <Stack spacing={2} width={"300px"}>
         <TextField
           label="Name"
           variant="outlined"

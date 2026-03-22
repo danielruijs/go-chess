@@ -1,4 +1,4 @@
-import type { TimeFormat } from "../interfaces/chess";
+import type { TimeFormat } from "../types/chess";
 
 function formatMatchTime(ms: number): string {
   const minutes = Math.floor(ms / 60000);

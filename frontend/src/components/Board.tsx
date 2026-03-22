@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Button, Dialog, DialogContent } from "@mui/material";
 import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
-import type { Board, Color, PieceType, Square } from "../interfaces/chess";
-import type { LegalMove } from "../interfaces/message";
-import type { Result } from "../interfaces/result";
+import type { Board, Color, PieceType, Square } from "../types/chess";
+import type { LegalMove } from "../types/message";
+import type { Result } from "../types/result";
 import { coordsToString, displayIndexToSquare } from "../utils/chess";
 
 const OUTCOME_TEXT = {
@@ -99,7 +99,7 @@ function BoardSquare({
 
 type BoardComponentProps = {
   color: Color;
-  board: Board | null;
+  board: Board;
   legalMoves: Record<string, LegalMove[]> | null;
   matchResult: Result | null;
   sendMoveMessage: (from: string, to: string, promotion: PieceType | null) => void;
@@ -127,11 +127,6 @@ function BoardComponent({
     const selectedMoveTargets = new Set(selectedMoves.map((move) => move.to));
     return { selectedMoves, selectedMoveTargets };
   }, [selected, legalMoves]);
-
-  if (!board) {
-    return <div>Loading board...</div>;
-  }
-  const currentBoard = board;
 
   function getResultString() {
     if (!matchResult) return null;
@@ -175,11 +170,11 @@ function BoardComponent({
   }
 
   function handleClick(square: Square, isMoveTarget: boolean) {
-    const piece = currentBoard[square.file][square.rank];
+    const piece = board[square.file][square.rank];
     const isSameSquare = selected && selected.file === square.file && selected.rank === square.rank;
 
     if (selected && isMoveTarget) {
-      const sourcePiece = currentBoard[selected.file][selected.rank];
+      const sourcePiece = board[selected.file][selected.rank];
       tryMove(selected, square, sourcePiece!.color);
     } else if (isSameSquare) {
       setSelected(null); // deselect if clicking the same square again

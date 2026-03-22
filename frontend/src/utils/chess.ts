@@ -1,5 +1,13 @@
-import type { Square, Color, TimeFormat } from "../interfaces/chess";
-import type { QueueData } from "../interfaces/message";
+import {
+  type Square,
+  type Color,
+  type TimeFormat,
+  type Board,
+  type PieceType,
+  type MaterialDiff,
+  pieceValues,
+} from "../types/chess";
+import type { QueueData } from "../types/message";
 
 function coordsToString(square: Square): string {
   const fileChar = String.fromCharCode("a".charCodeAt(0) + square.file);
@@ -41,4 +49,30 @@ function getQueueData(queues: QueueData[] | null, timeFormat: TimeFormat): Queue
   );
 }
 
-export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData };
+function getMaterialDiff(board: Board): MaterialDiff {
+  const counts: Record<Color, Record<PieceType, number>> = {
+    white: { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 },
+    black: { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 },
+  };
+  board.flat().forEach((piece) => {
+    if (piece) counts[piece.color][piece.type]++;
+  });
+
+  const materialDiff: MaterialDiff = {
+    score: 0,
+    extraPieces: { white: {}, black: {} },
+  };
+
+  for (const [type, value] of Object.entries(pieceValues) as [PieceType, number][]) {
+    const diff = counts.white[type] - counts.black[type];
+
+    materialDiff.score += diff * value;
+
+    if (diff > 0) materialDiff.extraPieces.white[type] = diff;
+    else if (diff < 0) materialDiff.extraPieces.black[type] = Math.abs(diff);
+  }
+
+  return materialDiff;
+}
+
+export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData, getMaterialDiff };

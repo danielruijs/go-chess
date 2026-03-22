@@ -8,6 +8,23 @@ interface Piece {
 
 type Board = (Piece | null)[][];
 
+const pieceValues: Record<PieceType, number> = {
+  pawn: 1,
+  knight: 3,
+  bishop: 3,
+  rook: 5,
+  queen: 9,
+  king: 1000,
+};
+
+type MaterialDiff = {
+  extraPieces: {
+    white: Partial<Record<PieceType, number>>;
+    black: Partial<Record<PieceType, number>>;
+  };
+  score: number; // positive if white has more, negative if black has more
+};
+
 /**
  * (0,0) is a1, (1,0) is b1, (7,7) is h8
  */
@@ -34,5 +51,5 @@ const timeFormats: TimeFormat[][] = [
   ],
 ];
 
-export type { Board, PieceType, Color, Square, TimeFormat };
-export { timeFormats };
+export type { Board, PieceType, Color, Square, TimeFormat, MaterialDiff };
+export { timeFormats, pieceValues };

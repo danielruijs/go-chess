@@ -1,5 +1,12 @@
-import type { QueueData } from "../interfaces/message";
-import { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData } from "../utils/chess";
+import type { Board } from "../types/chess";
+import type { QueueData } from "../types/message";
+import {
+  coordsToString,
+  pgnToMoves,
+  displayIndexToSquare,
+  getQueueData,
+  getMaterialDiff,
+} from "../utils/chess";
 
 describe("coordsToString", () => {
   it("converts (0,0) to a1", () => {
@@ -86,5 +93,64 @@ describe("getQueueData", () => {
   it("returns undefined when queues is null", () => {
     const result = getQueueData(null, { initialMs: 60000, incrementMs: 0 });
     expect(result).toBeUndefined();
+  });
+});
+
+describe("getMaterialDiff", () => {
+  it("returns zero score for empty board", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(0);
+    expect(result.extraPieces.white).toEqual({});
+    expect(result.extraPieces.black).toEqual({});
+  });
+
+  it("calculates score when white has extra pawn", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    board[0][0] = { color: "white", type: "pawn" };
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(1);
+    expect(result.extraPieces.white).toEqual({ pawn: 1 });
+    expect(result.extraPieces.black).toEqual({});
+  });
+
+  it("calculates score when black has extra queen", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    board[0][0] = { color: "black", type: "queen" };
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(-9);
+    expect(result.extraPieces.white).toEqual({});
+    expect(result.extraPieces.black).toEqual({ queen: 1 });
+  });
+
+  it("calculates combined material difference", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    board[0][0] = { color: "white", type: "rook" };
+    board[1][0] = { color: "white", type: "knight" };
+    board[2][0] = { color: "black", type: "bishop" };
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(5); // 5 + 3 - 3
+    expect(result.extraPieces.white).toEqual({ rook: 1, knight: 1 });
+    expect(result.extraPieces.black).toEqual({ bishop: 1 });
+  });
+
+  it("handles multiple pieces of same type", () => {
+    const board: Board = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+    board[0][0] = { color: "white", type: "pawn" };
+    board[0][1] = { color: "white", type: "pawn" };
+    board[1][0] = { color: "black", type: "pawn" };
+    const result = getMaterialDiff(board);
+    expect(result.score).toBe(1);
+    expect(result.extraPieces.white).toEqual({ pawn: 1 });
   });
 });

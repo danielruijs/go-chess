@@ -9,7 +9,7 @@ import type {
   EndMatchData,
   ClockData,
   QueueData,
-} from "../interfaces/message";
+} from "../types/message";
 import {
   MessageTypeBoard,
   MessageTypeMatchmakingUpdate,
@@ -18,9 +18,9 @@ import {
   MessageTypeDrawOffered,
   MessageTypeDrawDeclined,
   MessageTypeRespondDraw,
-} from "../interfaces/message";
-import type { Result } from "../interfaces/result";
-import type { Color, Board } from "../interfaces/chess";
+} from "../types/message";
+import type { Result } from "../types/result";
+import type { Color, Board } from "../types/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
 const WS_URL = import.meta.env.VITE_WS_URL;

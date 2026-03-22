@@ -1,7 +1,7 @@
-import type { QueueData } from "../interfaces/message";
+import type { QueueData } from "../types/message";
 import type { MouseEventHandler } from "react";
 import { formatTimeFormat } from "../utils/time";
-import type { TimeFormat } from "../interfaces/chess";
+import type { TimeFormat } from "../types/chess";
 
 type MatchmakingComponentProps = {
   timeFormat: TimeFormat;

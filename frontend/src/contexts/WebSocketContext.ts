@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
-import type { WSMessage, LegalMove, QueueData, ClockData } from "../interfaces/message";
-import type { Board, Color } from "../interfaces/chess";
-import type { Result } from "../interfaces/result";
+import type { WSMessage, LegalMove, QueueData, ClockData } from "../types/message";
+import type { Board, Color } from "../types/chess";
+import type { Result } from "../types/result";
 
 export interface WebSocketContextType {
   isConnected: boolean;

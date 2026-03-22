@@ -3,15 +3,16 @@ import MatchClock from "../components/MatchClock.tsx";
 import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 import { useNavigate } from "react-router-dom";
-import { pgnToMoves } from "../utils/chess.ts";
+import { getMaterialDiff, pgnToMoves } from "../utils/chess.ts";
 import {
   MessageTypeOfferDraw,
   MessageTypeResign,
   type MoveData,
   type WSMessage,
-} from "../interfaces/message.ts";
-import { MessageTypeMove } from "../interfaces/message";
-import type { PieceType } from "../interfaces/chess.ts";
+} from "../types/message.ts";
+import { MessageTypeMove } from "../types/message.ts";
+import type { PieceType } from "../types/chess.ts";
+import { useMemo } from "react";
 
 function Game() {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ function Game() {
   } = useWebSocket();
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
     return "Starting match...";
+  }
+  if (!board) {
+    return "Loading board...";
   }
 
   const moves = pgnToMoves(pgn);
@@ -69,6 +73,9 @@ function Game() {
 
   const ownTimeRemainingMs = playerColor === "white" ? clock.whiteTimeMs : clock.blackTimeMs;
   const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs;
+
+  const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
+  console.log(materialDiff);
 
   return (
     <div className="flex items-center h-screen">
