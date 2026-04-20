@@ -14,6 +14,7 @@ import { MessageTypeMove } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
 import { useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
+import useInterpolatedClock from "../hooks/useInterpolatedClock.ts";
 
 function Game() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ function Game() {
     inMatch,
   } = useWebSocket();
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
+  const interpolatedClock = useInterpolatedClock({ clock, activeColor, inMatch, intervalMs: 100 });
 
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
     return "Starting match...";
@@ -74,8 +76,11 @@ function Game() {
     sendMessage(message);
   }
 
-  const ownTimeRemainingMs = playerColor === "white" ? clock.whiteTimeMs : clock.blackTimeMs;
-  const opponentTimeRemainingMs = playerColor === "white" ? clock.blackTimeMs : clock.whiteTimeMs;
+  const displayedClock = interpolatedClock ?? clock;
+  const ownTimeRemainingMs =
+    playerColor === "white" ? displayedClock.whiteTimeMs : displayedClock.blackTimeMs;
+  const opponentTimeRemainingMs =
+    playerColor === "white" ? displayedClock.blackTimeMs : displayedClock.whiteTimeMs;
 
   return (
     <div className="flex items-center h-screen">

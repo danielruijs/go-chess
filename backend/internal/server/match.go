@@ -9,7 +9,7 @@ import (
 
 const (
 	clockCheckInterval     = 100 * time.Millisecond
-	clockBroadcastInterval = 1 * time.Second
+	clockBroadcastInterval = 10 * time.Second
 )
 
 type Match struct {
