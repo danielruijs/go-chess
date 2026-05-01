@@ -10,7 +10,7 @@ To run the backend, use the following command:
 task run
 ```
 
-The backend serves gameplay traffic on `localhost:8080`
+The backend serves gameplay traffic on `localhost:8085`.
 
 ### Metrics
 

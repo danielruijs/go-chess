@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   deps:
@@ -33,4 +33,4 @@ tasks:
   run:
     desc: "Run the backend"
     cmds:
-      - go run .
+      - go run . --dev

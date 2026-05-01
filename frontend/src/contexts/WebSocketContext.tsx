@@ -23,7 +23,7 @@ import type { Result } from "../types/result";
 import type { Color, Board } from "../types/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
-const WS_URL = import.meta.env.VITE_WS_URL;
+const WS_URL: string = import.meta.env.VITE_WS_URL as string;
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<WebSocket | null>(null);
