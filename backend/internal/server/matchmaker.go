@@ -74,11 +74,11 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 
 func (mm *Matchmaker) removePlayersFromQueues(players ...*Player) {
 	for _, player := range players {
-		for timeFormat, players := range mm.queue {
-			if _, exists := players[player]; exists {
-				delete(players, player)
-				mm.metrics.recordQueueLeave(timeFormat, len(players))
-				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(players))
+		for timeFormat, queuePlayers := range mm.queue {
+			if _, exists := queuePlayers[player]; exists {
+				delete(queuePlayers, player)
+				mm.metrics.recordQueueLeave(timeFormat, len(queuePlayers))
+				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(queuePlayers))
 			}
 		}
 		player.LeaveQueues()
