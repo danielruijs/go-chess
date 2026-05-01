@@ -7,19 +7,21 @@ import (
 )
 
 type Client struct {
-	Conn   *websocket.Conn
-	Player *Player
-	Done   chan struct{}
+	Conn    *websocket.Conn
+	Player  *Player
+	Done    chan struct{}
+	metrics *metrics
 }
 
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, metrics *metrics) *Client {
 	done := make(chan struct{})
 	player := NewPlayer("", done)
 
 	return &Client{
-		Conn:   conn,
-		Player: player,
-		Done:   done,
+		Conn:    conn,
+		Player:  player,
+		Done:    done,
+		metrics: metrics,
 	}
 }
 
@@ -35,14 +37,18 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 			return
 		}
 
+		c.metrics.recordWebsocketMessageReceived(message.Type)
+
 		handler, ok := messageHandlers[message.Type]
 		if !ok {
+			c.metrics.recordWebsocketMessageError(message.Type, "unsupported_type")
 			log.Println("Unsupported message type:", message.Type)
 			continue
 		}
 
 		err = handler.Handle(c, message.Data, matchmaker)
 		if err != nil {
+			c.metrics.recordWebsocketMessageError(message.Type, "handler_error")
 			log.Printf("Error handling message with type %v: %v\n", message.Type, err)
 		}
 	}

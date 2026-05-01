@@ -16,15 +16,18 @@ type Matchmaker struct {
 
 	activeMatches   map[*Player]*Match
 	activeMatchesMu sync.RWMutex
+
+	metrics *metrics
 }
 
-func NewMatchmaker() *Matchmaker {
+func NewMatchmaker(metrics *metrics) *Matchmaker {
 	return &Matchmaker{
 		queue:         make(map[TimeFormat]map[*Player]struct{}),
 		actions:       make(chan func()),
 		UpdateChan:    make(chan struct{}),
 		matchEnded:    make(chan *Match),
 		activeMatches: make(map[*Player]*Match),
+		metrics:       metrics,
 	}
 }
 
@@ -61,6 +64,7 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 		}
 		mm.queue[timeFormat][player] = struct{}{}
 		player.JoinQueue(timeFormat)
+		mm.metrics.recordQueueJoin(timeFormat, len(mm.queue[timeFormat]))
 		log.Printf("Player %s joined %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
 
 		errChan <- nil
@@ -68,15 +72,22 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 	return <-errChan
 }
 
-func (mm *Matchmaker) Leave(player *Player) {
-	mm.actions <- func() {
-		player.LeaveQueues()
-		for timeFormat := range mm.queue {
-			if _, ok := mm.queue[timeFormat][player]; ok {
-				delete(mm.queue[timeFormat], player)
-				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+func (mm *Matchmaker) removePlayersFromQueues(players ...*Player) {
+	for _, player := range players {
+		for timeFormat, queuePlayers := range mm.queue {
+			if _, exists := queuePlayers[player]; exists {
+				delete(queuePlayers, player)
+				mm.metrics.recordQueueLeave(timeFormat, len(queuePlayers))
+				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(queuePlayers))
 			}
 		}
+		player.LeaveQueues()
+	}
+}
+
+func (mm *Matchmaker) Leave(player *Player) {
+	mm.actions <- func() {
+		mm.removePlayersFromQueues(player)
 	}
 }
 
@@ -99,8 +110,8 @@ func (mm *Matchmaker) Run() {
 		case action := <-mm.actions:
 			action()
 
-			for timeFormat := range mm.queue {
-				if len(mm.queue[timeFormat]) < 2 {
+			for timeFormat, players := range mm.queue {
+				if len(players) < 2 {
 					continue
 				}
 				p1, p2 := mm.matchPlayers(timeFormat)
@@ -128,24 +139,17 @@ func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
 			break
 		}
 	}
-	for timeFormat := range mm.queue {
-		delete(mm.queue[timeFormat], p1)
-		delete(mm.queue[timeFormat], p2)
+
+	if p1 == nil || p2 == nil {
+		return nil, nil
 	}
-	p1.LeaveQueues()
-	p2.LeaveQueues()
+
+	mm.removePlayersFromQueues(p1, p2)
 	return p1, p2
 }
 
 func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat) {
-	match := &Match{
-		Player1:    player1,
-		Player2:    player2,
-		Engine:     chess.NewEngine(),
-		Clock:      NewMatchClock(timeFormat),
-		EventChan:  make(chan Event),
-		MatchEnded: mm.matchEnded,
-	}
+	match := NewMatch(player1, player2, timeFormat, mm.matchEnded, mm.metrics)
 
 	// Randomly assign colors
 	if rand.Intn(2) == 0 {
@@ -157,6 +161,7 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 	}
 
 	mm.RegisterMatch(match)
+	mm.metrics.recordMatchStarted(timeFormat)
 
 	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.GetColor(), player2.Name, player2.GetColor())
 

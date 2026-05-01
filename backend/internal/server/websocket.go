@@ -11,6 +11,7 @@ import (
 type WebSocketHandler struct {
 	upgrader   websocket.Upgrader
 	matchmaker *Matchmaker
+	metrics    *metrics
 	clients    map[*Client]struct{}
 	clientsMu  sync.RWMutex
 }
@@ -19,6 +20,7 @@ func NewWebSocketHandler(matchmaker *Matchmaker) *WebSocketHandler {
 	wsh := &WebSocketHandler{
 		upgrader:   websocket.Upgrader{},
 		matchmaker: matchmaker,
+		metrics:    matchmaker.metrics,
 		clients:    make(map[*Client]struct{}),
 	}
 
@@ -35,6 +37,7 @@ func (wsh *WebSocketHandler) RegisterClient(client *Client) {
 	wsh.clientsMu.Lock()
 	defer wsh.clientsMu.Unlock()
 	wsh.clients[client] = struct{}{}
+	wsh.metrics.recordWebsocketConnectionOpened()
 	log.Printf("Client registered. Total clients: %d\n", len(wsh.clients))
 }
 
@@ -42,6 +45,7 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	wsh.clientsMu.Lock()
 	defer wsh.clientsMu.Unlock()
 	delete(wsh.clients, client)
+	wsh.metrics.recordWebsocketConnectionClosed()
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
@@ -85,10 +89,9 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := NewClient(conn)
+	client := NewClient(conn, wsh.metrics)
 
 	wsh.RegisterClient(client)
-	log.Println("New WebSocket connection established")
 
 	defer func() {
 		close(client.Done)

@@ -40,12 +40,14 @@ func (h MoveEventHandler) Handle(m *Match, event Event) (ended bool) {
 	data, ok := event.Data.(MoveData)
 	if !ok {
 		log.Println("invalid move data format")
+		m.metrics.recordWebsocketMessageError(MessageTypeMove, "invalid_payload")
 		return false
 	}
 
 	loserByTimeout, err := m.Clock.BeforeMove(m.Engine.GetActiveColor())
 	if err != nil {
 		log.Println("failed to check match clock before move:", err)
+		m.metrics.recordWebsocketMessageError(MessageTypeMove, "clock_error")
 		return false
 	}
 	if loserByTimeout != nil {
@@ -56,6 +58,7 @@ func (h MoveEventHandler) Handle(m *Match, event Event) (ended bool) {
 	move, err := moveDataToMove(data)
 	if err != nil {
 		log.Println("invalid move data:", err)
+		m.metrics.recordWebsocketMessageError(MessageTypeMove, "invalid_move")
 		return false
 	}
 	result, err := m.Engine.ApplyMove(move, event.Player.GetColor())
@@ -65,6 +68,7 @@ func (h MoveEventHandler) Handle(m *Match, event Event) (ended bool) {
 		} else {
 			log.Printf("failed to apply move %s -> %s: %v\n", data.From, data.To, err)
 		}
+		m.metrics.recordWebsocketMessageError(MessageTypeMove, "illegal_move")
 		return false
 	}
 
@@ -120,6 +124,7 @@ type OfferDrawEventHandler struct{}
 func (h OfferDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	if m.DrawOfferedBy != nil {
 		log.Println("draw offer already pending")
+		m.metrics.recordWebsocketMessageError(MessageTypeOfferDraw, "duplicate_offer")
 		return false
 	}
 	m.DrawOfferedBy = event.Player
@@ -138,14 +143,17 @@ func (h RespondDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	data, ok := event.Data.(RespondDrawData)
 	if !ok {
 		log.Println("invalid respond draw data format")
+		m.metrics.recordWebsocketMessageError(MessageTypeRespondDraw, "invalid_payload")
 		return false
 	}
 	if m.DrawOfferedBy == nil {
 		log.Println("no draw offer to respond to")
+		m.metrics.recordWebsocketMessageError(MessageTypeRespondDraw, "no_pending_offer")
 		return false
 	}
 	if m.DrawOfferedBy == event.Player {
 		log.Println("player cannot respond to their own draw offer")
+		m.metrics.recordWebsocketMessageError(MessageTypeRespondDraw, "self_response")
 		return false
 	}
 	if !data.Accept {

@@ -22,6 +22,21 @@ type Match struct {
 	MatchEnded chan<- *Match
 
 	DrawOfferedBy *Player
+	startedAt     time.Time
+	metrics       *metrics
+}
+
+func NewMatch(player1, player2 *Player, timeFormat TimeFormat, matchEnded chan<- *Match, metrics *metrics) *Match {
+	return &Match{
+		Player1:    player1,
+		Player2:    player2,
+		Engine:     chess.NewEngine(),
+		Clock:      NewMatchClock(timeFormat),
+		EventChan:  make(chan Event),
+		MatchEnded: matchEnded,
+		startedAt:  time.Now(),
+		metrics:    metrics,
+	}
 }
 
 func (m *Match) Run() {
@@ -39,6 +54,7 @@ func (m *Match) Run() {
 				continue
 			}
 
+			m.metrics.recordMatchEvent(event.Type)
 			ended := handler.Handle(m, event)
 			if ended {
 				return
@@ -111,6 +127,7 @@ func (m *Match) sendFinalPositionUpdate() error {
 func (m *Match) end(result *chess.Result) {
 	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
+	m.metrics.recordMatchFinished(time.Since(m.startedAt), result)
 	err := m.sendFinalPositionUpdate()
 	if err != nil {
 		log.Println("failed to send final position update:", err)
