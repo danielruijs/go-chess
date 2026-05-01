@@ -94,6 +94,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		if wsh.allowLocalhost && strings.HasPrefix(origin, "http://localhost") {
 			return true
 		}
+		wsh.metrics.recordWebsocketConnectionDenied()
 		return false
 	}
 
