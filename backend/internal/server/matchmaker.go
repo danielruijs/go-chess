@@ -72,16 +72,22 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 	return <-errChan
 }
 
-func (mm *Matchmaker) Leave(player *Player) {
-	mm.actions <- func() {
-		player.LeaveQueues()
-		for timeFormat := range mm.queue {
-			if _, ok := mm.queue[timeFormat][player]; ok {
-				delete(mm.queue[timeFormat], player)
-				mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
-				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+func (mm *Matchmaker) removePlayersFromQueues(players ...*Player) {
+	for _, player := range players {
+		for timeFormat, players := range mm.queue {
+			if _, exists := players[player]; exists {
+				delete(players, player)
+				mm.metrics.recordQueueLeave(timeFormat, len(players))
+				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(players))
 			}
 		}
+		player.LeaveQueues()
+	}
+}
+
+func (mm *Matchmaker) Leave(player *Player) {
+	mm.actions <- func() {
+		mm.removePlayersFromQueues(player)
 	}
 }
 
@@ -104,8 +110,8 @@ func (mm *Matchmaker) Run() {
 		case action := <-mm.actions:
 			action()
 
-			for timeFormat := range mm.queue {
-				if len(mm.queue[timeFormat]) < 2 {
+			for timeFormat, players := range mm.queue {
+				if len(players) < 2 {
 					continue
 				}
 				p1, p2 := mm.matchPlayers(timeFormat)
@@ -133,13 +139,12 @@ func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
 			break
 		}
 	}
-	for timeFormat := range mm.queue {
-		delete(mm.queue[timeFormat], p1)
-		delete(mm.queue[timeFormat], p2)
-		mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
+
+	if p1 == nil || p2 == nil {
+		return nil, nil
 	}
-	p1.LeaveQueues()
-	p2.LeaveQueues()
+
+	mm.removePlayersFromQueues(p1, p2)
 	return p1, p2
 }
 
