@@ -17,6 +17,7 @@ type metrics struct {
 	onlineConnections prometheus.Gauge
 	connectionsTotal  prometheus.Counter
 	connectionsClosed prometheus.Counter
+	connectionsDenied prometheus.Counter
 	messagesReceived  *prometheus.CounterVec
 	messageErrors     *prometheus.CounterVec
 
@@ -50,6 +51,10 @@ func NewMetrics() *metrics {
 		connectionsClosed: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "go_chess_websocket_connections_closed_total",
 			Help: "Total number of websocket connections closed.",
+		}),
+		connectionsDenied: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "go_chess_websocket_connections_denied_total",
+			Help: "Total number of websocket connections denied due to origin checks.",
 		}),
 		messagesReceived: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_websocket_messages_received_total",
@@ -102,6 +107,7 @@ func NewMetrics() *metrics {
 		m.onlineConnections,
 		m.connectionsTotal,
 		m.connectionsClosed,
+		m.connectionsDenied,
 		m.messagesReceived,
 		m.messageErrors,
 		m.queueSize,
@@ -130,6 +136,10 @@ func (m *metrics) recordWebsocketConnectionOpened() {
 func (m *metrics) recordWebsocketConnectionClosed() {
 	m.onlineConnections.Dec()
 	m.connectionsClosed.Inc()
+}
+
+func (m *metrics) recordWebsocketConnectionDenied() {
+	m.connectionsDenied.Inc()
 }
 
 func (m *metrics) recordWebsocketMessageReceived(messageType MessageType) {
