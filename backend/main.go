@@ -7,13 +7,20 @@ import (
 )
 
 func main() {
-	matchmaker := server.NewMatchmaker()
+	metrics := server.NewMetrics()
+	matchmaker := server.NewMatchmaker(metrics)
 	go matchmaker.Run()
 
 	webSocketHandler := server.NewWebSocketHandler(matchmaker)
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", metrics.MetricsHandler())
 
 	http.HandleFunc("/ws", webSocketHandler.ServeWS)
 
 	log.Print("Started server")
+	go func() {
+		log.Print("Started metrics server on localhost:2115")
+		log.Fatal(http.ListenAndServe("localhost:2115", metricsMux))
+	}()
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
