@@ -7,11 +7,13 @@ import (
 )
 
 func main() {
+	config := parseFlags()
+
 	metrics := server.NewMetrics()
 	matchmaker := server.NewMatchmaker(metrics)
 	go matchmaker.Run()
 
-	webSocketHandler := server.NewWebSocketHandler(matchmaker)
+	webSocketHandler := server.NewWebSocketHandler(matchmaker, config.AllowLocalhost)
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", metrics.MetricsHandler())
 

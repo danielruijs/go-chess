@@ -3,25 +3,28 @@ package server
 import (
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
 type WebSocketHandler struct {
-	upgrader   websocket.Upgrader
-	matchmaker *Matchmaker
-	metrics    *metrics
-	clients    map[*Client]struct{}
-	clientsMu  sync.RWMutex
+	upgrader       websocket.Upgrader
+	matchmaker     *Matchmaker
+	metrics        *metrics
+	allowLocalhost bool
+	clients        map[*Client]struct{}
+	clientsMu      sync.RWMutex
 }
 
-func NewWebSocketHandler(matchmaker *Matchmaker) *WebSocketHandler {
+func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
-		upgrader:   websocket.Upgrader{},
-		matchmaker: matchmaker,
-		metrics:    matchmaker.metrics,
-		clients:    make(map[*Client]struct{}),
+		upgrader:       websocket.Upgrader{},
+		matchmaker:     matchmaker,
+		metrics:        matchmaker.metrics,
+		allowLocalhost: allowLocalhost,
+		clients:        make(map[*Client]struct{}),
 	}
 
 	go func() {
@@ -81,7 +84,18 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 }
 
 func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
-	wsh.upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	wsh.upgrader.CheckOrigin = func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		// Allow production origin
+		if origin == "https://gochess.dev" {
+			return true
+		}
+		// Allow local development origins
+		if wsh.allowLocalhost && strings.HasPrefix(origin, "http://localhost") {
+			return true
+		}
+		return false
+	}
 
 	conn, err := wsh.upgrader.Upgrade(w, r, nil)
 	if err != nil {
