@@ -4,9 +4,13 @@ on:
   push:
     paths:
       - "backend/**"
+      - "docker-compose.yml"
+      - ".github/workflow/backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "docker-compose.yml"
+      - ".github/workflow/backend.yml"
 
 jobs:
   lint:
