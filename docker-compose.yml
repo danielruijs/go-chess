@@ -7,4 +7,3 @@ services:
     ports:
       - "8085:8085"
       - "2115:2115"
-    command: ["--dev"]
