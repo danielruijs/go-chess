@@ -21,8 +21,8 @@ func main() {
 
 	log.Print("Started server")
 	go func() {
-		log.Print("Started metrics server on localhost:2115")
-		log.Fatal(http.ListenAndServe("localhost:2115", metricsMux))
+		log.Print("Started metrics server on :2115")
+		log.Fatal(http.ListenAndServe(":2115", metricsMux))
 	}()
-	log.Fatal(http.ListenAndServe("localhost:8085", nil))
+	log.Fatal(http.ListenAndServe(":8085", nil))
 }

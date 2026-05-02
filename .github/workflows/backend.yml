@@ -3,52 +3,74 @@ name: Backend
 on:
   push:
     paths:
-      - 'backend/**'
+      - "backend/**"
+      - "docker-compose.yml"
+      - ".github/workflow/backend.yml"
   pull_request:
     paths:
-      - 'backend/**'
+      - "backend/**"
+      - "docker-compose.yml"
+      - ".github/workflow/backend.yml"
 
 jobs:
-    lint:
-        name: Lint
-        runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-            - name: Setup Go
-              uses: actions/setup-go@v6
-              with:
-                go-version: '1.26'
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
 
-            - name: Install dependencies
-              run: cd backend && go mod download
+      - name: Install dependencies
+        run: cd backend && go mod download
 
-            - name: Go vet
-              run: cd backend && go vet ./...
+      - name: Go vet
+        run: cd backend && go vet ./...
 
-            - name: Lint
-              uses: golangci/golangci-lint-action@v9
-              with:
-                version: latest
-                working-directory: backend
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          working-directory: backend
 
-    test:
-      name: Test
-      runs-on: ubuntu-latest
+  test:
+    name: Test
+    runs-on: ubuntu-latest
 
-      steps:
-          - name: Checkout code
-            uses: actions/checkout@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-          - name: Setup Go
-            uses: actions/setup-go@v6
-            with:
-              go-version: '1.26'
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
 
-          - name: Install dependencies
-            run: cd backend && go mod download
+      - name: Install dependencies
+        run: cd backend && go mod download
 
-          - name: Test
-            run: cd backend && go test -v ./...
+      - name: Test
+        run: cd backend && go test -v ./...
+
+  deploy:
+    name: Deploy to self-hosted server
+    needs: [lint, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build and run backend
+        run: |
+          docker compose build backend
+          docker compose up -d backend
+
+      - name: Cleanup old Docker data
+        if: always() # This ensures it runs even if the build fails
+        run: docker system prune -f
