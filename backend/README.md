@@ -14,7 +14,7 @@ The backend serves gameplay traffic on `localhost:8085`.
 
 ### Metrics
 
-Prometheus metrics are served on `localhost:2115/metrics`. Backend metrics include websocket connection counts, matchmaking queue depth, active matches, match durations, move and draw event totals, clock timeouts, and match results by outcome and reason.
+Prometheus metrics are served on `localhost:2115/metrics`. Backend metrics include websocket connection counts, matchmaking queue depth, active matches, move and draw event totals, and match results by outcome and reason.
 
 ## Deploying in a container
 

@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"time"
 
 	"go-chess/internal/chess"
 
@@ -28,7 +27,6 @@ type metrics struct {
 	activeMatches   prometheus.Gauge
 	matchesStarted  *prometheus.CounterVec
 	matchesFinished prometheus.Counter
-	matchDuration   prometheus.Histogram
 	eventsTotal     *prometheus.CounterVec
 	resultsTotal    *prometheus.CounterVec
 }
@@ -88,11 +86,6 @@ func NewMetrics() *metrics {
 			Name: "go_chess_matches_finished_total",
 			Help: "Total matches finished.",
 		}),
-		matchDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
-			Name:    "go_chess_match_duration_seconds",
-			Help:    "Match duration in seconds.",
-			Buckets: prometheus.DefBuckets,
-		}),
 		eventsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_match_events_total",
 			Help: "Total match events by type.",
@@ -116,7 +109,6 @@ func NewMetrics() *metrics {
 		m.activeMatches,
 		m.matchesStarted,
 		m.matchesFinished,
-		m.matchDuration,
 		m.eventsTotal,
 		m.resultsTotal,
 	)
@@ -167,10 +159,9 @@ func (m *metrics) recordMatchStarted(timeFormat TimeFormat) {
 	m.matchesStarted.WithLabelValues(timeFormat.String()).Inc()
 }
 
-func (m *metrics) recordMatchFinished(duration time.Duration, result *chess.Result) {
+func (m *metrics) recordMatchFinished(result *chess.Result) {
 	m.activeMatches.Dec()
 	m.matchesFinished.Inc()
-	m.matchDuration.Observe(duration.Seconds())
 	if result != nil {
 		m.resultsTotal.WithLabelValues(string(result.Outcome), string(result.Reason)).Inc()
 	}
