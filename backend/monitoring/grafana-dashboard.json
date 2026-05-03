@@ -1285,7 +1285,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "rate(process_cpu_seconds_total{job=\"gtfs-aggregator\"}[1m])",
+          "expr": "rate(process_cpu_seconds_total{job=\"go-chess-backend\"}[1m])",
           "legendFormat": "{{instance}} {{job}}",
           "range": true,
           "refId": "A"
@@ -1379,7 +1379,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_goroutines{job=\"gtfs-aggregator\"}",
+          "expr": "go_goroutines{job=\"go-chess-backend\"}",
           "legendFormat": "{{instance}} {{job}}",
           "range": true,
           "refId": "A"
@@ -1473,7 +1473,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_memstats_alloc_bytes{job=\"gtfs-aggregator\"} / 1024 / 1024",
+          "expr": "go_memstats_alloc_bytes{job=\"go-chess-backend\"} / 1024 / 1024",
           "legendFormat": "{{instance}} {{job}}",
           "range": true,
           "refId": "A"
@@ -1567,7 +1567,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_memstats_heap_objects{job=\"gtfs-aggregator\"}",
+          "expr": "go_memstats_heap_objects{job=\"go-chess-backend\"}",
           "legendFormat": "{{instance}} {{job}}",
           "range": true,
           "refId": "A"
@@ -1592,6 +1592,6 @@
   "timezone": "browser",
   "title": "Go-chess Backend",
   "uid": "go-chess-backend",
-  "version": 7,
+  "version": 8,
   "weekStart": ""
 }
