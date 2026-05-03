@@ -125,6 +125,7 @@ func (m *Match) sendFinalPositionUpdate() error {
 func (m *Match) end(result *chess.Result) {
 	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
+	m.metrics.recordMatchFinished(result)
 	err := m.sendFinalPositionUpdate()
 	if err != nil {
 		log.Println("failed to send final position update:", err)
