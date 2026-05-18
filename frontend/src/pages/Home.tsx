@@ -7,6 +7,7 @@ import { timeFormats } from "../types/chess.ts";
 import { getQueueData } from "../utils/chess.ts";
 import {
   MessageTypeJoinMatch,
+  MessageTypeLeaveMatch,
   type WSMessage,
   type JoinMatchData,
   type QueueData,
@@ -18,8 +19,15 @@ function Home() {
   const { isConnected, queues, inMatch, sendMessage } = useWebSocket();
   const navigate = useNavigate();
 
-  function handleJoinQueue(timeFormat: TimeFormat, queueData: QueueData | undefined) {
-    if (!playerName || !isConnected || inMatch || queueData?.inQueue) {
+  function handleToggleQueue(timeFormat: TimeFormat, queueData: QueueData | undefined) {
+    if (!playerName || !isConnected || inMatch) {
+      return;
+    }
+
+    if (queueData?.inQueue) {
+      const leaveData = { timeFormat };
+      const message: WSMessage = { type: MessageTypeLeaveMatch, data: leaveData };
+      sendMessage(message);
       return;
     }
 
@@ -65,7 +73,7 @@ function Home() {
                   playerName={playerName}
                   isConnected={isConnected}
                   inMatch={inMatch}
-                  onJoinQueue={() => handleJoinQueue(timeFormat, queueData)}
+                  onToggleQueue={() => handleToggleQueue(timeFormat, queueData)}
                 />
               );
             })}

@@ -10,6 +10,7 @@ const MessageTypeDrawOffered = "draw_offered";
 const MessageTypeDrawDeclined = "draw_declined";
 // outbound
 const MessageTypeJoinMatch = "join_match";
+const MessageTypeLeaveMatch = "leave_match";
 const MessageTypeMove = "move";
 const MessageTypeResign = "resign";
 const MessageTypeOfferDraw = "offer_draw";
@@ -62,6 +63,10 @@ type JoinMatchData = {
   timeFormat: TimeFormat;
 };
 
+type LeaveMatchData = {
+  timeFormat: TimeFormat;
+};
+
 type MoveData = {
   from: string;
   to: string;
@@ -102,6 +107,10 @@ type WSMessage =
       data: JoinMatchData;
     }
   | {
+      type: typeof MessageTypeLeaveMatch;
+      data: LeaveMatchData;
+    }
+  | {
       type: typeof MessageTypeMove;
       data: MoveData;
     }
@@ -132,6 +141,7 @@ export {
   MessageTypeBoard,
   MessageTypeMove,
   MessageTypeJoinMatch,
+  MessageTypeLeaveMatch,
   MessageTypeStartMatch,
   MessageTypeMatchmakingUpdate,
   MessageTypeEndMatch,
