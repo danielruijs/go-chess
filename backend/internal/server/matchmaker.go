@@ -87,7 +87,9 @@ func (mm *Matchmaker) removePlayersFromQueues(players ...*Player) {
 }
 
 func (mm *Matchmaker) Leave(player *Player, timeFormat TimeFormat) {
+	done := make(chan struct{})
 	mm.actions <- func() {
+		defer close(done)
 		if _, ok := mm.queue[timeFormat][player]; ok {
 			delete(mm.queue[timeFormat], player)
 			mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
@@ -95,12 +97,16 @@ func (mm *Matchmaker) Leave(player *Player, timeFormat TimeFormat) {
 		}
 		player.LeaveQueue(timeFormat)
 	}
+	<-done
 }
 
 func (mm *Matchmaker) LeaveAll(player *Player) {
+	done := make(chan struct{})
 	mm.actions <- func() {
+		defer close(done)
 		mm.removePlayersFromQueues(player)
 	}
+	<-done
 }
 
 // Returns a snapshot of queue lengths for each time format
