@@ -45,6 +45,12 @@ func (p *Player) JoinQueue(timeFormat TimeFormat) {
 	p.queues[timeFormat] = struct{}{}
 }
 
+func (p *Player) LeaveQueue(timeFormat TimeFormat) {
+	p.queuesMu.Lock()
+	defer p.queuesMu.Unlock()
+	delete(p.queues, timeFormat)
+}
+
 func (p *Player) LeaveQueues() {
 	p.queuesMu.Lock()
 	defer p.queuesMu.Unlock()

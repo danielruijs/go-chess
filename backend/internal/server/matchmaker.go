@@ -68,6 +68,16 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 	return <-errChan
 }
 
+func (mm *Matchmaker) Leave(player *Player, timeFormat TimeFormat) {
+	mm.actions <- func() {
+		if _, ok := mm.queue[timeFormat][player]; ok {
+			delete(mm.queue[timeFormat], player)
+			log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+		}
+		player.LeaveQueue(timeFormat)
+	}
+}
+
 func (mm *Matchmaker) LeaveAll(player *Player) {
 	mm.actions <- func() {
 		for _, timeFormat := range player.GetQueues() {
