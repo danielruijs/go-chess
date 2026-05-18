@@ -45,6 +45,12 @@ func (p *Player) JoinQueue(timeFormat TimeFormat) {
 	p.queues[timeFormat] = struct{}{}
 }
 
+func (p *Player) LeaveQueue(timeFormat TimeFormat) {
+	p.queuesMu.Lock()
+	defer p.queuesMu.Unlock()
+	delete(p.queues, timeFormat)
+}
+
 func (p *Player) LeaveQueues() {
 	p.queuesMu.Lock()
 	defer p.queuesMu.Unlock()
@@ -56,6 +62,16 @@ func (p *Player) IsInQueue(timeFormat TimeFormat) bool {
 	defer p.queuesMu.RUnlock()
 	_, inQueue := p.queues[timeFormat]
 	return inQueue
+}
+
+func (p *Player) GetQueues() []TimeFormat {
+	p.queuesMu.RLock()
+	defer p.queuesMu.RUnlock()
+	queues := make([]TimeFormat, 0, len(p.queues))
+	for timeFormat := range p.queues {
+		queues = append(queues, timeFormat)
+	}
+	return queues
 }
 
 func (p *Player) GetSendChannel() chan WSMessage {

@@ -11,6 +11,7 @@ type MessageHandler interface {
 
 var messageHandlers = map[MessageType]MessageHandler{
 	MessageTypeJoinMatch:   JoinMatchMessageHandler{},
+	MessageTypeLeaveMatch:  LeaveMatchMessageHandler{},
 	MessageTypeMove:        MoveMessageHandler{},
 	MessageTypeResign:      ResignMessageHandler{},
 	MessageTypeOfferDraw:   OfferDrawMessageHandler{},
@@ -36,6 +37,18 @@ func (h JoinMatchMessageHandler) Handle(c *Client, messageData json.RawMessage, 
 		return fmt.Errorf("failed to join matchmaking queue: %w", err)
 	}
 
+	return nil
+}
+
+type LeaveMatchMessageHandler struct{}
+
+func (h LeaveMatchMessageHandler) Handle(c *Client, messageData json.RawMessage, matchmaker *Matchmaker) error {
+	var data LeaveMatchData
+	if err := json.Unmarshal(messageData, &data); err != nil {
+		return fmt.Errorf("invalid leave match data format: %w", err)
+	}
+	timeFormat := MsToTimeFormat(data.TimeFormat)
+	matchmaker.Leave(c.Player, timeFormat)
 	return nil
 }
 

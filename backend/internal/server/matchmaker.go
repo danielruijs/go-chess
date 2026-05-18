@@ -72,23 +72,40 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 	return <-errChan
 }
 
+func (mm *Matchmaker) removePlayerFromQueue(player *Player, timeFormat TimeFormat) {
+	if _, exists := mm.queue[timeFormat][player]; exists {
+		delete(mm.queue[timeFormat], player)
+		mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
+		log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+	}
+}
+
 func (mm *Matchmaker) removePlayersFromQueues(players ...*Player) {
 	for _, player := range players {
-		for timeFormat, queuePlayers := range mm.queue {
-			if _, exists := queuePlayers[player]; exists {
-				delete(queuePlayers, player)
-				mm.metrics.recordQueueLeave(timeFormat, len(queuePlayers))
-				log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(queuePlayers))
-			}
+		for _, timeFormat := range player.GetQueues() {
+			mm.removePlayerFromQueue(player, timeFormat)
 		}
 		player.LeaveQueues()
 	}
 }
 
-func (mm *Matchmaker) Leave(player *Player) {
+func (mm *Matchmaker) Leave(player *Player, timeFormat TimeFormat) {
+	done := make(chan struct{})
 	mm.actions <- func() {
+		defer close(done)
+		mm.removePlayerFromQueue(player, timeFormat)
+		player.LeaveQueue(timeFormat)
+	}
+	<-done
+}
+
+func (mm *Matchmaker) LeaveAll(player *Player) {
+	done := make(chan struct{})
+	mm.actions <- func() {
+		defer close(done)
 		mm.removePlayersFromQueues(player)
 	}
+	<-done
 }
 
 // Returns a snapshot of queue lengths for each time format

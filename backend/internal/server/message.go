@@ -17,6 +17,7 @@ const (
 	MessageTypeDrawDeclined      MessageType = "draw_declined"
 	// inbound
 	MessageTypeJoinMatch   MessageType = "join_match"
+	MessageTypeLeaveMatch  MessageType = "leave_match"
 	MessageTypeMove        MessageType = "move"
 	MessageTypeResign      MessageType = "resign"
 	MessageTypeOfferDraw   MessageType = "offer_draw"
@@ -77,6 +78,10 @@ type EndMatchData struct {
 // inbound
 type JoinMatchData struct {
 	PlayerName string       `json:"playerName"`
+	TimeFormat TimeFormatMs `json:"timeFormat"`
+}
+
+type LeaveMatchData struct {
 	TimeFormat TimeFormatMs `json:"timeFormat"`
 }
 

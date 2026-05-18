@@ -119,7 +119,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		close(client.Done)
-		wsh.matchmaker.Leave(client.Player)
+		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
 		_ = client.Conn.Close()
 	}()
