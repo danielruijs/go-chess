@@ -3,24 +3,30 @@ package server
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
 type WebSocketHandler struct {
-	upgrader   websocket.Upgrader
-	matchmaker *Matchmaker
-	clients    map[*Client]struct{}
-	clientsMu  sync.RWMutex
+	upgrader       websocket.Upgrader
+	matchmaker     *Matchmaker
+	metrics        *metrics
+	allowLocalhost bool
+	clients        map[*Client]struct{}
+	clientsMu      sync.RWMutex
 }
 
-func NewWebSocketHandler(matchmaker *Matchmaker) *WebSocketHandler {
+func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
-		upgrader:   websocket.Upgrader{},
-		matchmaker: matchmaker,
-		clients:    make(map[*Client]struct{}),
+		upgrader:       websocket.Upgrader{},
+		matchmaker:     matchmaker,
+		metrics:        matchmaker.metrics,
+		allowLocalhost: allowLocalhost,
+		clients:        make(map[*Client]struct{}),
 	}
+	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
 	go func() {
 		for range matchmaker.UpdateChan {
@@ -35,6 +41,7 @@ func (wsh *WebSocketHandler) RegisterClient(client *Client) {
 	wsh.clientsMu.Lock()
 	defer wsh.clientsMu.Unlock()
 	wsh.clients[client] = struct{}{}
+	wsh.metrics.recordWebsocketConnectionOpened()
 	log.Printf("Client registered. Total clients: %d\n", len(wsh.clients))
 }
 
@@ -42,6 +49,7 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	wsh.clientsMu.Lock()
 	defer wsh.clientsMu.Unlock()
 	delete(wsh.clients, client)
+	wsh.metrics.recordWebsocketConnectionClosed()
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
@@ -76,19 +84,38 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 	client.Player.SendInformational(MessageTypeMatchmakingUpdate, updateData)
 }
 
-func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
-	wsh.upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+func (wsh *WebSocketHandler) checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	// Allow production origin
+	if origin == "https://gochess.dev" {
+		return true
+	}
 
+	// Allow local development origins
+	if wsh.allowLocalhost {
+		u, err := url.Parse(origin)
+		if err == nil {
+			hostname := u.Hostname()
+			if hostname == "localhost" || hostname == "127.0.0.1" {
+				return true
+			}
+		}
+	}
+
+	wsh.metrics.recordWebsocketConnectionDenied()
+	return false
+}
+
+func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	conn, err := wsh.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("error when upgrading connection to websocket: %s", err)
 		return
 	}
 
-	client := NewClient(conn)
+	client := NewClient(conn, wsh.metrics)
 
 	wsh.RegisterClient(client)
-	log.Println("New WebSocket connection established")
 
 	defer func() {
 		close(client.Done)

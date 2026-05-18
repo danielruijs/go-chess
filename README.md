@@ -1,4 +1,6 @@
-# go-chess
+# Go-chess
+
+The application is currently deployed at https://gochess.dev/
 
 ## Running the application
 
