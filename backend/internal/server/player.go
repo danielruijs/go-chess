@@ -58,6 +58,16 @@ func (p *Player) IsInQueue(timeFormat TimeFormat) bool {
 	return inQueue
 }
 
+func (p *Player) GetQueues() []TimeFormat {
+	p.queuesMu.RLock()
+	defer p.queuesMu.RUnlock()
+	queues := make([]TimeFormat, 0, len(p.queues))
+	for timeFormat := range p.queues {
+		queues = append(queues, timeFormat)
+	}
+	return queues
+}
+
 func (p *Player) GetSendChannel() chan WSMessage {
 	return p.sendChan
 }
