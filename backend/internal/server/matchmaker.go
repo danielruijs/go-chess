@@ -90,6 +90,7 @@ func (mm *Matchmaker) Leave(player *Player, timeFormat TimeFormat) {
 	mm.actions <- func() {
 		if _, ok := mm.queue[timeFormat][player]; ok {
 			delete(mm.queue[timeFormat], player)
+			mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
 			log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
 		}
 		player.LeaveQueue(timeFormat)
