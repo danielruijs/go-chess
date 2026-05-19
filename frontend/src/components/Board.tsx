@@ -26,9 +26,6 @@ const REASON_TEXT = {
 
 const PROMOTION_PIECES = ["queen", "rook", "bishop", "knight"] as const;
 
-type DragStartPayload = Parameters<DragStartEvent>[0];
-type DragEndPayload = Parameters<DragEndEvent>[0];
-
 function DraggablePiece({
   square,
   pieceColor,
@@ -185,7 +182,7 @@ function BoardComponent({
     }
   }
 
-  function handleDragStart(event: DragStartPayload) {
+  function handleDragStart(event: DragStartEvent) {
     const sourceSquare = event.operation.source?.data.square;
     if (!sourceSquare || !hasLegalMoves(sourceSquare)) {
       setSelected(null);
@@ -195,7 +192,7 @@ function BoardComponent({
     setSelected(sourceSquare);
   }
 
-  function handleDragEnd(event: DragEndPayload) {
+  function handleDragEnd(event: DragEndEvent) {
     const from = event.operation.source?.data.square;
     const to = event.operation.target?.data.square;
     const sourceColor = event.operation.source?.data.color;
