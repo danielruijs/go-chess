@@ -41,7 +41,7 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-row gap-12 p-4">
-      <Stack spacing={2} width={"300px"}>
+      <Stack spacing={2} className="w-75">
         <TextField
           label="Name"
           variant="outlined"
