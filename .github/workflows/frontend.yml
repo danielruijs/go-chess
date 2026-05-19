@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - "frontend/**"
-      - ".github/workflow/frontend.yml"
+      - ".github/workflows/frontend.yml"
   pull_request:
     paths:
       - "frontend/**"
-      - ".github/workflow/frontend.yml"
+      - ".github/workflows/frontend.yml"
 
 jobs:
   lint:
@@ -32,6 +32,9 @@ jobs:
 
       - name: Format
         run: cd frontend && npm run format:check
+
+      - name: Build
+        run: cd frontend && npm run build
 
   test:
     name: Test
