@@ -1615,6 +1615,24 @@ func TestGenerateKingMoves(t *testing.T) {
 				{From: strToSquare("e1"), To: strToSquare("c1")}, // castling
 			},
 		},
+		{
+			name: "castling not allowed without rook",
+			pos: &Position{
+				WhiteKing: bitboardFromStrs([]string{"e1"}),
+				CastlingRights: CastlingRights{
+					WhiteOO:  true,
+					WhiteOOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("e1"), To: strToSquare("d1")},
+				{From: strToSquare("e1"), To: strToSquare("d2")},
+				{From: strToSquare("e1"), To: strToSquare("e2")},
+				{From: strToSquare("e1"), To: strToSquare("f2")},
+				{From: strToSquare("e1"), To: strToSquare("f1")},
+			},
+		},
 	}
 
 	g := NewGenerator()
