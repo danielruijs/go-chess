@@ -322,6 +322,48 @@ func TestMakeMoveUpdatesCastlingRightsRook(t *testing.T) {
 	assert.Equal(t, Black, pos.ActiveColor)
 }
 
+func TestCastlingNotRestoredWhenRookMovesToOriginalSquareWhite(t *testing.T) {
+	pos := &Position{
+		WhiteKing:    bitboardFromStrs([]string{"e1"}),
+		WhiteRooks:   bitboardFromStrs([]string{"h1", "h5"}),
+		BlackKing:    bitboardFromStrs([]string{"e8"}),
+		BlackBishops: bitboardFromStrs([]string{"b7"}),
+		CastlingRights: CastlingRights{
+			WhiteOO: true,
+		},
+		ActiveColor: Black,
+	}
+
+	// Black captures white rook on h1
+	pos.MakeMove(Move{From: strToSquare("b7"), To: strToSquare("h1")})
+	// White captures black bishop on b7 with second rook
+	pos.MakeMove(Move{From: strToSquare("h5"), To: strToSquare("h1")})
+
+	moves := NewGenerator().generateKingMoves(pos, White)
+	assert.NotContains(t, moves, Move{From: strToSquare("e1"), To: strToSquare("g1")})
+}
+
+func TestCastlingNotRestoredWhenRookMovesToOriginalSquareBlack(t *testing.T) {
+	pos := &Position{
+		WhiteKing:    bitboardFromStrs([]string{"e1"}),
+		WhiteBishops: bitboardFromStrs([]string{"g2"}),
+		BlackKing:    bitboardFromStrs([]string{"e8"}),
+		BlackRooks:   bitboardFromStrs([]string{"a8", "a5"}),
+		CastlingRights: CastlingRights{
+			BlackOOO: true,
+		},
+		ActiveColor: White,
+	}
+
+	// White captures black rook on a8
+	pos.MakeMove(Move{From: strToSquare("g2"), To: strToSquare("a8")})
+	// White captures black bishop on b7 with second rook
+	pos.MakeMove(Move{From: strToSquare("a5"), To: strToSquare("a8")})
+
+	moves := NewGenerator().generateKingMoves(pos, Black)
+	assert.NotContains(t, moves, Move{From: strToSquare("e8"), To: strToSquare("c8")})
+}
+
 func TestMakeMoveUpdatesEnPassantSquare(t *testing.T) {
 	pos := &Position{
 		WhitePawns:  bitboardFromStrs([]string{"e2"}),
