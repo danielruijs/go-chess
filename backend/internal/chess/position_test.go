@@ -336,7 +336,7 @@ func TestCastlingNotRestoredWhenRookMovesToOriginalSquareWhite(t *testing.T) {
 
 	// Black captures white rook on h1
 	pos.MakeMove(Move{From: strToSquare("b7"), To: strToSquare("h1")})
-	// White captures black bishop on b7 with second rook
+	// White captures black bishop on h1 with second rook
 	pos.MakeMove(Move{From: strToSquare("h5"), To: strToSquare("h1")})
 
 	moves := NewGenerator().generateKingMoves(pos, White)
@@ -357,7 +357,7 @@ func TestCastlingNotRestoredWhenRookMovesToOriginalSquareBlack(t *testing.T) {
 
 	// White captures black rook on a8
 	pos.MakeMove(Move{From: strToSquare("g2"), To: strToSquare("a8")})
-	// White captures black bishop on b7 with second rook
+	// White captures black bishop on a8 with second rook
 	pos.MakeMove(Move{From: strToSquare("a5"), To: strToSquare("a8")})
 
 	moves := NewGenerator().generateKingMoves(pos, Black)
