@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.tsx";
 import Game from "./pages/Game.tsx";
-import { WebSocketProvider } from "./contexts/WebSocketContext.tsx";
+import WebSocketProvider from "./contexts/WebSocketContext.tsx";
 import NotificationProvider from "./contexts/NotificationProvider.tsx";
-import { ConnectionStatus } from "./components/ConnectionStatus.tsx";
+import ConnectionStatus from "./components/ConnectionStatus.tsx";
 
 function App() {
   return (

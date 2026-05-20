@@ -1,6 +1,6 @@
 import { useWebSocket } from "../contexts/WebSocketContext";
 
-export function ConnectionStatus() {
+function ConnectionStatus() {
   const { isConnected } = useWebSocket();
 
   return (
@@ -14,3 +14,5 @@ export function ConnectionStatus() {
     </div>
   );
 }
+
+export default ConnectionStatus;
