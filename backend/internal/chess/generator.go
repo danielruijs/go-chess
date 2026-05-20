@@ -277,25 +277,31 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 	moves := []Move{}
 
 	king := *pos.GetPieceBitboard(color, King)
+	rooks := *pos.GetPieceBitboard(color, Rook)
 	ownPieces := pos.GetOccupiedByColor(color)
 
-	var kingSideRight, queenSideRight bool
+	var hasKingSideRight, hasQueenSideRight bool
 	var kingSideMask, queenSideMask Bitboard
 	var kingSideTo, queenSideTo Square
+	var kingSideRookSquare, queenSideRookSquare Square
 	if color == White {
-		kingSideRight = pos.CastlingRights.WhiteOO
-		queenSideRight = pos.CastlingRights.WhiteOOO
+		hasKingSideRight = pos.CastlingRights.WhiteOO
+		hasQueenSideRight = pos.CastlingRights.WhiteOOO
 		kingSideMask = 0x60 // f1,g1
 		queenSideMask = 0xE // b1,c1,d1
 		kingSideTo = Square(6)
 		queenSideTo = Square(2)
+		kingSideRookSquare = Square(7)  // h1
+		queenSideRookSquare = Square(0) // a1
 	} else {
-		kingSideRight = pos.CastlingRights.BlackOO
-		queenSideRight = pos.CastlingRights.BlackOOO
+		hasKingSideRight = pos.CastlingRights.BlackOO
+		hasQueenSideRight = pos.CastlingRights.BlackOOO
 		kingSideMask = 0x6000000000000000  // f8,g8
 		queenSideMask = 0x0E00000000000000 // b8,c8,d8
 		kingSideTo = Square(62)
 		queenSideTo = Square(58)
+		kingSideRookSquare = Square(63)  // h8
+		queenSideRookSquare = Square(56) // a8
 	}
 
 	from := popLSB(&king) // should only be one king
@@ -307,12 +313,17 @@ func (g *Generator) generateKingMoves(pos *Position, color Color) []Move {
 
 	// Castling, cant castle out of, through, or into check (into filtered in filterLegalMoves)
 	occupied := pos.GetOccupied()
+	hasRook := squareMask(kingSideRookSquare)&rooks != 0
 	kingSidePath := []Square{Square(from), Square(from + 1)}
-	if kingSideRight && occupied&kingSideMask == 0 && !g.areSquaresAttacked(pos, color, kingSidePath) {
+	isPathClear := occupied&kingSideMask == 0 && !g.areSquaresAttacked(pos, color, kingSidePath)
+	if hasKingSideRight && isPathClear && hasRook {
 		moves = append(moves, Move{From: Square(from), To: kingSideTo})
 	}
+
+	hasRook = squareMask(queenSideRookSquare)&rooks != 0
 	queenSidePath := []Square{Square(from), Square(from - 1)}
-	if queenSideRight && occupied&queenSideMask == 0 && !g.areSquaresAttacked(pos, color, queenSidePath) {
+	isPathClear = occupied&queenSideMask == 0 && !g.areSquaresAttacked(pos, color, queenSidePath)
+	if hasQueenSideRight && isPathClear && hasRook {
 		moves = append(moves, Move{From: Square(from), To: queenSideTo})
 	}
 

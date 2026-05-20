@@ -163,18 +163,20 @@ func (p *Position) MakeMove(move Move) {
 	occupied := p.GetOccupied()
 	toMask := squareMask(move.To)
 	isCapture := false
+	var capturedPiece *Piece
+	var capturedSquare Square
 
 	if move.IsEnPassant(p) {
 		// en passant
 		isCapture = true
 		p.removePiece(move.From)
 		p.setPiece(move.To, piece)
-		var capturedSquare Square
 		if piece.Color == White {
 			capturedSquare = Square(move.To - 8)
 		} else {
 			capturedSquare = Square(move.To + 8)
 		}
+		capturedPiece = p.GetPiece(capturedSquare)
 		p.removePiece(capturedSquare)
 	} else if move.IsCastling(p) {
 		// castling
@@ -196,6 +198,8 @@ func (p *Position) MakeMove(move Move) {
 		// promotion, can be capture
 		if occupied&toMask != 0 {
 			isCapture = true
+			capturedPiece = p.GetPiece(move.To)
+			capturedSquare = move.To
 			p.removePiece(move.To)
 		}
 		p.removePiece(move.From)
@@ -203,6 +207,8 @@ func (p *Position) MakeMove(move Move) {
 	} else if occupied&toMask != 0 {
 		// captures
 		isCapture = true
+		capturedPiece = p.GetPiece(move.To)
+		capturedSquare = move.To
 		p.removePiece(move.To)
 		p.removePiece(move.From)
 		p.setPiece(move.To, piece)
@@ -212,31 +218,7 @@ func (p *Position) MakeMove(move Move) {
 		p.setPiece(move.To, piece)
 	}
 
-	// update castling rights
-	switch piece.Type {
-	case King:
-		if piece.Color == White {
-			p.CastlingRights.WhiteOO = false
-			p.CastlingRights.WhiteOOO = false
-		} else {
-			p.CastlingRights.BlackOO = false
-			p.CastlingRights.BlackOOO = false
-		}
-	case Rook:
-		if piece.Color == White {
-			if move.From == Square(7) { // h1
-				p.CastlingRights.WhiteOO = false
-			} else if move.From == Square(0) { // a1
-				p.CastlingRights.WhiteOOO = false
-			}
-		} else {
-			if move.From == Square(63) { // h8
-				p.CastlingRights.BlackOO = false
-			} else if move.From == Square(56) { // a8
-				p.CastlingRights.BlackOOO = false
-			}
-		}
-	}
+	p.updateCastlingRights(move, piece, capturedPiece, capturedSquare)
 
 	// update en passant square for double pawn moves
 	p.EnPassant = nil
@@ -262,6 +244,48 @@ func (p *Position) MakeMove(move Move) {
 
 	// switch active color
 	p.ActiveColor = GetOppositeColor(p.ActiveColor)
+}
+
+func (p *Position) updateCastlingRights(move Move, piece *Piece, capturedPiece *Piece, capturedSquare Square) {
+	switch piece.Type {
+	case King:
+		if piece.Color == White {
+			p.CastlingRights.WhiteOO = false
+			p.CastlingRights.WhiteOOO = false
+		} else {
+			p.CastlingRights.BlackOO = false
+			p.CastlingRights.BlackOOO = false
+		}
+	case Rook:
+		if piece.Color == White {
+			if move.From == Square(7) { // h1
+				p.CastlingRights.WhiteOO = false
+			} else if move.From == Square(0) { // a1
+				p.CastlingRights.WhiteOOO = false
+			}
+		} else {
+			if move.From == Square(63) { // h8
+				p.CastlingRights.BlackOO = false
+			} else if move.From == Square(56) { // a8
+				p.CastlingRights.BlackOOO = false
+			}
+		}
+	}
+
+	// if a rook was captured, clear the corresponding castling right
+	if capturedPiece != nil && capturedPiece.Type == Rook {
+		// determine which square the rook was on when captured
+		switch capturedSquare {
+		case Square(7): // h1
+			p.CastlingRights.WhiteOO = false
+		case Square(0): // a1
+			p.CastlingRights.WhiteOOO = false
+		case Square(63): // h8
+			p.CastlingRights.BlackOO = false
+		case Square(56): // a8
+			p.CastlingRights.BlackOOO = false
+		}
+	}
 }
 
 func (p *Position) IsInCheck(g *Generator, color Color) bool {

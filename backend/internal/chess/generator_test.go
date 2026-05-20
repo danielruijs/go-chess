@@ -1615,6 +1615,42 @@ func TestGenerateKingMoves(t *testing.T) {
 				{From: strToSquare("e1"), To: strToSquare("c1")}, // castling
 			},
 		},
+		{
+			name: "white castling not allowed without rook",
+			pos: &Position{
+				WhiteKing: bitboardFromStrs([]string{"e1"}),
+				CastlingRights: CastlingRights{
+					WhiteOO:  true,
+					WhiteOOO: true,
+				},
+			},
+			color: White,
+			legalMoves: []Move{
+				{From: strToSquare("e1"), To: strToSquare("d1")},
+				{From: strToSquare("e1"), To: strToSquare("d2")},
+				{From: strToSquare("e1"), To: strToSquare("e2")},
+				{From: strToSquare("e1"), To: strToSquare("f2")},
+				{From: strToSquare("e1"), To: strToSquare("f1")},
+			},
+		},
+		{
+			name: "black castling not allowed without rook",
+			pos: &Position{
+				BlackKing: bitboardFromStrs([]string{"e8"}),
+				CastlingRights: CastlingRights{
+					BlackOO:  true,
+					BlackOOO: true,
+				},
+			},
+			color: Black,
+			legalMoves: []Move{
+				{From: strToSquare("e8"), To: strToSquare("d8")},
+				{From: strToSquare("e8"), To: strToSquare("d7")},
+				{From: strToSquare("e8"), To: strToSquare("e7")},
+				{From: strToSquare("e8"), To: strToSquare("f7")},
+				{From: strToSquare("e8"), To: strToSquare("f8")},
+			},
+		},
 	}
 
 	g := NewGenerator()

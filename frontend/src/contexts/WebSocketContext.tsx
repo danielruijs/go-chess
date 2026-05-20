@@ -25,7 +25,7 @@ import { WebSocketContext } from "./WebSocketContext";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL as string;
 
-export function WebSocketProvider({ children }: { children: ReactNode }) {
+function WebSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [board, setBoard] = useState<Board | null>(null);
@@ -170,3 +170,5 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     </WebSocketContext.Provider>
   );
 }
+
+export default WebSocketProvider;
