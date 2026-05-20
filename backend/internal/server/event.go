@@ -91,12 +91,7 @@ type GameStartedEventHandler struct{}
 func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.Clock.Start()
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		startMatchData := StartMatchData{
-			Color:           player.GetColor(),
-			WhitePlayerName: m.getPlayerByColor(chess.White).Name,
-			BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
-			Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
-		}
+		startMatchData := m.getStartMatchData(player)
 		err := player.SendCritical(MessageTypeStartMatch, startMatchData)
 		if err != nil {
 			log.Printf("failed to send start match message to %s: %v", player.Name, err)

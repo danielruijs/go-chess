@@ -13,14 +13,11 @@ type Client struct {
 	metrics *metrics
 }
 
-func NewClient(conn *websocket.Conn, metrics *metrics) *Client {
-	done := make(chan struct{})
-	player := NewPlayer("", done)
-
+func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
 	return &Client{
 		Conn:    conn,
 		Player:  player,
-		Done:    done,
+		Done:    make(chan struct{}),
 		metrics: metrics,
 	}
 }

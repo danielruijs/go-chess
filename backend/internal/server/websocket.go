@@ -14,9 +14,15 @@ type WebSocketHandler struct {
 	matchmaker     *Matchmaker
 	metrics        *metrics
 	allowLocalhost bool
-	clients        map[*Client]struct{}
-	clientsMu      sync.RWMutex
+
+	clients   map[*Client]struct{}
+	clientsMu sync.RWMutex
+
+	players   map[string]*Player
+	playersMu sync.RWMutex
 }
+
+const SESSION_ID_COOKIE_NAME = "go-chess.sessionId"
 
 func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
@@ -25,6 +31,7 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocket
 		metrics:        matchmaker.metrics,
 		allowLocalhost: allowLocalhost,
 		clients:        make(map[*Client]struct{}),
+		players:        make(map[string]*Player),
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
@@ -51,6 +58,31 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	delete(wsh.clients, client)
 	wsh.metrics.recordWebsocketConnectionClosed()
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
+}
+
+func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
+	if sessionID == "" {
+		return NewPlayer()
+	}
+
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	if player, ok := wsh.players[sessionID]; ok {
+		return player
+	}
+
+	player := NewPlayer()
+	wsh.players[sessionID] = player
+	return player
+}
+
+func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
+	cookie, err := r.Cookie(SESSION_ID_COOKIE_NAME)
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
 }
 
 func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {
@@ -113,18 +145,24 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := NewClient(conn, wsh.metrics)
+	sessionID := wsh.sessionIDFromRequest(r)
+	player := wsh.getOrCreatePlayer(sessionID)
+	client := NewClient(conn, player, wsh.metrics)
 
 	wsh.RegisterClient(client)
 
 	defer func() {
 		close(client.Done)
-		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
 		_ = client.Conn.Close()
 	}()
 
 	go client.SendMessages()
+	if match := wsh.matchmaker.GetMatch(client.Player); match != nil {
+		if err := match.sendCurrentState(client.Player); err != nil {
+			log.Printf("failed to restore match for %s: %v", client.Player.Name, err)
+		}
+	}
 	queueStats := wsh.matchmaker.GetQueueStats()
 	wsh.sendMatchmakingUpdate(client, queueStats)
 	client.ReceiveMessages(wsh.matchmaker)

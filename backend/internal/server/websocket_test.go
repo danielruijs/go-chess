@@ -82,3 +82,16 @@ func TestWebSocketHandlerDeniesOriginBypassAndCountsIt(t *testing.T) {
 
 	require.InDelta(t, 1.0, testutil.ToFloat64(handler.metrics.connectionsDenied), 0.0001)
 }
+
+func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	first := handler.getOrCreatePlayer("session-123")
+	first.Name = "Alice"
+
+	second := handler.getOrCreatePlayer("session-123")
+
+	require.Same(t, first, second)
+	require.Equal(t, "Alice", second.Name)
+}

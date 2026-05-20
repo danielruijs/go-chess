@@ -85,14 +85,7 @@ func (m *Match) Run() {
 
 func (m *Match) sendPositionUpdate(isCritical bool) error {
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		legalMovesList := m.Engine.GetLegalMoves(player.GetColor())
-		boardData := BoardData{
-			Board:       m.Engine.GetBoard(),
-			LegalMoves:  moveListToLegalMoves(legalMovesList),
-			PGN:         m.Engine.GetPGN(),
-			ActiveColor: m.Engine.GetActiveColor(),
-			Clock:       m.Clock.Snapshot(m.Engine.GetActiveColor()),
-		}
+		boardData := m.getBoardData(player)
 		if isCritical {
 			err := player.SendCritical(MessageTypeBoard, boardData)
 			if err != nil {
@@ -103,6 +96,38 @@ func (m *Match) sendPositionUpdate(isCritical bool) error {
 		}
 	}
 	return nil
+}
+
+func (m *Match) sendCurrentState(player *Player) error {
+	if err := player.SendCritical(MessageTypeStartMatch, m.getStartMatchData(player)); err != nil {
+		return fmt.Errorf("failed to send start match message to %s: %v", player.Name, err)
+	}
+
+	if err := player.SendCritical(MessageTypeBoard, m.getBoardData(player)); err != nil {
+		return fmt.Errorf("failed to send board data to %s: %v", player.Name, err)
+	}
+
+	return nil
+}
+
+func (m *Match) getBoardData(player *Player) BoardData {
+	legalMovesList := m.Engine.GetLegalMoves(player.GetColor())
+	return BoardData{
+		Board:       m.Engine.GetBoard(),
+		LegalMoves:  moveListToLegalMoves(legalMovesList),
+		PGN:         m.Engine.GetPGN(),
+		ActiveColor: m.Engine.GetActiveColor(),
+		Clock:       m.Clock.Snapshot(m.Engine.GetActiveColor()),
+	}
+}
+
+func (m *Match) getStartMatchData(player *Player) StartMatchData {
+	return StartMatchData{
+		Color:           player.GetColor(),
+		WhitePlayerName: m.getPlayerByColor(chess.White).Name,
+		BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
+		Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
+	}
 }
 
 func (m *Match) sendFinalPositionUpdate() error {

@@ -19,15 +19,13 @@ type Player struct {
 	queuesMu sync.RWMutex
 
 	sendChan chan WSMessage
-	done     chan struct{}
 }
 
-func NewPlayer(name string, done chan struct{}) *Player {
+func NewPlayer() *Player {
 	return &Player{
-		Name:     name,
+		Name:     "",
 		queues:   make(map[TimeFormat]struct{}),
 		sendChan: make(chan WSMessage, 100),
-		done:     done,
 	}
 }
 
@@ -91,7 +89,6 @@ func (p *Player) SendInformational(msgType MessageType, data any) {
 
 	select {
 	case p.sendChan <- msg:
-	case <-p.done:
 	default:
 		log.Printf("Skipping message for %s", p.Name)
 	}
@@ -113,8 +110,6 @@ func (p *Player) SendCritical(msgType MessageType, data any) error {
 	select {
 	case p.sendChan <- msg:
 		return nil
-	case <-p.done:
-		return errors.New("player disconnected")
 	case <-ctx.Done():
 		return errors.New("timeout sending message")
 	}
