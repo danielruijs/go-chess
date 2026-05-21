@@ -14,6 +14,7 @@ type metrics struct {
 	registry *prometheus.Registry
 
 	onlineConnections prometheus.Gauge
+	cachedPlayers     prometheus.Gauge
 	connectionsTotal  prometheus.Counter
 	connectionsClosed prometheus.Counter
 	connectionsDenied prometheus.Counter
@@ -41,6 +42,10 @@ func NewMetrics() *metrics {
 		onlineConnections: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "go_chess_websocket_connections_active",
 			Help: "Current number of open websocket connections.",
+		}),
+		cachedPlayers: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "go_chess_websocket_players_cached",
+			Help: "Current number of cached websocket players.",
 		}),
 		connectionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "go_chess_websocket_connections_total",
@@ -98,6 +103,7 @@ func NewMetrics() *metrics {
 
 	registry.MustRegister(
 		m.onlineConnections,
+		m.cachedPlayers,
 		m.connectionsTotal,
 		m.connectionsClosed,
 		m.connectionsDenied,
@@ -128,6 +134,14 @@ func (m *metrics) recordWebsocketConnectionOpened() {
 func (m *metrics) recordWebsocketConnectionClosed() {
 	m.onlineConnections.Dec()
 	m.connectionsClosed.Inc()
+}
+
+func (m *metrics) recordWebsocketPlayerCached() {
+	m.cachedPlayers.Inc()
+}
+
+func (m *metrics) recordWebsocketPlayerEvicted() {
+	m.cachedPlayers.Dec()
 }
 
 func (m *metrics) recordWebsocketConnectionDenied() {

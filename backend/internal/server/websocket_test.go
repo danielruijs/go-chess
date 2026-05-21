@@ -98,6 +98,21 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 	require.Equal(t, "Alice", second.Name)
 }
 
+func TestWebSocketHandlerTracksCachedPlayerMetric(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	sessionID := "123e4567-e89b-12d3-a456-426614174000"
+	player := handler.getOrCreatePlayer(sessionID)
+	require.Same(t, player, handler.players[sessionID].player)
+	require.InDelta(t, 1.0, testutil.ToFloat64(handler.metrics.cachedPlayers), 0.0001)
+
+	handler.players[sessionID].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+	handler.cleanupInactivePlayers()
+
+	require.InDelta(t, 0.0, testutil.ToFloat64(handler.metrics.cachedPlayers), 0.0001)
+}
+
 func TestWebSocketHandlerCleansUpInactiveCachedPlayers(t *testing.T) {
 	handler, server := newTestWebSocketServer(t)
 	t.Cleanup(server.Close)

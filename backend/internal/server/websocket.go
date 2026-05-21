@@ -84,6 +84,7 @@ func (wsh *WebSocketHandler) cleanupInactivePlayers() {
 		}
 
 		delete(wsh.players, sessionID)
+		wsh.metrics.recordWebsocketPlayerEvicted()
 	}
 }
 
@@ -131,6 +132,7 @@ func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
 
 	player := NewPlayer()
 	wsh.players[sessionID] = &playerCacheEntry{player: player, lastUsed: time.Now()}
+	wsh.metrics.recordWebsocketPlayerCached()
 	return player
 }
 
