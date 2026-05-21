@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -82,7 +83,15 @@ func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
 	if err != nil {
 		return ""
 	}
+	if !isValidSessionID(cookie.Value) {
+		return ""
+	}
 	return cookie.Value
+}
+
+func isValidSessionID(sessionID string) bool {
+	_, err := uuid.Parse(sessionID)
+	return err == nil
 }
 
 func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {

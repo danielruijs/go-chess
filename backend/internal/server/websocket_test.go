@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -87,13 +88,26 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 	handler, server := newTestWebSocketServer(t)
 	t.Cleanup(server.Close)
 
-	first := handler.getOrCreatePlayer("session-123")
+	first := handler.getOrCreatePlayer("123e4567-e89b-12d3-a456-426614174000")
 	first.Name = "Alice"
 
-	second := handler.getOrCreatePlayer("session-123")
+	second := handler.getOrCreatePlayer("123e4567-e89b-12d3-a456-426614174000")
 
 	require.Same(t, first, second)
 	require.Equal(t, "Alice", second.Name)
+}
+
+func TestWebSocketHandlerDoesNotCacheInvalidSessionID(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	invalidSessionID := strings.Repeat("a", 128)
+
+	first := handler.getOrCreatePlayer(invalidSessionID)
+	second := handler.getOrCreatePlayer(invalidSessionID)
+
+	require.NotSame(t, first, second)
+	require.Empty(t, handler.players)
 }
 
 func TestPlayerBroadcastsToAllRegisteredClients(t *testing.T) {
