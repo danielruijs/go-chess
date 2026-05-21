@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -95,6 +96,69 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 
 	require.Same(t, first, second)
 	require.Equal(t, "Alice", second.Name)
+}
+
+func TestWebSocketHandlerCleansUpInactiveCachedPlayers(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	sessionID := "123e4567-e89b-12d3-a456-426614174000"
+	player := handler.getOrCreatePlayer(sessionID)
+	require.Same(t, player, handler.players[sessionID].player)
+
+	handler.players[sessionID].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+	handler.cleanupInactivePlayers()
+
+	_, ok := handler.players[sessionID]
+	require.False(t, ok)
+}
+
+func TestWebSocketHandlerKeepsCachedPlayersWithActiveClients(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	sessionID := "123e4567-e89b-12d3-a456-426614174000"
+	player := handler.getOrCreatePlayer(sessionID)
+	player.RegisterClient(&Client{sendChan: make(chan WSMessage, 1)})
+	handler.players[sessionID].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+
+	handler.cleanupInactivePlayers()
+
+	_, ok := handler.players[sessionID]
+	require.True(t, ok)
+}
+
+func TestWebSocketHandlerKeepsCachedPlayersInQueue(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	timeFormat := TimeFormat{initial: time.Minute, increment: 0}
+	sessionID := "123e4567-e89b-12d3-a456-426614174000"
+	player := handler.getOrCreatePlayer(sessionID)
+	require.NoError(t, handler.matchmaker.Join(player, timeFormat))
+	handler.players[sessionID].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+
+	handler.cleanupInactivePlayers()
+
+	_, ok := handler.players[sessionID]
+	require.True(t, ok)
+}
+
+func TestWebSocketHandlerKeepsCachedPlayersInMatch(t *testing.T) {
+	handler, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	timeFormat := TimeFormat{initial: time.Minute, increment: 0}
+	player1 := handler.getOrCreatePlayer("123e4567-e89b-12d3-a456-426614174000")
+	player2 := NewPlayer()
+	match := NewMatch(player1, player2, timeFormat, handler.matchmaker.matchEnded, handler.matchmaker.metrics)
+	handler.matchmaker.RegisterMatch(match)
+	handler.players["123e4567-e89b-12d3-a456-426614174000"].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+
+	handler.cleanupInactivePlayers()
+
+	_, ok := handler.players["123e4567-e89b-12d3-a456-426614174000"]
+	require.True(t, ok)
 }
 
 func TestWebSocketHandlerDoesNotCacheInvalidSessionID(t *testing.T) {

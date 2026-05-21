@@ -5,9 +5,20 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+)
+
+type playerCacheEntry struct {
+	player   *Player
+	lastUsed time.Time
+}
+
+const (
+	defaultPlayerCacheTTL      = 15 * time.Minute
+	defaultPlayerCleanupPeriod = 1 * time.Minute
 )
 
 type WebSocketHandler struct {
@@ -15,11 +26,13 @@ type WebSocketHandler struct {
 	matchmaker     *Matchmaker
 	metrics        *metrics
 	allowLocalhost bool
+	playerCacheTTL time.Duration
+	cleanupPeriod  time.Duration
 
 	clients   map[*Client]struct{}
 	clientsMu sync.RWMutex
 
-	players   map[string]*Player
+	players   map[string]*playerCacheEntry
 	playersMu sync.RWMutex
 }
 
@@ -32,7 +45,9 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocket
 		metrics:        matchmaker.metrics,
 		allowLocalhost: allowLocalhost,
 		clients:        make(map[*Client]struct{}),
-		players:        make(map[string]*Player),
+		playerCacheTTL: defaultPlayerCacheTTL,
+		cleanupPeriod:  defaultPlayerCleanupPeriod,
+		players:        make(map[string]*playerCacheEntry),
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
@@ -42,7 +57,34 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocket
 		}
 	}()
 
+	go wsh.runPlayerCleanup()
+
 	return wsh
+}
+
+func (wsh *WebSocketHandler) runPlayerCleanup() {
+	ticker := time.NewTicker(wsh.cleanupPeriod)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		wsh.cleanupInactivePlayers()
+	}
+}
+
+func (wsh *WebSocketHandler) cleanupInactivePlayers() {
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	for sessionID, entry := range wsh.players {
+		if entry.player.HasClients() ||
+			entry.player.IsInQueues() ||
+			wsh.matchmaker.GetMatch(entry.player) != nil ||
+			time.Since(entry.lastUsed) < wsh.playerCacheTTL {
+			continue
+		}
+
+		delete(wsh.players, sessionID)
+	}
 }
 
 func (wsh *WebSocketHandler) RegisterClient(client *Client) {
@@ -61,20 +103,34 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
-func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
+func (wsh *WebSocketHandler) refreshPlayer(sessionID string) {
 	if sessionID == "" {
+		return
+	}
+
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	if entry, ok := wsh.players[sessionID]; ok {
+		entry.lastUsed = time.Now()
+	}
+}
+
+func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
+	if sessionID == "" || !isValidSessionID(sessionID) {
 		return NewPlayer()
 	}
 
 	wsh.playersMu.Lock()
 	defer wsh.playersMu.Unlock()
 
-	if player, ok := wsh.players[sessionID]; ok {
-		return player
+	if entry, ok := wsh.players[sessionID]; ok {
+		entry.lastUsed = time.Now()
+		return entry.player
 	}
 
 	player := NewPlayer()
-	wsh.players[sessionID] = player
+	wsh.players[sessionID] = &playerCacheEntry{player: player, lastUsed: time.Now()}
 	return player
 }
 
@@ -165,6 +221,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		player.UnregisterClient(client)
 		close(client.Done)
 		wsh.UnregisterClient(client)
+		wsh.refreshPlayer(sessionID)
 		_ = client.Conn.Close()
 	}()
 

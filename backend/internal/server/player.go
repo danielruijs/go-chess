@@ -62,6 +62,18 @@ func (p *Player) IsInQueue(timeFormat TimeFormat) bool {
 	return inQueue
 }
 
+func (p *Player) IsInQueues() bool {
+	p.queuesMu.RLock()
+	defer p.queuesMu.RUnlock()
+	return len(p.queues) > 0
+}
+
+func (p *Player) HasClients() bool {
+	p.clientsMu.RLock()
+	defer p.clientsMu.RUnlock()
+	return len(p.clients) > 0
+}
+
 func (p *Player) GetQueues() []TimeFormat {
 	p.queuesMu.RLock()
 	defer p.queuesMu.RUnlock()
