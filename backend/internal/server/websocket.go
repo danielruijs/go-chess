@@ -148,10 +148,12 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	sessionID := wsh.sessionIDFromRequest(r)
 	player := wsh.getOrCreatePlayer(sessionID)
 	client := NewClient(conn, player, wsh.metrics)
+	player.RegisterClient(client)
 
 	wsh.RegisterClient(client)
 
 	defer func() {
+		player.UnregisterClient(client)
 		close(client.Done)
 		wsh.UnregisterClient(client)
 		_ = client.Conn.Close()

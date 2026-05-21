@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go-chess/internal/chess"
 	"log"
@@ -18,14 +17,15 @@ type Player struct {
 	queues   map[TimeFormat]struct{}
 	queuesMu sync.RWMutex
 
-	sendChan chan WSMessage
+	clients   map[*Client]struct{}
+	clientsMu sync.RWMutex
 }
 
 func NewPlayer() *Player {
 	return &Player{
-		Name:     "",
-		queues:   make(map[TimeFormat]struct{}),
-		sendChan: make(chan WSMessage, 100),
+		Name:    "",
+		queues:  make(map[TimeFormat]struct{}),
+		clients: make(map[*Client]struct{}),
 	}
 }
 
@@ -72,8 +72,27 @@ func (p *Player) GetQueues() []TimeFormat {
 	return queues
 }
 
-func (p *Player) GetSendChannel() chan WSMessage {
-	return p.sendChan
+func (p *Player) RegisterClient(client *Client) {
+	p.clientsMu.Lock()
+	defer p.clientsMu.Unlock()
+	p.clients[client] = struct{}{}
+}
+
+func (p *Player) UnregisterClient(client *Client) {
+	p.clientsMu.Lock()
+	defer p.clientsMu.Unlock()
+	delete(p.clients, client)
+}
+
+func (p *Player) getClientsSnapshot() []*Client {
+	p.clientsMu.RLock()
+	defer p.clientsMu.RUnlock()
+
+	clients := make([]*Client, 0, len(p.clients))
+	for client := range p.clients {
+		clients = append(clients, client)
+	}
+	return clients
 }
 
 func (p *Player) SendInformational(msgType MessageType, data any) {
@@ -87,10 +106,12 @@ func (p *Player) SendInformational(msgType MessageType, data any) {
 		Data: jsonData,
 	}
 
-	select {
-	case p.sendChan <- msg:
-	default:
-		log.Printf("Skipping message for %s", p.Name)
+	for _, client := range p.getClientsSnapshot() {
+		select {
+		case client.sendChan <- msg:
+		default:
+			log.Printf("Skipping message for %s", p.Name)
+		}
 	}
 }
 
@@ -107,10 +128,16 @@ func (p *Player) SendCritical(msgType MessageType, data any) error {
 		Data: jsonData,
 	}
 
-	select {
-	case p.sendChan <- msg:
-		return nil
-	case <-ctx.Done():
-		return errors.New("timeout sending message")
+	var failed int
+	for _, client := range p.getClientsSnapshot() {
+		select {
+		case client.sendChan <- msg:
+		case <-ctx.Done():
+			failed++
+		}
 	}
+	if failed > 0 {
+		return fmt.Errorf("failed to send %s message to %d clients for %s", msgType, failed, p.Name)
+	}
+	return nil
 }

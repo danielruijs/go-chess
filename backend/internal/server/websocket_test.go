@@ -95,3 +95,21 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 	require.Same(t, first, second)
 	require.Equal(t, "Alice", second.Name)
 }
+
+func TestPlayerBroadcastsToAllRegisteredClients(t *testing.T) {
+	player := NewPlayer()
+	clientOne := &Client{sendChan: make(chan WSMessage, 1)}
+	clientTwo := &Client{sendChan: make(chan WSMessage, 1)}
+
+	player.RegisterClient(clientOne)
+	player.RegisterClient(clientTwo)
+
+	err := player.SendCritical(MessageTypeStartMatch, nil)
+	require.NoError(t, err)
+
+	messageOne := <-clientOne.sendChan
+	messageTwo := <-clientTwo.sendChan
+
+	require.Equal(t, MessageTypeStartMatch, messageOne.Type)
+	require.Equal(t, MessageTypeStartMatch, messageTwo.Type)
+}

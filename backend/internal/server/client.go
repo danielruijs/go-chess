@@ -7,18 +7,20 @@ import (
 )
 
 type Client struct {
-	Conn    *websocket.Conn
-	Player  *Player
-	Done    chan struct{}
-	metrics *metrics
+	Conn     *websocket.Conn
+	Player   *Player
+	Done     chan struct{}
+	sendChan chan WSMessage
+	metrics  *metrics
 }
 
 func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
 	return &Client{
-		Conn:    conn,
-		Player:  player,
-		Done:    make(chan struct{}),
-		metrics: metrics,
+		Conn:     conn,
+		Player:   player,
+		Done:     make(chan struct{}),
+		sendChan: make(chan WSMessage, 100),
+		metrics:  metrics,
 	}
 }
 
@@ -52,10 +54,9 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 }
 
 func (c *Client) SendMessages() {
-	ch := c.Player.GetSendChannel()
 	for {
 		select {
-		case message := <-ch:
+		case message := <-c.sendChan:
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
 				log.Println("Error sending message:", err)
