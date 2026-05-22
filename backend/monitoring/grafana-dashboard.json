@@ -1853,6 +1853,64 @@
       ],
       "title": "Heap Objects",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "id": 118,
+      "panels": [],
+      "title": "Logs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "ffh6rtf8ot6v4c"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 19,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 117,
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "showControls": true,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "syntaxHighlighting": true,
+        "unwrappedColumns": false,
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "12.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "ffh6rtf8ot6v4c"
+          },
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "{service_name=\"go-chess-backend-1\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "",
+      "type": "logs"
     }
   ],
   "preload": false,
@@ -1870,6 +1928,6 @@
   "timezone": "browser",
   "title": "Go-chess Backend",
   "uid": "go-chess-backend",
-  "version": 15,
+  "version": 16,
   "weekStart": ""
 }
