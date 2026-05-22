@@ -43,16 +43,19 @@ func dialTestWebSocket(t *testing.T, serverURL string, origin string) (*websocke
 	return conn, response
 }
 
-func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, sessionID string) (*websocket.Conn, *http.Response) {
+func dialTestWebSocketWithQueryParam(t *testing.T, serverURL string, origin string, sessionID string) (*websocket.Conn, *http.Response) {
 	t.Helper()
 
 	parsedURL, err := url.Parse(serverURL)
 	require.NoError(t, err)
 	parsedURL.Scheme = "ws"
 
+	q := parsedURL.Query()
+	q.Set("sessionId", sessionID)
+	parsedURL.RawQuery = q.Encode()
+
 	header := http.Header{}
 	header.Set("Origin", origin)
-	header.Set("Cookie", sessionIDCookieName+"="+sessionID)
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
 	require.NoError(t, err)
@@ -159,7 +162,7 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 	firstSessionID := "123e4567-e89b-12d3-a456-426614174000"
 	secondSessionID := "123e4567-e89b-12d3-a456-426614174001"
 
-	firstConn, firstResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
+	firstConn, firstResponse := dialTestWebSocketWithQueryParam(t, server.URL, origin, firstSessionID)
 	t.Cleanup(func() {
 		_ = firstConn.Close()
 		if firstResponse != nil && firstResponse.Body != nil {
@@ -167,7 +170,7 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 		}
 	})
 
-	secondConn, secondResponse := dialTestWebSocketWithCookie(t, server.URL, origin, secondSessionID)
+	secondConn, secondResponse := dialTestWebSocketWithQueryParam(t, server.URL, origin, secondSessionID)
 	t.Cleanup(func() {
 		_ = secondConn.Close()
 		if secondResponse != nil && secondResponse.Body != nil {
@@ -196,7 +199,7 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 
 	// Simulate a disconnect and reconnect for the first player
 	require.NoError(t, firstConn.Close())
-	reconnectConn, reconnectResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
+	reconnectConn, reconnectResponse := dialTestWebSocketWithQueryParam(t, server.URL, origin, firstSessionID)
 	t.Cleanup(func() {
 		_ = reconnectConn.Close()
 		if reconnectResponse != nil && reconnectResponse.Body != nil {

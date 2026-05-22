@@ -24,27 +24,15 @@ import type { Color, Board } from "../types/chess";
 import { WebSocketContext } from "./WebSocketContext";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL as string;
-const SESSION_ID_COOKIE_NAME = "go-chess.sessionId";
+const SESSION_ID_KEY = "go-chess.sessionId";
 
-function getCookie(name: string): string | null {
-  const value = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${name}=`))
-    ?.split("=")[1];
-
-  return value ?? null;
-}
-
-function setCookie(name: string, value: string, maxAge = 60 * 60 * 24): void {
-  const secureAttribute = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax${secureAttribute}`;
-}
-
-function ensureSessionIdCookie() {
-  const existing = getCookie(SESSION_ID_COOKIE_NAME);
-  if (existing) return;
-  const id = window.crypto.randomUUID();
-  setCookie(SESSION_ID_COOKIE_NAME, id);
+function getOrGenerateSessionId(): string {
+  let id = localStorage.getItem(SESSION_ID_KEY);
+  if (!id) {
+    id = window.crypto.randomUUID();
+    localStorage.setItem(SESSION_ID_KEY, id);
+  }
+  return id;
 }
 
 function WebSocketProvider({ children }: { children: ReactNode }) {
@@ -97,9 +85,10 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Ensure session cookie exists, then initialize WebSocket once
-    ensureSessionIdCookie();
-    socketRef.current = new WebSocket(WS_URL);
+    // Ensure session ID exists, then initialize WebSocket once
+    const sessionId = getOrGenerateSessionId();
+    const wsUrlWithSession = `${WS_URL}?sessionId=${encodeURIComponent(sessionId)}`;
+    socketRef.current = new WebSocket(wsUrlWithSession);
 
     socketRef.current.addEventListener("open", () => {
       console.log("WebSocket connected");
