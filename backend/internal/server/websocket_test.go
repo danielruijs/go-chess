@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -40,6 +41,57 @@ func dialTestWebSocket(t *testing.T, serverURL string, origin string) (*websocke
 	require.NoError(t, err)
 
 	return conn, response
+}
+
+func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, sessionID string) (*websocket.Conn, *http.Response) {
+	t.Helper()
+
+	parsedURL, err := url.Parse(serverURL)
+	require.NoError(t, err)
+	parsedURL.Scheme = "ws"
+
+	header := http.Header{}
+	header.Set("Origin", origin)
+	header.Set("Cookie", SESSION_ID_COOKIE_NAME+"="+sessionID)
+
+	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
+	require.NoError(t, err)
+
+	return conn, response
+}
+
+func sendTestMessage(t *testing.T, conn *websocket.Conn, messageType MessageType, data any) {
+	t.Helper()
+
+	rawData, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	require.NoError(t, conn.WriteJSON(WSMessage{Type: messageType, Data: rawData}))
+}
+
+func readTestMessage(t *testing.T, conn *websocket.Conn) WSMessage {
+	t.Helper()
+
+	var message WSMessage
+	require.NoError(t, conn.ReadJSON(&message))
+
+	return message
+}
+
+func waitForTestMessageType(t *testing.T, conn *websocket.Conn, expectedType MessageType) WSMessage {
+	t.Helper()
+
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
+	defer func() {
+		_ = conn.SetReadDeadline(time.Time{})
+	}()
+
+	for {
+		message := readTestMessage(t, conn)
+		if message.Type == expectedType {
+			return message
+		}
+	}
 }
 
 func TestWebSocketHandlerAllowsLocalhostOrigins(t *testing.T) {
@@ -96,6 +148,65 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 
 	require.Same(t, first, second)
 	require.Equal(t, "Alice", second.Name)
+}
+
+func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
+	_, server := newTestWebSocketServer(t)
+	t.Cleanup(server.Close)
+
+	const origin = "http://localhost:3000"
+	timeFormat := TimeFormat{initial: time.Minute, increment: 0}
+	firstSessionID := "123e4567-e89b-12d3-a456-426614174000"
+	secondSessionID := "123e4567-e89b-12d3-a456-426614174001"
+
+	firstConn, firstResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
+	t.Cleanup(func() {
+		_ = firstConn.Close()
+		if firstResponse != nil && firstResponse.Body != nil {
+			_ = firstResponse.Body.Close()
+		}
+	})
+
+	secondConn, secondResponse := dialTestWebSocketWithCookie(t, server.URL, origin, secondSessionID)
+	t.Cleanup(func() {
+		_ = secondConn.Close()
+		if secondResponse != nil && secondResponse.Body != nil {
+			_ = secondResponse.Body.Close()
+		}
+	})
+
+	require.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, firstConn).Type)
+	require.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, secondConn).Type)
+
+	// Both clients join the same matchmaking queue with the same time format, which should pair them together
+	sendTestMessage(t, firstConn, MessageTypeJoinMatch, JoinMatchData{
+		PlayerName: "Alice",
+		TimeFormat: TimeFormatMs{InitialMs: timeFormat.initial.Milliseconds(), IncrementMs: timeFormat.increment.Milliseconds()},
+	})
+	sendTestMessage(t, secondConn, MessageTypeJoinMatch, JoinMatchData{
+		PlayerName: "Bob",
+		TimeFormat: TimeFormatMs{InitialMs: timeFormat.initial.Milliseconds(), IncrementMs: timeFormat.increment.Milliseconds()},
+	})
+
+	// Wait for both clients to receive the start match and board messages
+	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, firstConn, MessageTypeStartMatch).Type)
+	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, secondConn, MessageTypeStartMatch).Type)
+	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, firstConn, MessageTypeBoard).Type)
+	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, secondConn, MessageTypeBoard).Type)
+
+	// Simulate a disconnect and reconnect for the first player
+	require.NoError(t, firstConn.Close())
+	reconnectConn, reconnectResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
+	t.Cleanup(func() {
+		_ = reconnectConn.Close()
+		if reconnectResponse != nil && reconnectResponse.Body != nil {
+			_ = reconnectResponse.Body.Close()
+		}
+	})
+
+	// The first player should receive the start match and board messages again, indicating that their active match was restored
+	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, reconnectConn, MessageTypeStartMatch).Type)
+	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, reconnectConn, MessageTypeBoard).Type)
 }
 
 func TestWebSocketHandlerTracksCachedPlayerMetric(t *testing.T) {
