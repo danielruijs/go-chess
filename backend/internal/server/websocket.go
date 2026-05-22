@@ -222,6 +222,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		player.UnregisterClient(client)
 		close(client.Done)
+		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
 		wsh.refreshPlayer(sessionID)
 		_ = client.Conn.Close()
