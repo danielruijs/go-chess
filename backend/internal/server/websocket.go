@@ -180,10 +180,7 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 		})
 	}
 	updateData := MatchmakingUpdateData{Queues: queues}
-	err := client.Player.Send(MessageTypeMatchmakingUpdate, updateData)
-	if err != nil {
-		log.Printf("failed to send %s: %v", MessageTypeMatchmakingUpdate, err)
-	}
+	client.Player.Send(MessageTypeMatchmakingUpdate, updateData)
 }
 
 func (wsh *WebSocketHandler) checkOrigin(r *http.Request) bool {
@@ -233,9 +230,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	go client.SendMessages()
 	if match := wsh.matchmaker.GetMatch(client.Player); match != nil {
-		if err := match.sendCurrentState(client.Player); err != nil {
-			log.Printf("failed to restore match for %s: %v", client.Player.Name, err)
-		}
+		match.sendCurrentState(client.Player)
 	}
 	queueStats := wsh.matchmaker.GetQueueStats()
 	wsh.sendMatchmakingUpdate(client, queueStats)

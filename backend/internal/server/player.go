@@ -2,8 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"go-chess/internal/chess"
+	"log"
 	"sync"
 )
 
@@ -104,17 +104,17 @@ func (p *Player) getClientsSnapshot() []*Client {
 	return clients
 }
 
-func (p *Player) Send(msgType MessageType, data any) error {
+func (p *Player) Send(msgType MessageType, data any) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to marshal data for %s: %w", p.Name, err)
+		log.Printf("WARN: failed to marshal %s for %s: %v", msgType, p.Name, err)
+		return
 	}
 	msg := WSMessage{
 		Type: msgType,
 		Data: jsonData,
 	}
 
-	var failed int
 	for _, client := range p.getClientsSnapshot() {
 		select {
 		case <-client.Done:
@@ -122,12 +122,10 @@ func (p *Player) Send(msgType MessageType, data any) error {
 			continue
 		case client.sendChan <- msg:
 		default:
-			failed++
-			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full")
+			log.Printf("WARN: send buffer full, evicting client for player %s (msg=%s)", p.Name, msgType)
+			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full_evicted")
+			close(client.Done)
+			p.UnregisterClient(client)
 		}
 	}
-	if failed > 0 {
-		return fmt.Errorf("failed to send to %d clients for %s", failed, p.Name)
-	}
-	return nil
 }

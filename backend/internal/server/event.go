@@ -92,11 +92,7 @@ func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.Clock.Start()
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		startMatchData := m.getStartMatchData(player)
-		err := player.Send(MessageTypeStartMatch, startMatchData)
-		if err != nil {
-			log.Printf("failed to send %s: %v", MessageTypeStartMatch, err)
-			continue
-		}
+		player.Send(MessageTypeStartMatch, startMatchData)
 	}
 	return false
 }
@@ -125,10 +121,7 @@ func (h OfferDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.DrawOfferedBy = event.Player
 
 	opponent := m.getOpponent(event.Player)
-	err := opponent.Send(MessageTypeDrawOffered, nil)
-	if err != nil {
-		log.Printf("failed to send %s: %v", MessageTypeDrawOffered, err)
-	}
+	opponent.Send(MessageTypeDrawOffered, nil)
 	return false
 }
 
@@ -154,10 +147,7 @@ func (h RespondDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	if !data.Accept {
 		// notify opponent that the draw offer was declined
 		opponent := m.getOpponent(event.Player)
-		err := opponent.Send(MessageTypeDrawDeclined, nil)
-		if err != nil {
-			log.Printf("failed to send %s: %v", MessageTypeDrawDeclined, err)
-		}
+		opponent.Send(MessageTypeDrawDeclined, nil)
 		m.DrawOfferedBy = nil
 		return false
 	}

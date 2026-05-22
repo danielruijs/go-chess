@@ -308,8 +308,7 @@ func TestPlayerBroadcastsToAllRegisteredClients(t *testing.T) {
 	player.RegisterClient(clientOne)
 	player.RegisterClient(clientTwo)
 
-	err := player.Send(MessageTypeStartMatch, nil)
-	require.NoError(t, err)
+	player.Send(MessageTypeStartMatch, nil)
 
 	messageOne := <-clientOne.sendChan
 	messageTwo := <-clientTwo.sendChan

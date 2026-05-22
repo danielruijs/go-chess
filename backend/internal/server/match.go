@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"go-chess/internal/chess"
 	"log"
 	"time"
@@ -58,10 +57,7 @@ func (m *Match) Run() {
 				return
 			}
 
-			err := m.sendPositionUpdate()
-			if err != nil {
-				log.Println("failed to send position update:", err)
-			}
+			m.sendPositionUpdate()
 		case <-clockCheckTicker.C:
 			if !m.Clock.IsRunning() {
 				continue
@@ -75,35 +71,21 @@ func (m *Match) Run() {
 			if !m.Clock.IsRunning() {
 				continue
 			}
-			err := m.sendPositionUpdate()
-			if err != nil {
-				log.Println("failed to send position update:", err)
-			}
+			m.sendPositionUpdate()
 		}
 	}
 }
 
-func (m *Match) sendPositionUpdate() error {
+func (m *Match) sendPositionUpdate() {
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		boardData := m.getBoardData(player)
-		err := player.Send(MessageTypeBoard, boardData)
-		if err != nil {
-			return fmt.Errorf("failed to send %s: %w", MessageTypeBoard, err)
-		}
+		player.Send(MessageTypeBoard, boardData)
 	}
-	return nil
 }
 
-func (m *Match) sendCurrentState(player *Player) error {
-	if err := player.Send(MessageTypeStartMatch, m.getStartMatchData(player)); err != nil {
-		return fmt.Errorf("failed to send %s: %w", MessageTypeStartMatch, err)
-	}
-
-	if err := player.Send(MessageTypeBoard, m.getBoardData(player)); err != nil {
-		return fmt.Errorf("failed to send %s: %w", MessageTypeBoard, err)
-	}
-
-	return nil
+func (m *Match) sendCurrentState(player *Player) {
+	player.Send(MessageTypeStartMatch, m.getStartMatchData(player))
+	player.Send(MessageTypeBoard, m.getBoardData(player))
 }
 
 func (m *Match) getBoardData(player *Player) BoardData {
@@ -126,7 +108,7 @@ func (m *Match) getStartMatchData(player *Player) StartMatchData {
 	}
 }
 
-func (m *Match) sendFinalPositionUpdate() error {
+func (m *Match) sendFinalPositionUpdate() {
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		boardData := BoardData{
 			Board:       m.Engine.GetBoard(),
@@ -135,22 +117,15 @@ func (m *Match) sendFinalPositionUpdate() error {
 			ActiveColor: m.Engine.GetActiveColor(),
 			Clock:       m.Clock.Snapshot(m.Engine.GetActiveColor()),
 		}
-		err := player.Send(MessageTypeBoard, boardData)
-		if err != nil {
-			return fmt.Errorf("failed to send %s: %w", MessageTypeBoard, err)
-		}
+		player.Send(MessageTypeBoard, boardData)
 	}
-	return nil
 }
 
 func (m *Match) end(result *chess.Result) {
 	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
 	m.metrics.recordMatchFinished(result)
-	err := m.sendFinalPositionUpdate()
-	if err != nil {
-		log.Println("failed to send final position update:", err)
-	}
+	m.sendFinalPositionUpdate()
 	m.sendMatchEnd(*result)
 	close(m.EventChan)
 	m.MatchEnded <- m
@@ -169,12 +144,8 @@ func (m *Match) sendMatchEnd(result chess.Result) {
 		Result: result,
 	}
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		err := player.Send(MessageTypeEndMatch, resultData)
-		if err != nil {
-			log.Printf("failed to send %s: %v", MessageTypeEndMatch, err)
-		}
+		player.Send(MessageTypeEndMatch, resultData)
 	}
-
 }
 
 func (m *Match) getPlayerByColor(color chess.Color) *Player {
