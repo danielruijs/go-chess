@@ -9,11 +9,12 @@ type eventType string
 type eventData any
 
 const (
-	EventTypeMove        eventType = "move"
-	EventTypeGameStarted eventType = "game_started"
-	EventTypeResign      eventType = "resign"
-	EventTypeOfferDraw   eventType = "offer_draw"
-	EventTypeRespondDraw eventType = "respond_draw"
+	EventTypeMove              eventType = "move"
+	EventTypeGameStarted       eventType = "game_started"
+	EventTypeResign            eventType = "resign"
+	EventTypeOfferDraw         eventType = "offer_draw"
+	EventTypeRespondDraw       eventType = "respond_draw"
+	EventTypePlayerReconnected eventType = "player_reconnected"
 )
 
 type Event struct {
@@ -27,11 +28,12 @@ type EventHandler interface {
 }
 
 var eventHandlers = map[eventType]EventHandler{
-	EventTypeMove:        MoveEventHandler{},
-	EventTypeGameStarted: GameStartedEventHandler{},
-	EventTypeResign:      ResignEventHandler{},
-	EventTypeOfferDraw:   OfferDrawEventHandler{},
-	EventTypeRespondDraw: RespondDrawEventHandler{},
+	EventTypeMove:              MoveEventHandler{},
+	EventTypeGameStarted:       GameStartedEventHandler{},
+	EventTypeResign:            ResignEventHandler{},
+	EventTypeOfferDraw:         OfferDrawEventHandler{},
+	EventTypeRespondDraw:       RespondDrawEventHandler{},
+	EventTypePlayerReconnected: PlayerReconnectedEventHandler{},
 }
 
 type MoveEventHandler struct{}
@@ -91,17 +93,18 @@ type GameStartedEventHandler struct{}
 func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.Clock.Start()
 	for _, player := range []*Player{m.Player1, m.Player2} {
-		startMatchData := StartMatchData{
-			Color:           player.GetColor(),
-			WhitePlayerName: m.getPlayerByColor(chess.White).Name,
-			BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
-			Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
-		}
-		err := player.SendCritical(MessageTypeStartMatch, startMatchData)
-		if err != nil {
-			log.Printf("failed to send start match message to %s: %v", player.Name, err)
-			continue
-		}
+		startMatchData := m.getStartMatchData(player)
+		player.Send(MessageTypeStartMatch, startMatchData)
+	}
+	return false
+}
+
+// re-sends the current match state to a specific player
+type PlayerReconnectedEventHandler struct{}
+
+func (h PlayerReconnectedEventHandler) Handle(m *Match, event Event) (ended bool) {
+	if event.Player != nil {
+		m.sendCurrentState(event.Player)
 	}
 	return false
 }
@@ -130,10 +133,7 @@ func (h OfferDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.DrawOfferedBy = event.Player
 
 	opponent := m.getOpponent(event.Player)
-	err := opponent.SendCritical(MessageTypeDrawOffered, nil)
-	if err != nil {
-		log.Printf("failed to send draw offered message to %s: %v", opponent.Name, err)
-	}
+	opponent.Send(MessageTypeDrawOffered, nil)
 	return false
 }
 
@@ -159,10 +159,7 @@ func (h RespondDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	if !data.Accept {
 		// notify opponent that the draw offer was declined
 		opponent := m.getOpponent(event.Player)
-		err := opponent.SendCritical(MessageTypeDrawDeclined, nil)
-		if err != nil {
-			log.Printf("failed to send draw declined message to %s: %v", opponent.Name, err)
-		}
+		opponent.Send(MessageTypeDrawDeclined, nil)
 		m.DrawOfferedBy = nil
 		return false
 	}

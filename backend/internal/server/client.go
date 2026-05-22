@@ -2,26 +2,33 @@ package server
 
 import (
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	Conn    *websocket.Conn
-	Player  *Player
-	Done    chan struct{}
+	Conn   *websocket.Conn
+	Player *Player
+
+	Done      chan struct{}
+	closeOnce sync.Once
+	sendChan  chan WSMessage
+
 	metrics *metrics
 }
 
-func NewClient(conn *websocket.Conn, metrics *metrics) *Client {
-	done := make(chan struct{})
-	player := NewPlayer("", done)
+func (c *Client) Close() {
+	c.closeOnce.Do(func() { close(c.Done) })
+}
 
+func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
 	return &Client{
-		Conn:    conn,
-		Player:  player,
-		Done:    done,
-		metrics: metrics,
+		Conn:     conn,
+		Player:   player,
+		Done:     make(chan struct{}),
+		sendChan: make(chan WSMessage, 100),
+		metrics:  metrics,
 	}
 }
 
@@ -55,13 +62,15 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 }
 
 func (c *Client) SendMessages() {
-	ch := c.Player.GetSendChannel()
 	for {
 		select {
-		case message := <-ch:
+		case message := <-c.sendChan:
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
+				c.metrics.recordWebsocketMessageSendError(message.Type, "write_error")
 				log.Println("Error sending message:", err)
+			} else {
+				c.metrics.recordWebsocketMessageSent(message.Type)
 			}
 		case <-c.Done:
 			return

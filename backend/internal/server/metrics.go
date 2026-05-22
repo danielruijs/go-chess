@@ -13,12 +13,15 @@ import (
 type metrics struct {
 	registry *prometheus.Registry
 
-	onlineConnections prometheus.Gauge
-	connectionsTotal  prometheus.Counter
-	connectionsClosed prometheus.Counter
-	connectionsDenied prometheus.Counter
-	messagesReceived  *prometheus.CounterVec
-	messageErrors     *prometheus.CounterVec
+	onlineConnections    prometheus.Gauge
+	cachedPlayers        prometheus.Gauge
+	connectionsTotal     prometheus.Counter
+	connectionsClosed    prometheus.Counter
+	connectionsDenied    prometheus.Counter
+	messagesSent         *prometheus.CounterVec
+	messagesReceived     *prometheus.CounterVec
+	messageSendErrors    *prometheus.CounterVec
+	messageReceiveErrors *prometheus.CounterVec
 
 	queueSize        *prometheus.GaugeVec
 	queueJoinsTotal  *prometheus.CounterVec
@@ -42,6 +45,10 @@ func NewMetrics() *metrics {
 			Name: "go_chess_websocket_connections_active",
 			Help: "Current number of open websocket connections.",
 		}),
+		cachedPlayers: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "go_chess_websocket_players_cached",
+			Help: "Current number of cached websocket players.",
+		}),
 		connectionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "go_chess_websocket_connections_total",
 			Help: "Total number of websocket connections opened.",
@@ -54,12 +61,20 @@ func NewMetrics() *metrics {
 			Name: "go_chess_websocket_connections_denied_total",
 			Help: "Total number of websocket connections denied due to origin checks.",
 		}),
+		messagesSent: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "go_chess_websocket_messages_sent_total",
+			Help: "Total websocket messages sent to player clients by message type.",
+		}, []string{"type"}),
 		messagesReceived: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_websocket_messages_received_total",
 			Help: "Total websocket messages received by message type.",
 		}, []string{"type"}),
-		messageErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name: "go_chess_websocket_message_errors_total",
+		messageSendErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "go_chess_websocket_message_send_errors_total",
+			Help: "Total websocket message send errors by type and category.",
+		}, []string{"type", "category"}),
+		messageReceiveErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "go_chess_websocket_message_receive_errors_total",
 			Help: "Total websocket message handling errors by type and category.",
 		}, []string{"type", "category"}),
 		queueSize: prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -98,11 +113,14 @@ func NewMetrics() *metrics {
 
 	registry.MustRegister(
 		m.onlineConnections,
+		m.cachedPlayers,
 		m.connectionsTotal,
 		m.connectionsClosed,
 		m.connectionsDenied,
+		m.messagesSent,
 		m.messagesReceived,
-		m.messageErrors,
+		m.messageSendErrors,
+		m.messageReceiveErrors,
 		m.queueSize,
 		m.queueJoinsTotal,
 		m.queueLeavesTotal,
@@ -130,16 +148,32 @@ func (m *metrics) recordWebsocketConnectionClosed() {
 	m.connectionsClosed.Inc()
 }
 
+func (m *metrics) recordWebsocketPlayerCached() {
+	m.cachedPlayers.Inc()
+}
+
+func (m *metrics) recordWebsocketPlayerEvicted() {
+	m.cachedPlayers.Dec()
+}
+
 func (m *metrics) recordWebsocketConnectionDenied() {
 	m.connectionsDenied.Inc()
+}
+
+func (m *metrics) recordWebsocketMessageSent(messageType MessageType) {
+	m.messagesSent.WithLabelValues(string(messageType)).Inc()
 }
 
 func (m *metrics) recordWebsocketMessageReceived(messageType MessageType) {
 	m.messagesReceived.WithLabelValues(string(messageType)).Inc()
 }
 
+func (m *metrics) recordWebsocketMessageSendError(messageType MessageType, category string) {
+	m.messageSendErrors.WithLabelValues(string(messageType), category).Inc()
+}
+
 func (m *metrics) recordWebsocketMessageError(messageType MessageType, category string) {
-	m.messageErrors.WithLabelValues(string(messageType), category).Inc()
+	m.messageReceiveErrors.WithLabelValues(string(messageType), category).Inc()
 }
 
 func (m *metrics) recordQueueJoin(timeFormat TimeFormat, queueSize int) {

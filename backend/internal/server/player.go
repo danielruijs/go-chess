@@ -1,14 +1,10 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"go-chess/internal/chess"
 	"log"
 	"sync"
-	"time"
 )
 
 type Player struct {
@@ -18,16 +14,15 @@ type Player struct {
 	queues   map[TimeFormat]struct{}
 	queuesMu sync.RWMutex
 
-	sendChan chan WSMessage
-	done     chan struct{}
+	clients   map[*Client]struct{}
+	clientsMu sync.RWMutex
 }
 
-func NewPlayer(name string, done chan struct{}) *Player {
+func NewPlayer() *Player {
 	return &Player{
-		Name:     name,
-		queues:   make(map[TimeFormat]struct{}),
-		sendChan: make(chan WSMessage, 100),
-		done:     done,
+		Name:    "",
+		queues:  make(map[TimeFormat]struct{}),
+		clients: make(map[*Client]struct{}),
 	}
 }
 
@@ -64,6 +59,18 @@ func (p *Player) IsInQueue(timeFormat TimeFormat) bool {
 	return inQueue
 }
 
+func (p *Player) IsInQueues() bool {
+	p.queuesMu.RLock()
+	defer p.queuesMu.RUnlock()
+	return len(p.queues) > 0
+}
+
+func (p *Player) HasClients() bool {
+	p.clientsMu.RLock()
+	defer p.clientsMu.RUnlock()
+	return len(p.clients) > 0
+}
+
 func (p *Player) GetQueues() []TimeFormat {
 	p.queuesMu.RLock()
 	defer p.queuesMu.RUnlock()
@@ -74,14 +81,33 @@ func (p *Player) GetQueues() []TimeFormat {
 	return queues
 }
 
-func (p *Player) GetSendChannel() chan WSMessage {
-	return p.sendChan
+func (p *Player) RegisterClient(client *Client) {
+	p.clientsMu.Lock()
+	defer p.clientsMu.Unlock()
+	p.clients[client] = struct{}{}
 }
 
-func (p *Player) SendInformational(msgType MessageType, data any) {
+func (p *Player) UnregisterClient(client *Client) {
+	p.clientsMu.Lock()
+	defer p.clientsMu.Unlock()
+	delete(p.clients, client)
+}
+
+func (p *Player) getClientsSnapshot() []*Client {
+	p.clientsMu.RLock()
+	defer p.clientsMu.RUnlock()
+
+	clients := make([]*Client, 0, len(p.clients))
+	for client := range p.clients {
+		clients = append(clients, client)
+	}
+	return clients
+}
+
+func (p *Player) Send(msgType MessageType, data any) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
+		log.Printf("WARN: failed to marshal %s for %s: %v", msgType, p.Name, err)
 		return
 	}
 	msg := WSMessage{
@@ -89,33 +115,17 @@ func (p *Player) SendInformational(msgType MessageType, data any) {
 		Data: jsonData,
 	}
 
-	select {
-	case p.sendChan <- msg:
-	case <-p.done:
-	default:
-		log.Printf("Skipping message for %s", p.Name)
-	}
-}
-
-func (p *Player) SendCritical(msgType MessageType, data any) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
-	}
-	msg := WSMessage{
-		Type: msgType,
-		Data: jsonData,
-	}
-
-	select {
-	case p.sendChan <- msg:
-		return nil
-	case <-p.done:
-		return errors.New("player disconnected")
-	case <-ctx.Done():
-		return errors.New("timeout sending message")
+	for _, client := range p.getClientsSnapshot() {
+		select {
+		case <-client.Done:
+			// Skip clients that are already closed
+			continue
+		case client.sendChan <- msg:
+		default:
+			log.Printf("WARN: send buffer full, evicting client for player %s (msg=%s)", p.Name, msgType)
+			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full_evicted")
+			client.Close()
+			p.UnregisterClient(client)
+		}
 	}
 }

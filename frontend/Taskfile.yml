@@ -6,6 +6,11 @@ tasks:
     cmds:
       - npm install
 
+  build:
+    desc: "Build the frontend"
+    cmds:
+      - npm run build
+
   test:
     desc: "Run tests"
     cmds:
@@ -16,9 +21,14 @@ tasks:
     cmds:
       - npm run lint
 
+  format:
+    desc: "Check code formatting"
+    cmds:
+      - npm run format:check
+
   ci:
     desc: "Run full frontend ci"
-    deps: [deps, test, lint]
+    deps: [deps, build, test, lint, format]
 
   run:
     desc: "Run the frontend"

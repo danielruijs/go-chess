@@ -5,8 +5,20 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+)
+
+type playerCacheEntry struct {
+	player   *Player
+	lastUsed time.Time
+}
+
+const (
+	defaultPlayerCacheTTL      = 15 * time.Minute
+	defaultPlayerCleanupPeriod = 1 * time.Minute
 )
 
 type WebSocketHandler struct {
@@ -14,9 +26,17 @@ type WebSocketHandler struct {
 	matchmaker     *Matchmaker
 	metrics        *metrics
 	allowLocalhost bool
-	clients        map[*Client]struct{}
-	clientsMu      sync.RWMutex
+	playerCacheTTL time.Duration
+	cleanupPeriod  time.Duration
+
+	clients   map[*Client]struct{}
+	clientsMu sync.RWMutex
+
+	players   map[string]*playerCacheEntry
+	playersMu sync.RWMutex
 }
+
+const sessionIDCookieName = "go-chess.sessionId"
 
 func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
@@ -25,6 +45,9 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocket
 		metrics:        matchmaker.metrics,
 		allowLocalhost: allowLocalhost,
 		clients:        make(map[*Client]struct{}),
+		playerCacheTTL: defaultPlayerCacheTTL,
+		cleanupPeriod:  defaultPlayerCleanupPeriod,
+		players:        make(map[string]*playerCacheEntry),
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
@@ -34,7 +57,35 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocket
 		}
 	}()
 
+	go wsh.runPlayerCleanup()
+
 	return wsh
+}
+
+func (wsh *WebSocketHandler) runPlayerCleanup() {
+	ticker := time.NewTicker(wsh.cleanupPeriod)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		wsh.cleanupInactivePlayers()
+	}
+}
+
+func (wsh *WebSocketHandler) cleanupInactivePlayers() {
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	for sessionID, entry := range wsh.players {
+		if entry.player.HasClients() ||
+			entry.player.IsInQueues() ||
+			wsh.matchmaker.GetMatch(entry.player) != nil ||
+			time.Since(entry.lastUsed) < wsh.playerCacheTTL {
+			continue
+		}
+
+		delete(wsh.players, sessionID)
+		wsh.metrics.recordWebsocketPlayerEvicted()
+	}
 }
 
 func (wsh *WebSocketHandler) RegisterClient(client *Client) {
@@ -51,6 +102,54 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	delete(wsh.clients, client)
 	wsh.metrics.recordWebsocketConnectionClosed()
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
+}
+
+func (wsh *WebSocketHandler) refreshPlayer(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	if entry, ok := wsh.players[sessionID]; ok {
+		entry.lastUsed = time.Now()
+	}
+}
+
+func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
+	if sessionID == "" || !isValidSessionID(sessionID) {
+		return NewPlayer()
+	}
+
+	wsh.playersMu.Lock()
+	defer wsh.playersMu.Unlock()
+
+	if entry, ok := wsh.players[sessionID]; ok {
+		entry.lastUsed = time.Now()
+		return entry.player
+	}
+
+	player := NewPlayer()
+	wsh.players[sessionID] = &playerCacheEntry{player: player, lastUsed: time.Now()}
+	wsh.metrics.recordWebsocketPlayerCached()
+	return player
+}
+
+func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
+	cookie, err := r.Cookie(sessionIDCookieName)
+	if err != nil {
+		return ""
+	}
+	if !isValidSessionID(cookie.Value) {
+		return ""
+	}
+	return cookie.Value
+}
+
+func isValidSessionID(sessionID string) bool {
+	_, err := uuid.Parse(sessionID)
+	return err == nil
 }
 
 func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {
@@ -81,7 +180,7 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 		})
 	}
 	updateData := MatchmakingUpdateData{Queues: queues}
-	client.Player.SendInformational(MessageTypeMatchmakingUpdate, updateData)
+	client.Player.Send(MessageTypeMatchmakingUpdate, updateData)
 }
 
 func (wsh *WebSocketHandler) checkOrigin(r *http.Request) bool {
@@ -113,18 +212,26 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := NewClient(conn, wsh.metrics)
+	sessionID := wsh.sessionIDFromRequest(r)
+	player := wsh.getOrCreatePlayer(sessionID)
+	client := NewClient(conn, player, wsh.metrics)
+	player.RegisterClient(client)
 
 	wsh.RegisterClient(client)
 
 	defer func() {
-		close(client.Done)
+		player.UnregisterClient(client)
+		client.Close()
 		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
+		wsh.refreshPlayer(sessionID)
 		_ = client.Conn.Close()
 	}()
 
 	go client.SendMessages()
+	if match := wsh.matchmaker.GetMatch(client.Player); match != nil {
+		match.EventChan <- Event{Type: EventTypePlayerReconnected, Player: client.Player}
+	}
 	queueStats := wsh.matchmaker.GetQueueStats()
 	wsh.sendMatchmakingUpdate(client, queueStats)
 	client.ReceiveMessages(wsh.matchmaker)
