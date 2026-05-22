@@ -411,6 +411,194 @@
         "x": 0,
         "y": 7
       },
+      "id": 115,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": true,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (type) (rate(go_chess_websocket_messages_sent_total[1m]))",
+          "legendFormat": "{{type}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Messages Sent Rate by Type (1m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cfexu8nult5vkb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 105,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": true,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (type, category) (rate(go_chess_websocket_message_send_errors_total[1m]))",
+          "legendFormat": "{{type}}/{{category}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Message Send Error Rate by Type/Category (1m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cfexu8nult5vkb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
       "id": 104,
       "options": {
         "legend": {
@@ -503,9 +691,9 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 13
       },
-      "id": 105,
+      "id": 116,
       "options": {
         "legend": {
           "calcs": [],
@@ -523,13 +711,13 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum by (type, category) (rate(go_chess_websocket_message_errors_total[1m]))",
+          "expr": "sum by (type, category) (rate(go_chess_websocket_message_receive_errors_total[1m]))",
           "legendFormat": "{{type}}/{{category}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Message Error Rate by Type/Category (1m)",
+      "title": "Message Received Error Rate by Type/Category (1m)",
       "type": "timeseries"
     },
     {
@@ -597,7 +785,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 13
+        "y": 19
       },
       "id": 107,
       "options": {
@@ -691,7 +879,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 13
+        "y": 19
       },
       "id": 108,
       "options": {
@@ -785,7 +973,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 13
+        "y": 19
       },
       "id": 114,
       "options": {
@@ -841,7 +1029,7 @@
         "h": 12,
         "w": 4,
         "x": 0,
-        "y": 19
+        "y": 25
       },
       "id": 109,
       "options": {
@@ -937,7 +1125,7 @@
         "h": 6,
         "w": 12,
         "x": 4,
-        "y": 19
+        "y": 25
       },
       "id": 112,
       "options": {
@@ -1027,7 +1215,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 19
+        "y": 25
       },
       "id": 110,
       "options": {
@@ -1122,7 +1310,7 @@
         "h": 6,
         "w": 12,
         "x": 4,
-        "y": 25
+        "y": 31
       },
       "id": 113,
       "options": {
@@ -1216,7 +1404,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 25
+        "y": 31
       },
       "id": 111,
       "options": {
@@ -1251,7 +1439,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 37
       },
       "id": 13,
       "panels": [],
@@ -1323,7 +1511,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 38
       },
       "id": 14,
       "options": {
@@ -1417,7 +1605,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 38
       },
       "id": 15,
       "options": {
@@ -1511,7 +1699,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 38
+        "y": 44
       },
       "id": 16,
       "options": {
@@ -1605,7 +1793,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 38
+        "y": 44
       },
       "id": 17,
       "options": {
@@ -1650,6 +1838,6 @@
   "timezone": "browser",
   "title": "Go-chess Backend",
   "uid": "go-chess-backend",
-  "version": 12,
+  "version": 13,
   "weekStart": ""
 }

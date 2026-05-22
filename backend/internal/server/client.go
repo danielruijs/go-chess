@@ -59,7 +59,10 @@ func (c *Client) SendMessages() {
 		case message := <-c.sendChan:
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
+				c.metrics.recordWebsocketMessageSendError(message.Type, "write_error")
 				log.Println("Error sending message:", err)
+			} else {
+				c.metrics.recordWebsocketMessageSent(message.Type)
 			}
 		case <-c.Done:
 			return

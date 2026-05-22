@@ -14,7 +14,7 @@ The backend serves gameplay traffic on `localhost:8085`.
 
 ### Metrics
 
-Prometheus metrics are served on `localhost:2115/metrics`. Backend metrics include websocket connection counts, cached websocket player counts, matchmaking queue depth, active matches, move and draw event totals, and match results by outcome and reason. The `monitoring/grafana-dashboard.json` file contains a Grafana dashboard configuration that can be imported to visualize these metrics.
+Prometheus metrics are served on `localhost:2115/metrics`. Backend metrics include websocket connection counts, cached websocket player counts, websocket message send/receive counts, websocket send and receive errors by type and category, matchmaking queue depth, active matches, move and draw event totals, and match results by outcome and reason. The `monitoring/grafana-dashboard.json` file contains a Grafana dashboard configuration that can be imported to visualize these metrics.
 
 ## Deploying in a container
 

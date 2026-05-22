@@ -117,9 +117,13 @@ func (p *Player) Send(msgType MessageType, data any) error {
 	var failed int
 	for _, client := range p.getClientsSnapshot() {
 		select {
+		case <-client.Done:
+			// Skip clients that are already closed
+			continue
 		case client.sendChan <- msg:
 		default:
 			failed++
+			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full")
 		}
 	}
 	if failed > 0 {
