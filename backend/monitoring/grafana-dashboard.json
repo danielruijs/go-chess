@@ -99,7 +99,41 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
@@ -116,38 +150,36 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 4,
+        "w": 6,
         "x": 4,
         "y": 1
       },
       "id": 106,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "pluginVersion": "12.4.2",
       "targets": [
         {
           "editorMode": "code",
           "expr": "go_chess_websocket_players_cached",
-          "legendFormat": "cached",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Cached WebSocket Players",
-      "type": "stat"
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -212,8 +244,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 8,
-        "x": 8,
+        "w": 7,
+        "x": 10,
         "y": 1
       },
       "id": 102,
@@ -234,20 +266,20 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "increase(go_chess_websocket_connections_total[5m])",
+          "expr": "increase(go_chess_websocket_connections_total[1m])",
           "legendFormat": "opened",
           "range": true,
           "refId": "A"
         },
         {
           "editorMode": "code",
-          "expr": "increase(go_chess_websocket_connections_closed_total[5m])",
+          "expr": "increase(go_chess_websocket_connections_closed_total[1m])",
           "legendFormat": "closed",
           "range": true,
           "refId": "B"
         }
       ],
-      "title": "WebSocket Opens/Closes (5m)",
+      "title": "WebSocket Opens/Closes (1m)",
       "type": "timeseries"
     },
     {
@@ -313,8 +345,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 8,
-        "x": 16,
+        "w": 7,
+        "x": 17,
         "y": 1
       },
       "id": 103,
@@ -1838,6 +1870,6 @@
   "timezone": "browser",
   "title": "Go-chess Backend",
   "uid": "go-chess-backend",
-  "version": 13,
+  "version": 15,
   "weekStart": ""
 }
