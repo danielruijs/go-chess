@@ -36,8 +36,6 @@ type WebSocketHandler struct {
 	playersMu sync.RWMutex
 }
 
-const sessionIDCookieName = "go-chess.sessionId"
-
 func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
 		upgrader:       websocket.Upgrader{},
@@ -137,14 +135,11 @@ func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
 }
 
 func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
-	cookie, err := r.Cookie(sessionIDCookieName)
-	if err != nil {
+	sessionID := r.URL.Query().Get("sessionId")
+	if !isValidSessionID(sessionID) {
 		return ""
 	}
-	if !isValidSessionID(cookie.Value) {
-		return ""
-	}
-	return cookie.Value
+	return sessionID
 }
 
 func isValidSessionID(sessionID string) bool {
