@@ -36,7 +36,8 @@ function getCookie(name: string): string | null {
 }
 
 function setCookie(name: string, value: string, maxAge = 60 * 60 * 24): void {
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  const secureAttribute = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax${secureAttribute}`;
 }
 
 function getOrCreateSessionId() {
