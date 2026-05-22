@@ -52,7 +52,7 @@ func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, 
 
 	header := http.Header{}
 	header.Set("Origin", origin)
-	header.Set("Cookie", SESSION_ID_COOKIE_NAME+"="+sessionID)
+	header.Set("Cookie", sessionIDCookieName+"="+sessionID)
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
 	require.NoError(t, err)

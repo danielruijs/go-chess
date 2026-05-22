@@ -2,16 +2,24 @@ package server
 
 import (
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	Conn     *websocket.Conn
-	Player   *Player
-	Done     chan struct{}
-	sendChan chan WSMessage
-	metrics  *metrics
+	Conn   *websocket.Conn
+	Player *Player
+
+	Done      chan struct{}
+	closeOnce sync.Once
+	sendChan  chan WSMessage
+
+	metrics *metrics
+}
+
+func (c *Client) Close() {
+	c.closeOnce.Do(func() { close(c.Done) })
 }
 
 func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {

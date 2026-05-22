@@ -9,11 +9,12 @@ type eventType string
 type eventData any
 
 const (
-	EventTypeMove        eventType = "move"
-	EventTypeGameStarted eventType = "game_started"
-	EventTypeResign      eventType = "resign"
-	EventTypeOfferDraw   eventType = "offer_draw"
-	EventTypeRespondDraw eventType = "respond_draw"
+	EventTypeMove              eventType = "move"
+	EventTypeGameStarted       eventType = "game_started"
+	EventTypeResign            eventType = "resign"
+	EventTypeOfferDraw         eventType = "offer_draw"
+	EventTypeRespondDraw       eventType = "respond_draw"
+	EventTypePlayerReconnected eventType = "player_reconnected"
 )
 
 type Event struct {
@@ -27,11 +28,12 @@ type EventHandler interface {
 }
 
 var eventHandlers = map[eventType]EventHandler{
-	EventTypeMove:        MoveEventHandler{},
-	EventTypeGameStarted: GameStartedEventHandler{},
-	EventTypeResign:      ResignEventHandler{},
-	EventTypeOfferDraw:   OfferDrawEventHandler{},
-	EventTypeRespondDraw: RespondDrawEventHandler{},
+	EventTypeMove:              MoveEventHandler{},
+	EventTypeGameStarted:       GameStartedEventHandler{},
+	EventTypeResign:            ResignEventHandler{},
+	EventTypeOfferDraw:         OfferDrawEventHandler{},
+	EventTypeRespondDraw:       RespondDrawEventHandler{},
+	EventTypePlayerReconnected: PlayerReconnectedEventHandler{},
 }
 
 type MoveEventHandler struct{}
@@ -93,6 +95,16 @@ func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		startMatchData := m.getStartMatchData(player)
 		player.Send(MessageTypeStartMatch, startMatchData)
+	}
+	return false
+}
+
+// re-sends the current match state to a specific player
+type PlayerReconnectedEventHandler struct{}
+
+func (h PlayerReconnectedEventHandler) Handle(m *Match, event Event) (ended bool) {
+	if event.Player != nil {
+		m.sendCurrentState(event.Player)
 	}
 	return false
 }

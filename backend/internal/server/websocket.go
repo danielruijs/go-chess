@@ -36,7 +36,7 @@ type WebSocketHandler struct {
 	playersMu sync.RWMutex
 }
 
-const SESSION_ID_COOKIE_NAME = "go-chess.sessionId"
+const sessionIDCookieName = "go-chess.sessionId"
 
 func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
 	wsh := &WebSocketHandler{
@@ -137,7 +137,7 @@ func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
 }
 
 func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
-	cookie, err := r.Cookie(SESSION_ID_COOKIE_NAME)
+	cookie, err := r.Cookie(sessionIDCookieName)
 	if err != nil {
 		return ""
 	}
@@ -221,7 +221,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		player.UnregisterClient(client)
-		close(client.Done)
+		client.Close()
 		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
 		wsh.refreshPlayer(sessionID)
@@ -230,7 +230,7 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	go client.SendMessages()
 	if match := wsh.matchmaker.GetMatch(client.Player); match != nil {
-		match.sendCurrentState(client.Player)
+		match.EventChan <- Event{Type: EventTypePlayerReconnected, Player: client.Player}
 	}
 	queueStats := wsh.matchmaker.GetQueueStats()
 	wsh.sendMatchmakingUpdate(client, queueStats)
