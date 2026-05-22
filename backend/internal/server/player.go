@@ -1,13 +1,10 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"go-chess/internal/chess"
-	"log"
 	"sync"
-	"time"
 )
 
 type Player struct {
@@ -107,33 +104,10 @@ func (p *Player) getClientsSnapshot() []*Client {
 	return clients
 }
 
-func (p *Player) SendInformational(msgType MessageType, data any) {
+func (p *Player) Send(msgType MessageType, data any) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
-		return
-	}
-	msg := WSMessage{
-		Type: msgType,
-		Data: jsonData,
-	}
-
-	for _, client := range p.getClientsSnapshot() {
-		select {
-		case client.sendChan <- msg:
-		default:
-			log.Printf("Skipping message for %s", p.Name)
-		}
-	}
-}
-
-func (p *Player) SendCritical(msgType MessageType, data any) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to marshal %s data for %s: %v", msgType, p.Name, err)
+		return fmt.Errorf("failed to marshal data for %s: %w", p.Name, err)
 	}
 	msg := WSMessage{
 		Type: msgType,
@@ -144,12 +118,12 @@ func (p *Player) SendCritical(msgType MessageType, data any) error {
 	for _, client := range p.getClientsSnapshot() {
 		select {
 		case client.sendChan <- msg:
-		case <-ctx.Done():
+		default:
 			failed++
 		}
 	}
 	if failed > 0 {
-		return fmt.Errorf("failed to send %s message to %d clients for %s", msgType, failed, p.Name)
+		return fmt.Errorf("failed to send to %d clients for %s", failed, p.Name)
 	}
 	return nil
 }

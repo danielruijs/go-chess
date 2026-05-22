@@ -92,9 +92,9 @@ func (h GameStartedEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.Clock.Start()
 	for _, player := range []*Player{m.Player1, m.Player2} {
 		startMatchData := m.getStartMatchData(player)
-		err := player.SendCritical(MessageTypeStartMatch, startMatchData)
+		err := player.Send(MessageTypeStartMatch, startMatchData)
 		if err != nil {
-			log.Printf("failed to send start match message to %s: %v", player.Name, err)
+			log.Printf("failed to send %s: %v", MessageTypeStartMatch, err)
 			continue
 		}
 	}
@@ -125,9 +125,9 @@ func (h OfferDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	m.DrawOfferedBy = event.Player
 
 	opponent := m.getOpponent(event.Player)
-	err := opponent.SendCritical(MessageTypeDrawOffered, nil)
+	err := opponent.Send(MessageTypeDrawOffered, nil)
 	if err != nil {
-		log.Printf("failed to send draw offered message to %s: %v", opponent.Name, err)
+		log.Printf("failed to send %s: %v", MessageTypeDrawOffered, err)
 	}
 	return false
 }
@@ -154,9 +154,9 @@ func (h RespondDrawEventHandler) Handle(m *Match, event Event) (ended bool) {
 	if !data.Accept {
 		// notify opponent that the draw offer was declined
 		opponent := m.getOpponent(event.Player)
-		err := opponent.SendCritical(MessageTypeDrawDeclined, nil)
+		err := opponent.Send(MessageTypeDrawDeclined, nil)
 		if err != nil {
-			log.Printf("failed to send draw declined message to %s: %v", opponent.Name, err)
+			log.Printf("failed to send %s: %v", MessageTypeDrawDeclined, err)
 		}
 		m.DrawOfferedBy = nil
 		return false

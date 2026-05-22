@@ -180,7 +180,10 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 		})
 	}
 	updateData := MatchmakingUpdateData{Queues: queues}
-	client.Player.SendInformational(MessageTypeMatchmakingUpdate, updateData)
+	err := client.Player.Send(MessageTypeMatchmakingUpdate, updateData)
+	if err != nil {
+		log.Printf("failed to send %s: %v", MessageTypeMatchmakingUpdate, err)
+	}
 }
 
 func (wsh *WebSocketHandler) checkOrigin(r *http.Request) bool {
