@@ -30,7 +30,6 @@ func (h JoinMatchMessageHandler) Handle(c *Client, messageData json.RawMessage, 
 		return fmt.Errorf("player is already in a match")
 	}
 
-	c.Player.Name = data.PlayerName
 	timeFormat := MsToTimeFormat(data.TimeFormat)
 	err := matchmaker.Join(c.Player, timeFormat)
 	if err != nil {

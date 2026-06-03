@@ -77,7 +77,6 @@ type EndMatchData struct {
 
 // inbound
 type JoinMatchData struct {
-	PlayerName string       `json:"playerName"`
 	TimeFormat TimeFormatMs `json:"timeFormat"`
 }
 
