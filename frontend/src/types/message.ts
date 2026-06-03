@@ -59,7 +59,6 @@ type EndMatchData = {
 
 // outbound
 type JoinMatchData = {
-  playerName: string;
   timeFormat: TimeFormat;
 };
 

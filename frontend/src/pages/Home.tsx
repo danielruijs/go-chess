@@ -31,7 +31,7 @@ function Home() {
       return;
     }
 
-    const joinMatchData: JoinMatchData = { playerName, timeFormat };
+    const joinMatchData: JoinMatchData = { timeFormat };
     const message: WSMessage = {
       type: MessageTypeJoinMatch,
       data: joinMatchData,
