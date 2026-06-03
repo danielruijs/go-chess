@@ -183,11 +183,9 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 
 	// Both clients join the same matchmaking queue with the same time format, which should pair them together
 	sendTestMessage(t, firstConn, MessageTypeJoinMatch, JoinMatchData{
-		PlayerName: "Alice",
 		TimeFormat: TimeFormatMs{InitialMs: timeFormat.initial.Milliseconds(), IncrementMs: timeFormat.increment.Milliseconds()},
 	})
 	sendTestMessage(t, secondConn, MessageTypeJoinMatch, JoinMatchData{
-		PlayerName: "Bob",
 		TimeFormat: TimeFormatMs{InitialMs: timeFormat.initial.Milliseconds(), IncrementMs: timeFormat.increment.Milliseconds()},
 	})
 
