@@ -2,14 +2,17 @@ package server
 
 import (
 	"encoding/json"
+	"go-chess/internal/auth"
 	"go-chess/internal/chess"
 	"log"
 	"sync"
 )
 
 type Player struct {
-	Name  string
-	color chess.Color
+	Key         auth.PlayerKey
+	Username    string
+	DisplayName string
+	color       chess.Color
 
 	queues   map[TimeFormat]struct{}
 	queuesMu sync.RWMutex
@@ -18,11 +21,13 @@ type Player struct {
 	clientsMu sync.RWMutex
 }
 
-func NewPlayer() *Player {
+func NewPlayer(key auth.PlayerKey, username, displayName string) *Player {
 	return &Player{
-		Name:    "",
-		queues:  make(map[TimeFormat]struct{}),
-		clients: make(map[*Client]struct{}),
+		Key:         key,
+		Username:    username,
+		DisplayName: displayName,
+		queues:      make(map[TimeFormat]struct{}),
+		clients:     make(map[*Client]struct{}),
 	}
 }
 
@@ -107,7 +112,7 @@ func (p *Player) getClientsSnapshot() []*Client {
 func (p *Player) Send(msgType MessageType, data any) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("WARN: failed to marshal %s for %s: %v", msgType, p.Name, err)
+		log.Printf("WARN: failed to marshal %s for %s: %v", msgType, p.DisplayName, err)
 		return
 	}
 	msg := WSMessage{
@@ -122,7 +127,7 @@ func (p *Player) Send(msgType MessageType, data any) {
 			continue
 		case client.sendChan <- msg:
 		default:
-			log.Printf("WARN: send buffer full, evicting client for player %s (msg=%s)", p.Name, msgType)
+			log.Printf("WARN: send buffer full, evicting client for player %s (msg=%s)", p.DisplayName, msgType)
 			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full_evicted")
 			client.Close()
 			p.UnregisterClient(client)
