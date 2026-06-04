@@ -1,13 +1,14 @@
 package server
 
 import (
+	"encoding/json"
+	"go-chess/internal/auth"
 	"log"
 	"net/http"
-	"net/url"
+	"slices"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -25,27 +26,29 @@ type WebSocketHandler struct {
 	upgrader       websocket.Upgrader
 	matchmaker     *Matchmaker
 	metrics        *metrics
-	allowLocalhost bool
+	allowedOrigins []string
 	playerCacheTTL time.Duration
 	cleanupPeriod  time.Duration
+	sessionStore   *auth.SessionStore
 
 	clients   map[*Client]struct{}
 	clientsMu sync.RWMutex
 
-	players   map[string]*playerCacheEntry
+	players   map[auth.PlayerKey]*playerCacheEntry
 	playersMu sync.RWMutex
 }
 
-func NewWebSocketHandler(matchmaker *Matchmaker, allowLocalhost bool) *WebSocketHandler {
+func NewWebSocketHandler(matchmaker *Matchmaker, allowedOrigins []string, sessionStore *auth.SessionStore) *WebSocketHandler {
 	wsh := &WebSocketHandler{
 		upgrader:       websocket.Upgrader{},
 		matchmaker:     matchmaker,
 		metrics:        matchmaker.metrics,
-		allowLocalhost: allowLocalhost,
+		allowedOrigins: allowedOrigins,
 		clients:        make(map[*Client]struct{}),
 		playerCacheTTL: defaultPlayerCacheTTL,
 		cleanupPeriod:  defaultPlayerCleanupPeriod,
-		players:        make(map[string]*playerCacheEntry),
+		players:        make(map[auth.PlayerKey]*playerCacheEntry),
+		sessionStore:   sessionStore,
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
@@ -73,7 +76,7 @@ func (wsh *WebSocketHandler) cleanupInactivePlayers() {
 	wsh.playersMu.Lock()
 	defer wsh.playersMu.Unlock()
 
-	for sessionID, entry := range wsh.players {
+	for playerKey, entry := range wsh.players {
 		if entry.player.HasClients() ||
 			entry.player.IsInQueues() ||
 			wsh.matchmaker.GetMatch(entry.player) != nil ||
@@ -81,7 +84,7 @@ func (wsh *WebSocketHandler) cleanupInactivePlayers() {
 			continue
 		}
 
-		delete(wsh.players, sessionID)
+		delete(wsh.players, playerKey)
 		wsh.metrics.recordWebsocketPlayerEvicted()
 	}
 }
@@ -102,49 +105,65 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
-func (wsh *WebSocketHandler) refreshPlayer(sessionID string) {
-	if sessionID == "" {
+func (wsh *WebSocketHandler) refreshPlayer(playerKey auth.PlayerKey) {
+	if playerKey == "" {
 		return
 	}
 
 	wsh.playersMu.Lock()
 	defer wsh.playersMu.Unlock()
 
-	if entry, ok := wsh.players[sessionID]; ok {
+	if entry, ok := wsh.players[playerKey]; ok {
 		entry.lastUsed = time.Now()
 	}
 }
 
-func (wsh *WebSocketHandler) getOrCreatePlayer(sessionID string) *Player {
-	if sessionID == "" || !isValidSessionID(sessionID) {
-		return NewPlayer()
-	}
+func (wsh *WebSocketHandler) getOrCreatePlayer(session auth.Session) *Player {
+	key := session.PlayerKey()
 
 	wsh.playersMu.Lock()
 	defer wsh.playersMu.Unlock()
 
-	if entry, ok := wsh.players[sessionID]; ok {
+	if entry, ok := wsh.players[key]; ok {
 		entry.lastUsed = time.Now()
 		return entry.player
 	}
 
-	player := NewPlayer()
-	wsh.players[sessionID] = &playerCacheEntry{player: player, lastUsed: time.Now()}
+	player := NewPlayer(key, session.Username, session.DisplayName)
+	wsh.players[key] = &playerCacheEntry{player: player, lastUsed: time.Now()}
 	wsh.metrics.recordWebsocketPlayerCached()
 	return player
 }
 
-func (wsh *WebSocketHandler) sessionIDFromRequest(r *http.Request) string {
-	sessionID := r.URL.Query().Get("sessionId")
-	if !isValidSessionID(sessionID) {
-		return ""
+func (wsh *WebSocketHandler) sessionFromRequest(r *http.Request) (auth.Session, bool) {
+	// Retrieve the session cookie from the handshake request if it exists and is valid.
+	var sessionID auth.SessionID
+	if cookie, err := r.Cookie(auth.SessionCookieName); err == nil {
+		val := auth.SessionID(cookie.Value)
+		if auth.IsValidSessionID(val) {
+			sessionID = val
+		}
 	}
-	return sessionID
-}
 
-func isValidSessionID(sessionID string) bool {
-	_, err := uuid.Parse(sessionID)
-	return err == nil
+	// Look up the active session if a valid session ID was found.
+	if sessionID != "" {
+		if session, ok := wsh.sessionStore.GetSession(sessionID); ok {
+			// Consider the session authenticated if it has a non-empty username
+			// (i.e. not an anonymous session).
+			isAuthenticated := session.Username != ""
+			return session, isAuthenticated
+		}
+	}
+
+	// No valid session found — fall back to an anonymous session.
+	// Reuse the cookie's sessionID if it was valid (preserves reconnect continuity),
+	// otherwise generate a new one.
+	fallbackID := sessionID
+	if fallbackID == "" {
+		fallbackID = auth.GenerateSessionID()
+	}
+
+	return wsh.sessionStore.CreateAnonSessionWithID(fallbackID), false
 }
 
 func (wsh *WebSocketHandler) BroadcastMatchmakingUpdates() {
@@ -180,20 +199,8 @@ func (wsh *WebSocketHandler) sendMatchmakingUpdate(client *Client, queueStats ma
 
 func (wsh *WebSocketHandler) checkOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
-	// Allow production origin
-	if origin == "https://gochess.dev" {
+	if slices.Contains(wsh.allowedOrigins, origin) {
 		return true
-	}
-
-	// Allow local development origins
-	if wsh.allowLocalhost {
-		u, err := url.Parse(origin)
-		if err == nil {
-			hostname := u.Hostname()
-			if hostname == "localhost" || hostname == "127.0.0.1" {
-				return true
-			}
-		}
 	}
 
 	wsh.metrics.recordWebsocketConnectionDenied()
@@ -207,8 +214,8 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID := wsh.sessionIDFromRequest(r)
-	player := wsh.getOrCreatePlayer(sessionID)
+	session, isAuthenticated := wsh.sessionFromRequest(r)
+	player := wsh.getOrCreatePlayer(session)
 	client := NewClient(conn, player, wsh.metrics)
 	player.RegisterClient(client)
 
@@ -219,11 +226,28 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		client.Close()
 		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
-		wsh.refreshPlayer(sessionID)
+		wsh.refreshPlayer(player.Key)
 		_ = client.Conn.Close()
 	}()
 
 	go client.SendMessages()
+
+	// Send initial player info immediately after connection is opened and registered.
+	playerInfo := PlayerInfoData{
+		Username:        player.Username,
+		DisplayName:     player.DisplayName,
+		IsAuthenticated: isAuthenticated,
+	}
+	infoBytes, err := json.Marshal(playerInfo)
+	if err != nil {
+		log.Printf("WARN: failed to marshal %s for %s: %v", MessageTypePlayerInfo, player.DisplayName, err)
+		return
+	}
+	client.sendChan <- WSMessage{
+		Type: MessageTypePlayerInfo,
+		Data: json.RawMessage(infoBytes),
+	}
+
 	if match := wsh.matchmaker.GetMatch(client.Player); match != nil {
 		match.EventChan <- Event{Type: EventTypePlayerReconnected, Player: client.Player}
 	}
