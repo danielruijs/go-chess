@@ -1,23 +1,36 @@
 package main
 
 import (
+	"go-chess/internal/auth"
 	"go-chess/internal/server"
 	"log"
 	"net/http"
 )
 
 func main() {
-	config := parseFlags()
+	config, err := parseFlags()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	metrics := server.NewMetrics()
 	matchmaker := server.NewMatchmaker(metrics)
 	go matchmaker.Run()
 
-	webSocketHandler := server.NewWebSocketHandler(matchmaker, config.AllowLocalhost)
+	userStore := auth.NewUserStore()
+	sessionStore := auth.NewSessionStore()
+	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.AllowedOrigins, config.CookieDomain)
+
+	webSocketHandler := server.NewWebSocketHandler(matchmaker, config.AllowedOrigins, sessionStore)
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", metrics.MetricsHandler())
 
 	http.HandleFunc("/ws", webSocketHandler.ServeWS)
+
+	http.HandleFunc("/api/register", authHandler.CORSMiddleware(authHandler.Register))
+	http.HandleFunc("/api/login", authHandler.CORSMiddleware(authHandler.Login))
+	http.HandleFunc("/api/logout", authHandler.CORSMiddleware(authHandler.Logout))
+	http.HandleFunc("/api/check", authHandler.CORSMiddleware(authHandler.CheckAuth))
 
 	log.Print("Started server")
 	go func() {
