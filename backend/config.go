@@ -1,16 +1,39 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+	"strings"
+)
 
 type Config struct {
-	AllowLocalhost bool
+	AllowedOrigins []string
+	CookieDomain   string
 }
 
-func parseFlags() Config {
-	dev := flag.Bool("dev", false, "enable dev features (allow localhost origins)")
+func parseFlags() (Config, error) {
+	var cfg Config
+	var origins string
+
+	flag.StringVar(&origins, "allowed-origins", "", "comma-separated list of allowed CORS/WebSocket origins")
+	flag.StringVar(&cfg.CookieDomain, "cookie-domain", "", "domain for session cookies")
 
 	flag.Parse()
-	return Config{
-		AllowLocalhost: *dev,
+
+	if origins == "" {
+		return Config{}, fmt.Errorf("-allowed-origins is required")
 	}
+	if cfg.CookieDomain == "" {
+		return Config{}, fmt.Errorf("-cookie-domain is required")
+	}
+
+	parts := strings.SplitSeq(origins, ",")
+	for p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed != "" {
+			cfg.AllowedOrigins = append(cfg.AllowedOrigins, trimmed)
+		}
+	}
+
+	return cfg, nil
 }
