@@ -65,7 +65,7 @@ func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {
 		mm.queue[timeFormat][player] = struct{}{}
 		player.JoinQueue(timeFormat)
 		mm.metrics.recordQueueJoin(timeFormat, len(mm.queue[timeFormat]))
-		log.Printf("Player %s joined %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+		log.Printf("Player %s joined %v. Queue size: %d\n", player.DisplayName, timeFormat, len(mm.queue[timeFormat]))
 
 		errChan <- nil
 	}
@@ -76,7 +76,7 @@ func (mm *Matchmaker) removePlayerFromQueue(player *Player, timeFormat TimeForma
 	if _, exists := mm.queue[timeFormat][player]; exists {
 		delete(mm.queue[timeFormat], player)
 		mm.metrics.recordQueueLeave(timeFormat, len(mm.queue[timeFormat]))
-		log.Printf("Player %s left %v. Queue size: %d\n", player.Name, timeFormat, len(mm.queue[timeFormat]))
+		log.Printf("Player %s left %v. Queue size: %d\n", player.DisplayName, timeFormat, len(mm.queue[timeFormat]))
 	}
 }
 
@@ -180,7 +180,7 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 	mm.RegisterMatch(match)
 	mm.metrics.recordMatchStarted(timeFormat)
 
-	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.Name, player1.GetColor(), player2.Name, player2.GetColor())
+	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.DisplayName, player1.GetColor(), player2.DisplayName, player2.GetColor())
 
 	go match.Run()
 

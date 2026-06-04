@@ -102,8 +102,8 @@ func (m *Match) getBoardData(player *Player) BoardData {
 func (m *Match) getStartMatchData(player *Player) StartMatchData {
 	return StartMatchData{
 		Color:           player.GetColor(),
-		WhitePlayerName: m.getPlayerByColor(chess.White).Name,
-		BlackPlayerName: m.getPlayerByColor(chess.Black).Name,
+		WhitePlayerName: m.getPlayerByColor(chess.White).DisplayName,
+		BlackPlayerName: m.getPlayerByColor(chess.Black).DisplayName,
 		Clock:           m.Clock.Snapshot(m.Engine.GetActiveColor()),
 	}
 }
@@ -129,7 +129,7 @@ func (m *Match) end(result *chess.Result) {
 	m.sendMatchEnd(*result)
 	close(m.EventChan)
 	m.MatchEnded <- m
-	log.Printf("ended match between %s and %s with result: %s\n", m.Player1.Name, m.Player2.Name, result.Outcome)
+	log.Printf("ended match between %s and %s with result: %s\n", m.Player1.DisplayName, m.Player2.DisplayName, result.Outcome)
 }
 
 func getTimeoutResult(loser chess.Color) *chess.Result {
