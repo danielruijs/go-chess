@@ -15,6 +15,7 @@ const (
 	MessageTypeEndMatch          MessageType = "end_match"
 	MessageTypeDrawOffered       MessageType = "draw_offered"
 	MessageTypeDrawDeclined      MessageType = "draw_declined"
+	MessageTypePlayerInfo        MessageType = "player_info"
 	// inbound
 	MessageTypeJoinMatch   MessageType = "join_match"
 	MessageTypeLeaveMatch  MessageType = "leave_match"
@@ -73,6 +74,12 @@ type StartMatchData struct {
 
 type EndMatchData struct {
 	Result chess.Result `json:"result"`
+}
+
+type PlayerInfoData struct {
+	Username        string `json:"username"`
+	DisplayName     string `json:"displayName"`
+	IsAuthenticated bool   `json:"isAuthenticated"`
 }
 
 // inbound
