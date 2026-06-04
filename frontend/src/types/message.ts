@@ -8,6 +8,7 @@ const MessageTypeStartMatch = "start_match";
 const MessageTypeEndMatch = "end_match";
 const MessageTypeDrawOffered = "draw_offered";
 const MessageTypeDrawDeclined = "draw_declined";
+const MessageTypePlayerInfo = "player_info";
 // outbound
 const MessageTypeJoinMatch = "join_match";
 const MessageTypeLeaveMatch = "leave_match";
@@ -57,6 +58,12 @@ type EndMatchData = {
   result: Result;
 };
 
+type PlayerInfoData = {
+  displayName: string;
+  username: string;
+  isAuthenticated: boolean;
+};
+
 // outbound
 type JoinMatchData = {
   timeFormat: TimeFormat;
@@ -100,6 +107,10 @@ type WSMessage =
   | {
       type: typeof MessageTypeDrawDeclined;
     }
+  | {
+      type: typeof MessageTypePlayerInfo;
+      data: PlayerInfoData;
+    }
   // outbound
   | {
       type: typeof MessageTypeJoinMatch;
@@ -135,6 +146,7 @@ export type {
   EndMatchData,
   ClockData,
   QueueData,
+  PlayerInfoData,
 };
 export {
   MessageTypeBoard,
@@ -149,4 +161,5 @@ export {
   MessageTypeResign,
   MessageTypeOfferDraw,
   MessageTypeRespondDraw,
+  MessageTypePlayerInfo,
 };
