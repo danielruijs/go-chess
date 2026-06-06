@@ -30,19 +30,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(credentials: Credentials) {
-    const err = await apiLogin(credentials);
-    if (!err) {
-      await checkSession();
+    const { data, error } = await apiLogin(credentials);
+    if (data) {
+      setPlayerInfo(data);
     }
-    return err;
+    return error;
   }
 
   async function register(credentials: Credentials) {
-    const err = await apiRegister(credentials);
-    if (!err) {
-      await checkSession();
+    const { data, error } = await apiRegister(credentials);
+    if (data) {
+      setPlayerInfo(data);
     }
-    return err;
+    return error;
   }
 
   async function logout() {
