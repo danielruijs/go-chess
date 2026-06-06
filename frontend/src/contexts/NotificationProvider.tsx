@@ -1,24 +1,40 @@
-import type { ReactNode } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import { Alert, Snackbar } from "@mui/material";
-import { useWebSocket } from "./WebSocketContext";
+import { NotificationContext, type NotificationSeverity } from "./NotificationContext";
 
 function NotificationProvider({ children }: { children: ReactNode }) {
-  const { isDrawDeclinedNoticeOpen, closeDrawDeclinedNotice } = useWebSocket();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [severity, setSeverity] = useState<NotificationSeverity>("info");
+
+  const showNotification = useCallback((msg: string, sev: NotificationSeverity) => {
+    setMessage(msg);
+    setSeverity(sev);
+    setOpen(true);
+  }, []);
+
+  const handleClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+    // Ignore clickaway events so accidental clicks don't dismiss messages
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false);
+  };
 
   return (
-    <>
+    <NotificationContext.Provider value={{ showNotification }}>
       {children}
       <Snackbar
-        open={isDrawDeclinedNoticeOpen}
+        open={open}
         autoHideDuration={5000}
-        onClose={closeDrawDeclinedNotice}
+        onClose={handleClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={closeDrawDeclinedNotice} severity="info" sx={{ width: "100%" }}>
-          Your draw offer was declined.
+        <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
+          {message}
         </Alert>
       </Snackbar>
-    </>
+    </NotificationContext.Provider>
   );
 }
 

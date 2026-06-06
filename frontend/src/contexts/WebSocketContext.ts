@@ -18,9 +18,7 @@ export interface WebSocketContextType {
   inMatch: boolean;
   matchResult: Result | null;
   isDrawOfferPending: boolean;
-  isDrawDeclinedNoticeOpen: boolean;
   respondToDrawOffer: (accept: boolean) => void;
-  closeDrawDeclinedNotice: () => void;
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
