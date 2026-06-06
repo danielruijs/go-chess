@@ -17,8 +17,10 @@ export async function logout(): Promise<void> {
   await fetch(`${API_URL}/api/logout`, { method: "POST", credentials: "include" });
 }
 
-/** Sends login request. Returns an Error on failure, or null on success. */
-export async function login(credentials: Credentials): Promise<Error | null> {
+/** Sends login request. Returns the player info on success, or an Error on failure. */
+export async function login(
+  credentials: Credentials
+): Promise<{ data: PlayerInfoData | null; error: Error | null }> {
   try {
     const response = await fetch(`${API_URL}/api/login`, {
       method: "POST",
@@ -28,16 +30,22 @@ export async function login(credentials: Credentials): Promise<Error | null> {
     });
     if (!response.ok) {
       const message = await response.text();
-      return new Error(message || "An error occurred during login");
+      return { data: null, error: new Error(message || "An error occurred during login") };
     }
-    return null;
+    const data = (await response.json()) as PlayerInfoData;
+    return { data, error: null };
   } catch (err) {
-    return err instanceof Error ? err : new Error("Failed to connect to the server");
+    return {
+      data: null,
+      error: err instanceof Error ? err : new Error("Failed to connect to the server"),
+    };
   }
 }
 
-/** Sends register request. Returns an Error on failure, or null on success. */
-export async function register(credentials: Credentials): Promise<Error | null> {
+/** Sends register request. Returns the player info on success, or an Error on failure. */
+export async function register(
+  credentials: Credentials
+): Promise<{ data: PlayerInfoData | null; error: Error | null }> {
   try {
     const response = await fetch(`${API_URL}/api/register`, {
       method: "POST",
@@ -47,10 +55,14 @@ export async function register(credentials: Credentials): Promise<Error | null> 
     });
     if (!response.ok) {
       const message = await response.text();
-      return new Error(message || "An error occurred during registration");
+      return { data: null, error: new Error(message || "An error occurred during registration") };
     }
-    return null;
+    const data = (await response.json()) as PlayerInfoData;
+    return { data, error: null };
   } catch (err) {
-    return err instanceof Error ? err : new Error("Failed to connect to the server");
+    return {
+      data: null,
+      error: err instanceof Error ? err : new Error("Failed to connect to the server"),
+    };
   }
 }
