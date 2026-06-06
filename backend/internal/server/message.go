@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"go-chess/internal/auth"
 	"go-chess/internal/chess"
 )
 
@@ -76,11 +77,7 @@ type EndMatchData struct {
 	Result chess.Result `json:"result"`
 }
 
-type PlayerInfoData struct {
-	Username        string `json:"username"`
-	DisplayName     string `json:"displayName"`
-	IsAuthenticated bool   `json:"isAuthenticated"`
-}
+type PlayerInfoData = auth.PlayerInfoData
 
 // inbound
 type JoinMatchData struct {

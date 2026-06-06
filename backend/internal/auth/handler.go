@@ -55,7 +55,7 @@ type credentials struct {
 	DisplayName string `json:"displayName"`
 }
 
-type authResponse struct {
+type PlayerInfoData struct {
 	Username        string `json:"username"`
 	DisplayName     string `json:"displayName"`
 	IsAuthenticated bool   `json:"isAuthenticated"`
@@ -114,7 +114,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	h.setSessionCookie(w, session.ID)
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(authResponse{
+	err = json.NewEncoder(w).Encode(PlayerInfoData{
 		Username:        user.Username,
 		DisplayName:     session.DisplayName,
 		IsAuthenticated: true,
@@ -147,7 +147,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.setSessionCookie(w, session.ID)
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(authResponse{
+	err = json.NewEncoder(w).Encode(PlayerInfoData{
 		Username:        user.Username,
 		DisplayName:     session.DisplayName,
 		IsAuthenticated: true,
@@ -172,7 +172,7 @@ func (h *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		if session, exists := h.sessionStore.GetSession(SessionID(cookie.Value)); exists {
 			w.Header().Set("Content-Type", "application/json")
-			err = json.NewEncoder(w).Encode(authResponse{
+			err = json.NewEncoder(w).Encode(PlayerInfoData{
 				Username:        session.Username,
 				DisplayName:     session.DisplayName,
 				IsAuthenticated: session.Username != "",
@@ -189,7 +189,7 @@ func (h *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 	h.setSessionCookie(w, session.ID)
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(authResponse{
+	err = json.NewEncoder(w).Encode(PlayerInfoData{
 		Username:        "",
 		DisplayName:     session.DisplayName,
 		IsAuthenticated: false,
