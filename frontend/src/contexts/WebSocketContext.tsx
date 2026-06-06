@@ -25,6 +25,7 @@ import type { Result } from "../types/result";
 import type { Color, Board } from "../types/chess";
 import { WebSocketContext } from "./WebSocketContext";
 import { useAuth } from "./AuthContext";
+import { useNotification } from "./NotificationContext";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL as string;
 
@@ -43,9 +44,9 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   const [inMatch, setInMatch] = useState<boolean>(false);
   const [matchResult, setMatchResult] = useState<Result | null>(null);
   const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
-  const [isDrawDeclinedNoticeOpen, setIsDrawDeclinedNoticeOpen] = useState(false);
 
   const { playerInfo, isLoading, setPlayerInfo } = useAuth();
+  const { showNotification } = useNotification();
 
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
@@ -59,10 +60,6 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     setIsDrawOfferPending(false);
   }
 
-  function closeDrawDeclinedNotice() {
-    setIsDrawDeclinedNoticeOpen(false);
-  }
-
   function resetMatchState() {
     setBoard(null);
     setLegalMoves(null);
@@ -73,7 +70,6 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     setInMatch(false);
     setMatchResult(null);
     setIsDrawOfferPending(false);
-    setIsDrawDeclinedNoticeOpen(false);
   }
 
   function sendMessage(message: WSMessage) {
@@ -103,6 +99,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     socket.addEventListener("error", (e) => {
       if (socketRef.current !== socket) return;
       console.error("WebSocket error:", e);
+      showNotification("Connection error. Lost connection to the server.", "error");
     });
 
     socket.addEventListener("message", (event) => {
@@ -146,7 +143,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
           break;
         }
         case MessageTypeDrawDeclined: {
-          setIsDrawDeclinedNoticeOpen(true);
+          showNotification("Your draw offer was declined.", "info");
           break;
         }
         case MessageTypePlayerInfo: {
@@ -156,7 +153,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         }
       }
     });
-  }, [setPlayerInfo]);
+  }, [setPlayerInfo, showNotification]);
 
   // Connect WS on mount once session loading is complete, and disconnect on unmount
   // Also reconnect whenever auth status changes
@@ -188,9 +185,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         activeColor,
         clock,
         isDrawOfferPending,
-        isDrawDeclinedNoticeOpen,
         respondToDrawOffer,
-        closeDrawDeclinedNotice,
       }}
     >
       {children}
