@@ -1,5 +1,6 @@
 import type { Board, Color, PieceType, TimeFormat } from "./chess";
 import type { Result } from "./result";
+import type { PlayerInfoData as AuthPlayerInfoData } from "./auth";
 
 // inbound
 const MessageTypeBoard = "board";
@@ -58,11 +59,7 @@ type EndMatchData = {
   result: Result;
 };
 
-type PlayerInfoData = {
-  displayName: string;
-  username: string;
-  isAuthenticated: boolean;
-};
+type PlayerInfoData = AuthPlayerInfoData;
 
 // outbound
 type JoinMatchData = {

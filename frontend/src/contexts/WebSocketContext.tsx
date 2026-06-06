@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type {
   WSMessage,
@@ -9,6 +9,7 @@ import type {
   EndMatchData,
   ClockData,
   QueueData,
+  PlayerInfoData,
 } from "../types/message";
 import {
   MessageTypeBoard,
@@ -18,22 +19,14 @@ import {
   MessageTypeDrawOffered,
   MessageTypeDrawDeclined,
   MessageTypeRespondDraw,
+  MessageTypePlayerInfo,
 } from "../types/message";
 import type { Result } from "../types/result";
 import type { Color, Board } from "../types/chess";
 import { WebSocketContext } from "./WebSocketContext";
+import { useAuth } from "./AuthContext";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL as string;
-const SESSION_ID_KEY = "go-chess.sessionId";
-
-function getOrGenerateSessionId(): string {
-  let id = localStorage.getItem(SESSION_ID_KEY);
-  if (!id) {
-    id = window.crypto.randomUUID();
-    localStorage.setItem(SESSION_ID_KEY, id);
-  }
-  return id;
-}
 
 function WebSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<WebSocket | null>(null);
@@ -51,6 +44,9 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   const [matchResult, setMatchResult] = useState<Result | null>(null);
   const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
   const [isDrawDeclinedNoticeOpen, setIsDrawDeclinedNoticeOpen] = useState(false);
+
+  const { playerInfo, isLoading, setPlayerInfo } = useAuth();
+
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
 
@@ -84,27 +80,33 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     socketRef.current?.send(JSON.stringify(message));
   }
 
-  useEffect(() => {
-    // Ensure session ID exists, then initialize WebSocket once
-    const sessionId = getOrGenerateSessionId();
-    const wsUrlWithSession = `${WS_URL}?sessionId=${encodeURIComponent(sessionId)}`;
-    socketRef.current = new WebSocket(wsUrlWithSession);
+  const connect = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
 
-    socketRef.current.addEventListener("open", () => {
+    const socket = new WebSocket(WS_URL);
+    socketRef.current = socket;
+
+    socket.addEventListener("open", () => {
+      if (socketRef.current !== socket) return;
       console.log("WebSocket connected");
       setIsConnected(true);
     });
 
-    socketRef.current.addEventListener("close", () => {
+    socket.addEventListener("close", () => {
+      if (socketRef.current !== socket) return;
       console.log("WebSocket disconnected");
       setIsConnected(false);
     });
 
-    socketRef.current.addEventListener("error", (e) => {
+    socket.addEventListener("error", (e) => {
+      if (socketRef.current !== socket) return;
       console.error("WebSocket error:", e);
     });
 
-    socketRef.current.addEventListener("message", (event) => {
+    socket.addEventListener("message", (event) => {
+      if (socketRef.current !== socket) return;
       const message: WSMessage = JSON.parse(event.data);
 
       switch (message.type) {
@@ -147,14 +149,27 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
           setIsDrawDeclinedNoticeOpen(true);
           break;
         }
+        case MessageTypePlayerInfo: {
+          const playerInfoData: PlayerInfoData = message.data;
+          setPlayerInfo(playerInfoData);
+          break;
+        }
       }
     });
+  }, [setPlayerInfo]);
 
-    // Cleanup on unmount
+  // Connect WS on mount once session loading is complete, and disconnect on unmount
+  // Also reconnect whenever auth status changes
+  useEffect(() => {
+    if (isLoading) return;
+
+    connect();
+
     return () => {
       socketRef.current?.close();
+      socketRef.current = null;
     };
-  }, []);
+  }, [connect, isLoading, playerInfo?.isAuthenticated]);
 
   return (
     <WebSocketContext.Provider
