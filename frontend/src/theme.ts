@@ -1,6 +1,12 @@
 import { createTheme } from "@mui/material/styles";
 
 export const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#2563eb",
+      dark: "#1d4ed8",
+    },
+  },
   components: {
     MuiButton: {
       styleOverrides: {
@@ -14,10 +20,8 @@ export const theme = createTheme({
         {
           props: { variant: "contained", color: "primary" },
           style: {
-            backgroundColor: "#2563eb",
             boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
             "&:hover": {
-              backgroundColor: "#1d4ed8",
               boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
             },
           },
@@ -30,7 +34,6 @@ export const theme = createTheme({
           borderBottom: "1px solid #e2e8f0",
         },
         indicator: {
-          backgroundColor: "#2563eb",
           height: 3,
           borderRadius: "3px 3px 0 0",
         },
@@ -43,9 +46,6 @@ export const theme = createTheme({
           fontWeight: 600,
           color: "#64748b",
           fontSize: "0.95rem",
-          "&.Mui-selected": {
-            color: "#2563eb",
-          },
         },
       },
     },
