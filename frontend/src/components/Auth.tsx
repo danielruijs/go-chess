@@ -75,7 +75,7 @@ function Auth({ open, onClose }: AuthProps) {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {error && (
               <Alert severity="error" sx={{ borderRadius: 4 }}>
-                {error}
+                {error.charAt(0).toUpperCase() + error.slice(1)}
               </Alert>
             )}
 
