@@ -1,6 +1,6 @@
-import { Button, Stack, TextField } from "@mui/material";
-import { useState } from "react";
+import { Button, Stack } from "@mui/material";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
+import { useAuth } from "../contexts/AuthContext.ts";
 import MatchmakingComponent from "../components/Matchmaking.tsx";
 import { useNavigate } from "react-router-dom";
 import { timeFormats } from "../types/chess.ts";
@@ -15,12 +15,12 @@ import {
 import type { TimeFormat } from "../types/chess.ts";
 
 function Home() {
-  const [playerName, setPlayerName] = useState<string>("");
+  const { playerInfo } = useAuth();
   const { isConnected, queues, inMatch, sendMessage } = useWebSocket();
   const navigate = useNavigate();
 
   function handleToggleQueue(timeFormat: TimeFormat, queueData: QueueData | undefined) {
-    if (!playerName || !isConnected || inMatch) {
+    if (!playerInfo?.displayName || !isConnected || inMatch) {
       return;
     }
 
@@ -40,16 +40,8 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-row gap-12 p-4">
+    <div className="flex flex-row gap-12 p-4">
       <Stack spacing={2} className="w-75">
-        <TextField
-          label="Name"
-          variant="outlined"
-          onChange={(e) => {
-            setPlayerName(e.target.value);
-          }}
-        />
-
         <Button
           variant="contained"
           disabled={!isConnected || !inMatch}
@@ -70,7 +62,7 @@ function Home() {
                   key={`${timeFormat.initialMs}-${timeFormat.incrementMs}`}
                   timeFormat={timeFormat}
                   queueData={queueData}
-                  playerName={playerName}
+                  displayName={playerInfo?.displayName ?? ""}
                   isConnected={isConnected}
                   inMatch={inMatch}
                   onToggleQueue={() => handleToggleQueue(timeFormat, queueData)}
