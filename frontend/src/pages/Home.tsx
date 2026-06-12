@@ -1,17 +1,11 @@
-import { Button, Stack } from "@mui/material";
+import { Button } from "@mui/material";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 import { useAuth } from "../contexts/AuthContext.ts";
 import MatchmakingComponent from "../components/Matchmaking.tsx";
 import { useNavigate } from "react-router-dom";
 import { timeFormats } from "../types/chess.ts";
 import { getQueueData } from "../utils/chess.ts";
-import {
-  MessageTypeJoinMatch,
-  MessageTypeLeaveMatch,
-  type WSMessage,
-  type JoinMatchData,
-  type QueueData,
-} from "../types/message.ts";
+import { MessageTypeJoinMatch, MessageTypeLeaveMatch, type QueueData } from "../types/message.ts";
 import type { TimeFormat } from "../types/chess.ts";
 
 function Home() {
@@ -24,54 +18,47 @@ function Home() {
       return;
     }
 
-    if (queueData?.inQueue) {
-      const leaveData = { timeFormat };
-      const message: WSMessage = { type: MessageTypeLeaveMatch, data: leaveData };
-      sendMessage(message);
-      return;
-    }
-
-    const joinMatchData: JoinMatchData = { timeFormat };
-    const message: WSMessage = {
-      type: MessageTypeJoinMatch,
-      data: joinMatchData,
-    };
-    sendMessage(message);
+    sendMessage({
+      type: queueData?.inQueue ? MessageTypeLeaveMatch : MessageTypeJoinMatch,
+      data: { timeFormat },
+    });
   }
 
   return (
-    <div className="flex flex-row gap-12 p-4">
-      <Stack spacing={2} className="w-75">
+    <div className="flex flex-col items-center p-8">
+      {inMatch ? (
         <Button
           variant="contained"
-          disabled={!isConnected || !inMatch}
+          disabled={!isConnected}
           onClick={() => {
             navigate("/game");
           }}
+          size="large"
         >
           Rejoin Match
         </Button>
-      </Stack>
-      <div className="flex flex-col gap-6">
-        {timeFormats.map((group, groupIdx) => (
-          <div key={groupIdx} className="flex flex-wrap gap-4">
-            {group.map((timeFormat) => {
-              const queueData = getQueueData(queues, timeFormat);
-              return (
-                <MatchmakingComponent
-                  key={`${timeFormat.initialMs}-${timeFormat.incrementMs}`}
-                  timeFormat={timeFormat}
-                  queueData={queueData}
-                  displayName={playerInfo?.displayName ?? ""}
-                  isConnected={isConnected}
-                  inMatch={inMatch}
-                  onToggleQueue={() => handleToggleQueue(timeFormat, queueData)}
-                />
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      ) : (
+        <div className="flex flex-col gap-6">
+          {timeFormats.map((group, groupIdx) => (
+            <div key={groupIdx} className="flex flex-wrap gap-4">
+              {group.map((timeFormat) => {
+                const queueData = getQueueData(queues, timeFormat);
+                return (
+                  <MatchmakingComponent
+                    key={`${timeFormat.initialMs}-${timeFormat.incrementMs}`}
+                    timeFormat={timeFormat}
+                    queueData={queueData}
+                    displayName={playerInfo?.displayName ?? ""}
+                    isConnected={isConnected}
+                    inMatch={inMatch}
+                    onToggleQueue={() => handleToggleQueue(timeFormat, queueData)}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
