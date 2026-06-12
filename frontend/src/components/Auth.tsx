@@ -70,7 +70,7 @@ function Auth({ open, onClose }: AuthProps) {
         <Tab label="Sign Up" />
       </Tabs>
 
-      <DialogContent sx={{ p: 0 }}>
+      <DialogContent sx={{ p: 0, overflow: "visible" }}>
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {error && (
