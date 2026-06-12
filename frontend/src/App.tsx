@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
+import { theme } from "./theme.ts";
 import Home from "./pages/Home.tsx";
 import Game from "./pages/Game.tsx";
 import WebSocketProvider from "./contexts/WebSocketContext.tsx";
@@ -7,6 +9,7 @@ import ConnectionStatus from "./components/ConnectionStatus.tsx";
 
 function App() {
   return (
+    <ThemeProvider theme={theme}>
     <BrowserRouter>
       <WebSocketProvider>
         <NotificationProvider>
@@ -22,6 +25,7 @@ function App() {
         </NotificationProvider>
       </WebSocketProvider>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
