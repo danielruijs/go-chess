@@ -6,7 +6,7 @@ import type { TimeFormat } from "../types/chess";
 type MatchmakingComponentProps = {
   timeFormat: TimeFormat;
   queueData: QueueData | undefined;
-  playerName: string;
+  displayName: string;
   isConnected: boolean;
   inMatch: boolean;
   onToggleQueue: MouseEventHandler<HTMLDivElement>;
@@ -15,14 +15,14 @@ type MatchmakingComponentProps = {
 function MatchmakingComponent({
   timeFormat,
   queueData,
-  playerName,
+  displayName,
   isConnected,
   inMatch,
   onToggleQueue,
 }: MatchmakingComponentProps) {
   const queueLength = queueData?.queueLength ?? 0;
   const inQueue = queueData?.inQueue ?? false;
-  const disabled = !playerName || !isConnected || inMatch;
+  const disabled = !displayName || !isConnected || inMatch;
   const actionText = inQueue ? "Click to leave queue" : "Click to join queue";
 
   return (

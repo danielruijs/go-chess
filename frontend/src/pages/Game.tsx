@@ -83,9 +83,9 @@ function Game() {
     playerColor === "white" ? displayedClock.blackTimeMs : displayedClock.whiteTimeMs;
 
   return (
-    <div className="flex items-center h-screen">
+    <div className="flex-1 flex items-center">
       <div className="flex gap-4 items-center justify-center w-full">
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-1">
           <PlayerInfo
             color={playerColor === "white" ? "black" : "white"}
             name={playerColor === "white" ? blackPlayerName : whitePlayerName}
