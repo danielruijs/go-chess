@@ -47,8 +47,8 @@ func validateDisplayName(displayName string) error {
 
 func validatePassword(password string) error {
 	length := len([]rune(password))
-	if length < 6 {
-		return errors.New("password must be at least 6 characters")
+	if length < 6 || length > 72 {
+		return errors.New("password must be between 6 and 72 characters")
 	}
 	hasUpper := false
 	for _, r := range password {
