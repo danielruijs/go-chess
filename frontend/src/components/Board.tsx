@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Button, Dialog, DialogContent } from "@mui/material";
 import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
@@ -68,7 +68,7 @@ function BoardSquare({
   isSelected: boolean;
   isMoveTarget: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { ref, isDropTarget } = useDroppable<{ square: Square }>({
     id: `square-${square.file}-${square.rank}`,
