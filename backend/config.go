@@ -35,5 +35,9 @@ func parseFlags() (Config, error) {
 		}
 	}
 
+	if len(cfg.AllowedOrigins) == 0 {
+		return Config{}, fmt.Errorf("no valid non-empty origins parsed from -allowed-origins")
+	}
+
 	return cfg, nil
 }
