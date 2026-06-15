@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type SyntheticEvent, type SubmitEvent } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -29,14 +29,14 @@ function Auth({ open, onClose }: AuthProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
     setError(null);
     setPassword("");
     setDisplayName("");
   };
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: SubmitEvent) => {
     // Prevent the default browser form submission behavior
     e.preventDefault();
 

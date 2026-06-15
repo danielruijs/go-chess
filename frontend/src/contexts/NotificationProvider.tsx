@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback, type ReactNode, type SyntheticEvent } from "react";
 import { Alert, Snackbar } from "@mui/material";
 import { NotificationContext, type NotificationSeverity } from "./NotificationContext";
 
@@ -13,7 +13,7 @@ function NotificationProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
-  const handleClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleClose = (_event?: SyntheticEvent | Event, reason?: string) => {
     // Ignore clickaway events so accidental clicks don't dismiss messages
     if (reason === "clickaway") {
       return;
