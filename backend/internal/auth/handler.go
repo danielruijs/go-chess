@@ -158,6 +158,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	cookie, err := r.Cookie(SessionCookieName)
 	if err == nil {
 		h.sessionStore.DeleteSession(SessionID(cookie.Value))
@@ -168,6 +173,11 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	cookie, err := r.Cookie(SessionCookieName)
 	if err == nil {
 		if session, exists := h.sessionStore.GetSession(SessionID(cookie.Value)); exists {
