@@ -30,19 +30,21 @@ type Cache[K comparable, V any] struct {
 	cleanupConfig *CleanupConfig[V]
 }
 
-func New[K comparable, V any](opts Options[V]) *Cache[K, V] {
+// New creates and returns a new Cache instance with the specified options.
+// Returns an error if the options are invalid.
+func New[K comparable, V any](opts Options[V]) (*Cache[K, V], error) {
 	if opts.Cleanup != nil {
 		if opts.Cleanup.Interval <= 0 {
-			panic(fmt.Sprintf("cache: cleanup interval must be positive, got %v", opts.Cleanup.Interval))
+			return nil, fmt.Errorf("cache: cleanup interval must be positive, got %v", opts.Cleanup.Interval)
 		}
 		if opts.Cleanup.ShouldEvict == nil {
-			panic("cache: ShouldEvict must not be nil")
+			return nil, fmt.Errorf("cache: ShouldEvict must not be nil")
 		}
 	}
 	return &Cache[K, V]{
 		items:         make(map[K]*cacheEntry[V]),
 		cleanupConfig: opts.Cleanup,
-	}
+	}, nil
 }
 
 // Get retrieves a value from the cache and updates its last accessed time.
