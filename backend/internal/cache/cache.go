@@ -75,11 +75,7 @@ func (c *Cache[K, V]) GetOrCreate(key K, creator func() V) V {
 	}
 
 	val := creator()
-	entry := &cacheEntry[V]{
-		value: val,
-	}
-	entry.lastUsed.Store(time.Now().UnixNano())
-	c.items[key] = entry
+	c.set(key, val)
 	return val
 }
 
@@ -88,11 +84,7 @@ func (c *Cache[K, V]) Set(key K, value V) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	entry := &cacheEntry[V]{
-		value: value,
-	}
-	entry.lastUsed.Store(time.Now().UnixNano())
-	c.items[key] = entry
+	c.set(key, value)
 }
 
 // SetIfAbsent inserts a value in the cache if the key does not already exist.
@@ -105,11 +97,7 @@ func (c *Cache[K, V]) SetIfAbsent(key K, value V) bool {
 		return false
 	}
 
-	entry := &cacheEntry[V]{
-		value: value,
-	}
-	entry.lastUsed.Store(time.Now().UnixNano())
-	c.items[key] = entry
+	c.set(key, value)
 	return true
 }
 
@@ -152,4 +140,14 @@ func (c *Cache[K, V]) cleanup() {
 			delete(c.items, k)
 		}
 	}
+}
+
+// set inserts or updates a value in the cache with the given key.
+// This helper must only be called while holding the write lock.
+func (c *Cache[K, V]) set(key K, value V) {
+	entry := &cacheEntry[V]{
+		value: value,
+	}
+	entry.lastUsed.Store(time.Now().UnixNano())
+	c.items[key] = entry
 }
