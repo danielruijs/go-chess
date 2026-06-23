@@ -152,8 +152,8 @@ func (m *metrics) recordWebsocketPlayerCached() {
 	m.cachedPlayers.Inc()
 }
 
-func (m *metrics) recordWebsocketPlayerEvicted() {
-	m.cachedPlayers.Dec()
+func (m *metrics) recordWebsocketPlayerEvicted(count int) {
+	m.cachedPlayers.Sub(float64(count))
 }
 
 func (m *metrics) recordWebsocketConnectionDenied() {

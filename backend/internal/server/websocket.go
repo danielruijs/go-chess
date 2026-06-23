@@ -47,6 +47,9 @@ func NewWebSocketHandler(ctx context.Context, matchmaker *Matchmaker, allowedOri
 		Cleanup: &cache.CleanupConfig[*Player]{
 			Interval:    playerCleanupInterval,
 			ShouldEvict: wsh.shouldEvictPlayer,
+			OnEvicted: func(count int) {
+				wsh.metrics.recordWebsocketPlayerEvicted(count)
+			},
 		},
 	})
 	if err != nil {
@@ -71,7 +74,6 @@ func (wsh *WebSocketHandler) shouldEvictPlayer(player *Player, lastUsed time.Tim
 		time.Since(lastUsed) < playerCacheTTL {
 		return false
 	}
-	wsh.metrics.recordWebsocketPlayerEvicted()
 	return true
 }
 
@@ -96,7 +98,7 @@ func (wsh *WebSocketHandler) refreshPlayer(playerKey auth.PlayerKey) {
 		return
 	}
 
-	wsh.players.Get(playerKey)
+	wsh.players.Touch(playerKey)
 }
 
 func (wsh *WebSocketHandler) getOrCreatePlayer(session auth.Session) *Player {
