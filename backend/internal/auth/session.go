@@ -14,6 +14,7 @@ import (
 const (
 	SessionCookieName      = "session_id"
 	SessionDuration        = 24 * time.Hour
+	sessionCookieMaxAge    = 30 * 24 * time.Hour
 	sessionCleanupInterval = 10 * time.Minute
 )
 
