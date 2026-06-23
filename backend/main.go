@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"go-chess/internal/auth"
 	"go-chess/internal/server"
 	"log"
 	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -13,15 +17,25 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	metrics := server.NewMetrics()
 	matchmaker := server.NewMatchmaker(metrics)
 	go matchmaker.Run()
 
 	userStore := auth.NewUserStore()
-	sessionStore := auth.NewSessionStore()
+	sessionStore, err := auth.NewSessionStore(ctx)
+	if err != nil {
+		log.Fatalf("failed to create session store: %v", err)
+	}
 	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.AllowedOrigins, config.CookieDomain)
 
-	webSocketHandler := server.NewWebSocketHandler(matchmaker, config.AllowedOrigins, sessionStore)
+	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
+	if err != nil {
+		log.Fatalf("failed to create websocket handler: %v", err)
+	}
+
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", metrics.MetricsHandler())
 
@@ -32,10 +46,35 @@ func main() {
 	http.HandleFunc("/api/logout", authHandler.CORSMiddleware(authHandler.Logout))
 	http.HandleFunc("/api/check", authHandler.CORSMiddleware(authHandler.CheckAuth))
 
-	log.Print("Started server")
+	srv := &http.Server{Addr: ":8085"}
+	metricsSrv := &http.Server{Addr: ":2115", Handler: metricsMux}
+
 	go func() {
-		log.Print("Started metrics server on :2115")
-		log.Fatal(http.ListenAndServe(":2115", metricsMux))
+		log.Print("started metrics server on :2115")
+		if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("metrics server failed: %v", err)
+		}
 	}()
-	log.Fatal(http.ListenAndServe(":8085", nil))
+
+	go func() {
+		log.Print("started server on :8085")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("shutting down...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown error: %v", err)
+	}
+	if err := metricsSrv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("metrics server shutdown error: %v", err)
+	}
+
+	log.Println("server exited")
 }

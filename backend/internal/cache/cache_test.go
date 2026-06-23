@@ -29,6 +29,7 @@ func TestCache_BasicOps(t *testing.T) {
 	c.Delete("foo")
 	val, ok = c.Get("foo")
 	assert.False(t, ok)
+	assert.Equal(t, 0, val)
 }
 
 func TestCache_GetOrCreate(t *testing.T) {
