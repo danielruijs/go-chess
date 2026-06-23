@@ -46,18 +46,18 @@ func main() {
 	http.HandleFunc("/api/logout", authHandler.CORSMiddleware(authHandler.Logout))
 	http.HandleFunc("/api/check", authHandler.CORSMiddleware(authHandler.CheckAuth))
 
-	srv := &http.Server{Addr: ":8085"}
-	metricsSrv := &http.Server{Addr: ":2115", Handler: metricsMux}
+	srv := &http.Server{Addr: config.Port}
+	metricsSrv := &http.Server{Addr: config.MetricsPort, Handler: metricsMux}
 
 	go func() {
-		log.Print("started metrics server on :2115")
+		log.Printf("started metrics server on %s", config.MetricsPort)
 		if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("metrics server failed: %v", err)
 		}
 	}()
 
 	go func() {
-		log.Print("started server on :8085")
+		log.Printf("started server on %s", config.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server failed: %v", err)
 		}
