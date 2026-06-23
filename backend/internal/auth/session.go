@@ -23,11 +23,6 @@ type Session struct {
 	ID          SessionID
 	Username    string // Empty if anonymous
 	DisplayName string
-	ExpiresAt   time.Time
-}
-
-func (s Session) IsExpired() bool {
-	return time.Now().After(s.ExpiresAt)
 }
 
 type SessionStore struct {
@@ -40,7 +35,7 @@ func NewSessionStore(ctx context.Context) (*SessionStore, error) {
 		Cleanup: &cache.CleanupConfig[Session]{
 			Interval: sessionCleanupInterval,
 			ShouldEvict: func(s Session, lastUsed time.Time) bool {
-				return s.IsExpired()
+				return time.Since(lastUsed) > SessionDuration
 			},
 		},
 	})
@@ -86,7 +81,6 @@ func (s *SessionStore) CreateSessionWithID(sessionID SessionID, username, displa
 		ID:          sessionID,
 		Username:    username,
 		DisplayName: displayName,
-		ExpiresAt:   time.Now().Add(SessionDuration),
 	}
 	s.cache.Set(sessionID, session)
 	return session
@@ -94,11 +88,7 @@ func (s *SessionStore) CreateSessionWithID(sessionID SessionID, username, displa
 
 // returns the session and a boolean indicating if it was found and valid
 func (s *SessionStore) GetSession(sessionID SessionID) (Session, bool) {
-	session, exists := s.cache.Get(sessionID)
-	if !exists || session.IsExpired() {
-		return Session{}, false
-	}
-	return session, true
+	return s.cache.Get(sessionID)
 }
 
 func (s *SessionStore) DeleteSession(sessionID SessionID) {
