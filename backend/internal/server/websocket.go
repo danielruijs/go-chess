@@ -29,7 +29,7 @@ type WebSocketHandler struct {
 	clients   map[*Client]struct{}
 	clientsMu sync.RWMutex
 
-	players *cache.Cache[auth.PlayerKey, *Player]
+	players *cache.Cache[PlayerKey, *Player]
 }
 
 func NewWebSocketHandler(ctx context.Context, matchmaker *Matchmaker, allowedOrigins []string, sessionStore *auth.SessionStore) (*WebSocketHandler, error) {
@@ -43,7 +43,7 @@ func NewWebSocketHandler(ctx context.Context, matchmaker *Matchmaker, allowedOri
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
 
-	cache, err := cache.New[auth.PlayerKey](cache.Options[*Player]{
+	cache, err := cache.New[PlayerKey](cache.Options[*Player]{
 		Cleanup: &cache.CleanupConfig[*Player]{
 			Interval:    playerCleanupInterval,
 			ShouldEvict: wsh.shouldEvictPlayer,
@@ -93,7 +93,7 @@ func (wsh *WebSocketHandler) UnregisterClient(client *Client) {
 	log.Printf("Client unregistered. Total clients: %d\n", len(wsh.clients))
 }
 
-func (wsh *WebSocketHandler) refreshPlayer(playerKey auth.PlayerKey) {
+func (wsh *WebSocketHandler) refreshPlayer(playerKey PlayerKey) {
 	if playerKey == "" {
 		return
 	}
@@ -102,7 +102,7 @@ func (wsh *WebSocketHandler) refreshPlayer(playerKey auth.PlayerKey) {
 }
 
 func (wsh *WebSocketHandler) getOrCreatePlayer(session auth.Session) *Player {
-	key := session.PlayerKey()
+	key := NewPlayerKey(session)
 
 	return wsh.players.GetOrCreate(key, func() *Player {
 		player := NewPlayer(key, session.Username, session.DisplayName)

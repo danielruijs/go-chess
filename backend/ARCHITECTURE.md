@@ -8,7 +8,7 @@ The backend is built around a few central entities that manage user identity, ne
 
 *   **User (`auth.User`)**: A persistent user account registered in the system. Contains credentials (hashed via bcrypt) and a display name. Stored and queried via the `UserStore`.
 *   **Session (`auth.Session`)**: A temporary session representation. Each session can be **anonymous** (temp guest name, not registered) or **authenticated** (tied to a `User`). Sessions are identified by a `SessionID` (UUID) stored in the client's secure HTTP-only `session_id` cookie. Valid sessions are cached for 24 hours in the `SessionStore`.
-*   **PlayerKey (`auth.PlayerKey`)**: A unique string key used to bridge the authentication layer (`auth`) and the gameplay layer (`server`). 
+*   **PlayerKey (`server.PlayerKey`)**: A unique string key used to bridge the authentication layer (`auth`) and the gameplay layer (`server`). 
     *   For authenticated users, the format is `"user:<username>"`.
     *   For anonymous users, the format is `"anon:<sessionID>"`.
 *   **Player (`server.Player`)**: The in-memory identity of an active player on the server. Players are cached in `WebSocketHandler.players`. They track matchmaking queues they have joined and matches they are currently playing.
