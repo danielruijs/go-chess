@@ -2,6 +2,10 @@
 
 The backend uses Go.
 
+## Architecture & Conceptual Flow
+
+For a comprehensive overview of the backend's architecture, including concept explanations, and data flow diagrams, see the [Architecture Documentation](ARCHITECTURE.md).
+
 ## Running the backend
 
 To run the backend, use the following command:
