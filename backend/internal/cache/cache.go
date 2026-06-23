@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,7 +31,7 @@ type Cache[K comparable, V any] struct {
 func New[K comparable, V any](opts Options[V]) *Cache[K, V] {
 	if opts.Cleanup != nil {
 		if opts.Cleanup.Interval <= 0 {
-			panic("cache: cleanup interval must be positive")
+			panic(fmt.Sprintf("cache: cleanup interval must be positive, got %v", opts.Cleanup.Interval))
 		}
 		if opts.Cleanup.ShouldEvict == nil {
 			panic("cache: ShouldEvict must not be nil")
@@ -54,6 +55,24 @@ func (c *Cache[K, V]) Get(key K) (V, bool) {
 
 	entry.lastUsed.Store(time.Now().UnixNano())
 	return entry.value, true
+}
+
+func (c *Cache[K, V]) GetOrCreate(key K, creator func() V) V {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if entry, ok := c.items[key]; ok {
+		entry.lastUsed.Store(time.Now().UnixNano())
+		return entry.value
+	}
+
+	val := creator()
+	entry := &cacheEntry[V]{
+		value: val,
+	}
+	entry.lastUsed.Store(time.Now().UnixNano())
+	c.items[key] = entry
+	return val
 }
 
 func (c *Cache[K, V]) Set(key K, value V) {
