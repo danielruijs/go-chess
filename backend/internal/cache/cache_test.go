@@ -178,7 +178,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	c.StartCleanup(ctx)
 
-	time.Sleep(20 * time.Millisecond)
+	time.Sleep(18 * time.Millisecond)
 
 	mu.Lock()
 	callsBeforeCancel := cleanupCalls
@@ -188,7 +188,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 	cancel()
 
 	// Sleep longer, should not tick anymore
-	time.Sleep(20 * time.Millisecond)
+	time.Sleep(22 * time.Millisecond)
 
 	mu.Lock()
 	callsAfterCancel := cleanupCalls
