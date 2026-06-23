@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
+// CleanupConfig defines the settings for periodic eviction of cache entries.
 type CleanupConfig[V any] struct {
 	Interval    time.Duration
 	ShouldEvict func(value V, lastUsed time.Time) bool
 }
 
+// Options provides configuration settings for creating a new Cache instance.
 type Options[V any] struct {
 	Cleanup *CleanupConfig[V]
 }
@@ -43,6 +45,8 @@ func New[K comparable, V any](opts Options[V]) *Cache[K, V] {
 	}
 }
 
+// Get retrieves a value from the cache and updates its last accessed time.
+// Returns the value and true if found, or a zero-value and false if not.
 func (c *Cache[K, V]) Get(key K) (V, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -57,6 +61,8 @@ func (c *Cache[K, V]) Get(key K) (V, bool) {
 	return entry.value, true
 }
 
+// GetOrCreate retrieves an existing value from the cache or atomicially computes
+// and stores a new one using the creator function if the key is missing.
 func (c *Cache[K, V]) GetOrCreate(key K, creator func() V) V {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -75,6 +81,7 @@ func (c *Cache[K, V]) GetOrCreate(key K, creator func() V) V {
 	return val
 }
 
+// Set inserts or updates a value in the cache with the given key.
 func (c *Cache[K, V]) Set(key K, value V) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -86,6 +93,7 @@ func (c *Cache[K, V]) Set(key K, value V) {
 	c.items[key] = entry
 }
 
+// Delete removes a value from the cache by its key.
 func (c *Cache[K, V]) Delete(key K) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -93,6 +101,8 @@ func (c *Cache[K, V]) Delete(key K) {
 	delete(c.items, key)
 }
 
+// StartCleanup launches a background goroutine that periodically performs evictions
+// of inactive or expired cache entries based on the CleanupConfig.
 func (c *Cache[K, V]) StartCleanup(ctx context.Context) {
 	if c.cleanupConfig == nil {
 		return
