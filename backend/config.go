@@ -10,8 +10,8 @@ type Config struct {
 	AllowedOrigins []string
 	CookieDomain   string
 
-	Port        string
-	MetricsPort string
+	Port        int
+	MetricsPort int
 }
 
 func parseFlags() (Config, error) {
@@ -20,8 +20,8 @@ func parseFlags() (Config, error) {
 
 	flag.StringVar(&origins, "allowed-origins", "", "comma-separated list of allowed CORS/WebSocket origins")
 	flag.StringVar(&cfg.CookieDomain, "cookie-domain", "", "domain for session cookies")
-	flag.StringVar(&cfg.Port, "port", "8085", "port for gameplay traffic")
-	flag.StringVar(&cfg.MetricsPort, "metrics-port", "2115", "port for metrics server")
+	flag.IntVar(&cfg.Port, "port", 8085, "port for gameplay traffic")
+	flag.IntVar(&cfg.MetricsPort, "metrics-port", 2115, "port for metrics server")
 
 	flag.Parse()
 
@@ -32,11 +32,11 @@ func parseFlags() (Config, error) {
 		return Config{}, fmt.Errorf("-cookie-domain is required")
 	}
 
-	if !strings.HasPrefix(cfg.Port, ":") {
-		cfg.Port = ":" + cfg.Port
+	if cfg.Port < 1 || cfg.Port > 65535 {
+		return Config{}, fmt.Errorf("invalid -port: %d (must be 1-65535)", cfg.Port)
 	}
-	if !strings.HasPrefix(cfg.MetricsPort, ":") {
-		cfg.MetricsPort = ":" + cfg.MetricsPort
+	if cfg.MetricsPort < 1 || cfg.MetricsPort > 65535 {
+		return Config{}, fmt.Errorf("invalid -metrics-port: %d (must be 1-65535)", cfg.MetricsPort)
 	}
 
 	parts := strings.SplitSeq(origins, ",")
