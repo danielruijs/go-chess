@@ -63,7 +63,7 @@ type PlayerInfoData struct {
 
 func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID SessionID) {
 	cookie := &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     sessionCookieName,
 		Value:    string(sessionID),
 		Path:     "/",
 		HttpOnly: true,
@@ -77,7 +77,7 @@ func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID SessionI
 
 func (h *AuthHandler) clearSessionCookie(w http.ResponseWriter) {
 	cookie := &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     sessionCookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
@@ -165,7 +165,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie(SessionCookieName)
+	cookie, err := r.Cookie(sessionCookieName)
 	if err == nil {
 		h.sessionStore.DeleteSession(SessionID(cookie.Value))
 	}
@@ -180,7 +180,7 @@ func (h *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie(SessionCookieName)
+	cookie, err := r.Cookie(sessionCookieName)
 	if err == nil {
 		if session, exists := h.sessionStore.GetSession(SessionID(cookie.Value)); exists {
 			w.Header().Set("Content-Type", "application/json")
