@@ -110,18 +110,11 @@ func (wsh *WebSocketHandler) getOrCreatePlayer(session auth.Session) *Player {
 }
 
 func (wsh *WebSocketHandler) sessionFromRequest(r *http.Request) (auth.Session, bool) {
-	// Retrieve the session cookie from the handshake request if it exists and is valid.
-	var sessionID auth.SessionID
-	if cookie, err := r.Cookie(auth.SessionCookieName); err == nil {
-		val := auth.SessionID(cookie.Value)
-		if auth.IsValidSessionID(val) {
-			sessionID = val
-		}
-	}
+	sessionID, ok := auth.SessionIDFromRequest(r)
 
 	// Look up the active session if a valid session ID was found.
-	if sessionID != "" {
-		if session, ok := wsh.sessionStore.GetSession(sessionID); ok {
+	if ok {
+		if session, exists := wsh.sessionStore.GetSession(sessionID); exists {
 			// Consider the session authenticated if it has a non-empty username
 			// (i.e. not an anonymous session).
 			isAuthenticated := session.Username != ""
@@ -133,7 +126,7 @@ func (wsh *WebSocketHandler) sessionFromRequest(r *http.Request) (auth.Session, 
 	// Reuse the cookie's sessionID if it was valid (preserves reconnect continuity),
 	// otherwise generate a new one.
 	fallbackID := sessionID
-	if fallbackID == "" {
+	if !ok {
 		fallbackID = auth.GenerateSessionID()
 	}
 

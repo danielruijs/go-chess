@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -12,9 +13,10 @@ import (
 )
 
 const (
-	SessionCookieName      = "session_id"
-	SessionDuration        = 24 * time.Hour
-	sessionCookieMaxAge    = 30 * 24 * time.Hour
+	sessionCookieName   = "session_id"
+	sessionCookieMaxAge = 30 * 24 * time.Hour
+
+	sessionDuration        = 24 * time.Hour
 	sessionCleanupInterval = 10 * time.Minute
 )
 
@@ -36,7 +38,7 @@ func NewSessionStore(ctx context.Context) (*SessionStore, error) {
 		Cleanup: &cache.CleanupConfig[Session]{
 			Interval: sessionCleanupInterval,
 			ShouldEvict: func(s Session, lastUsed time.Time) bool {
-				return time.Since(lastUsed) > SessionDuration
+				return time.Since(lastUsed) > sessionDuration
 			},
 		},
 	})
@@ -105,4 +107,18 @@ func (s Session) PlayerKey() PlayerKey {
 		return PlayerKey("user:" + s.Username)
 	}
 	return PlayerKey("anon:" + string(s.ID))
+}
+
+// SessionIDFromRequest extracts and validates the session ID from the request cookie, if present.
+// Returns the session ID and a boolean indicating if it was found and valid.
+func SessionIDFromRequest(r *http.Request) (SessionID, bool) {
+	cookie, err := r.Cookie(sessionCookieName)
+	if err != nil {
+		return "", false
+	}
+	sessionID := SessionID(cookie.Value)
+	if !IsValidSessionID(sessionID) {
+		return "", false
+	}
+	return sessionID, true
 }
