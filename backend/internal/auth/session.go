@@ -13,7 +13,11 @@ import (
 )
 
 const (
-	sessionCookieName   = "session_id"
+	sessionCookieName = "session_id"
+	// sessionCookieMaxAge is intentionally longer than sessionDuration.
+	// The backend is the source of truth for session expiry — sessions are evicted
+	// after sessionDuration of inactivity. The cookie just needs to persist long
+	// enough to outlive any active session, including across browser restarts.
 	sessionCookieMaxAge = 30 * 24 * time.Hour
 
 	sessionDuration        = 24 * time.Hour
