@@ -9,6 +9,9 @@ import (
 type Config struct {
 	AllowedOrigins []string
 	CookieDomain   string
+
+	Port        string
+	MetricsPort string
 }
 
 func parseFlags() (Config, error) {
@@ -17,6 +20,8 @@ func parseFlags() (Config, error) {
 
 	flag.StringVar(&origins, "allowed-origins", "", "comma-separated list of allowed CORS/WebSocket origins")
 	flag.StringVar(&cfg.CookieDomain, "cookie-domain", "", "domain for session cookies")
+	flag.StringVar(&cfg.Port, "port", "8085", "port for gameplay traffic")
+	flag.StringVar(&cfg.MetricsPort, "metrics-port", "2115", "port for metrics server")
 
 	flag.Parse()
 
@@ -25,6 +30,13 @@ func parseFlags() (Config, error) {
 	}
 	if cfg.CookieDomain == "" {
 		return Config{}, fmt.Errorf("-cookie-domain is required")
+	}
+
+	if !strings.HasPrefix(cfg.Port, ":") {
+		cfg.Port = ":" + cfg.Port
+	}
+	if !strings.HasPrefix(cfg.MetricsPort, ":") {
+		cfg.MetricsPort = ":" + cfg.MetricsPort
 	}
 
 	parts := strings.SplitSeq(origins, ",")
