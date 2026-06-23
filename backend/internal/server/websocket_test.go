@@ -18,7 +18,8 @@ func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) 
 	t.Helper()
 
 	metrics := NewMetrics()
-	matchmaker := NewMatchmaker(metrics)
+	matchmaker, err := NewMatchmaker(metrics)
+	assert.Nil(t, err)
 	go matchmaker.Run()
 
 	ctx := t.Context()

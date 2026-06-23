@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
 	"unicode"
+
+	"go-chess/internal/cache"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,14 +19,15 @@ type User struct {
 }
 
 type UserStore struct {
-	mu    sync.RWMutex
-	users map[string]User
+	cache *cache.Cache[string, User] // username (lowercase) -> User
 }
 
-func NewUserStore() *UserStore {
-	return &UserStore{
-		users: make(map[string]User),
+func NewUserStore() (*UserStore, error) {
+	cache, err := cache.New[string](cache.Options[User]{})
+	if err != nil {
+		return nil, err
 	}
+	return &UserStore{cache: cache}, nil
 }
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,20}$`)
@@ -74,14 +76,6 @@ func (s *UserStore) Register(username, password, displayName string) (User, erro
 		return User{}, err
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	lowerUsername := strings.ToLower(username)
-	if _, exists := s.users[lowerUsername]; exists {
-		return User{}, errors.New("username is already taken")
-	}
-
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to hash password: %w", err)
@@ -92,16 +86,19 @@ func (s *UserStore) Register(username, password, displayName string) (User, erro
 		DisplayName:    displayName,
 		HashedPassword: hashed,
 	}
-	s.users[lowerUsername] = user
+
+	lowerUsername := strings.ToLower(username)
+	wasSet := s.cache.SetIfAbsent(lowerUsername, user)
+	if !wasSet {
+		return User{}, errors.New("username is already taken")
+	}
+
 	return user, nil
 }
 
-func (s *UserStore) Authenticate(username, password string) (User, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
+func (s *UserStore) Login(username, password string) (User, error) {
 	lowerUsername := strings.ToLower(username)
-	user, exists := s.users[lowerUsername]
+	user, exists := s.cache.Get(lowerUsername)
 	if !exists {
 		return User{}, errors.New("invalid username or password")
 	}
