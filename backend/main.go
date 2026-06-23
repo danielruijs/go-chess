@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create matchmaker: %v", err)
 	}
-	go matchmaker.Run()
+	go matchmaker.Run(ctx)
 
 	userStore, err := auth.NewUserStore()
 	if err != nil {

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"go-chess/internal/cache"
 	"go-chess/internal/chess"
@@ -119,9 +120,12 @@ func (mm *Matchmaker) GetQueueStats() map[TimeFormat]int {
 	return <-update
 }
 
-func (mm *Matchmaker) Run() {
+func (mm *Matchmaker) Run(ctx context.Context) {
+	defer close(mm.UpdateChan)
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case action := <-mm.actions:
 			action()
 
