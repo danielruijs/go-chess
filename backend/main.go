@@ -21,10 +21,16 @@ func main() {
 	defer stop()
 
 	metrics := server.NewMetrics()
-	matchmaker := server.NewMatchmaker(metrics)
+	matchmaker, err := server.NewMatchmaker(metrics)
+	if err != nil {
+		log.Fatalf("failed to create matchmaker: %v", err)
+	}
 	go matchmaker.Run()
 
-	userStore := auth.NewUserStore()
+	userStore, err := auth.NewUserStore()
+	if err != nil {
+		log.Fatalf("failed to create user store: %v", err)
+	}
 	sessionStore, err := auth.NewSessionStore(ctx)
 	if err != nil {
 		log.Fatalf("failed to create session store: %v", err)

@@ -2,10 +2,10 @@ package server
 
 import (
 	"errors"
+	"go-chess/internal/cache"
 	"go-chess/internal/chess"
 	"log"
 	"math/rand"
-	"sync"
 )
 
 type Matchmaker struct {
@@ -14,41 +14,39 @@ type Matchmaker struct {
 	UpdateChan chan struct{}
 	matchEnded chan *Match
 
-	activeMatches   map[*Player]*Match
-	activeMatchesMu sync.RWMutex
+	activeMatches *cache.Cache[*Player, *Match]
 
 	metrics *metrics
 }
 
-func NewMatchmaker(metrics *metrics) *Matchmaker {
+func NewMatchmaker(metrics *metrics) (*Matchmaker, error) {
+	activeMatches, err := cache.New[*Player](cache.Options[*Match]{})
+	if err != nil {
+		return nil, err
+	}
 	return &Matchmaker{
 		queue:         make(map[TimeFormat]map[*Player]struct{}),
 		actions:       make(chan func()),
 		UpdateChan:    make(chan struct{}),
 		matchEnded:    make(chan *Match),
-		activeMatches: make(map[*Player]*Match),
+		activeMatches: activeMatches,
 		metrics:       metrics,
-	}
+	}, nil
 }
 
 func (mm *Matchmaker) GetMatch(player *Player) *Match {
-	mm.activeMatchesMu.RLock()
-	defer mm.activeMatchesMu.RUnlock()
-	return mm.activeMatches[player]
+	match, _ := mm.activeMatches.Get(player)
+	return match
 }
 
 func (mm *Matchmaker) RegisterMatch(match *Match) {
-	mm.activeMatchesMu.Lock()
-	defer mm.activeMatchesMu.Unlock()
-	mm.activeMatches[match.Player1] = match
-	mm.activeMatches[match.Player2] = match
+	mm.activeMatches.Set(match.Player1, match)
+	mm.activeMatches.Set(match.Player2, match)
 }
 
 func (mm *Matchmaker) UnregisterMatch(match *Match) {
-	mm.activeMatchesMu.Lock()
-	defer mm.activeMatchesMu.Unlock()
-	delete(mm.activeMatches, match.Player1)
-	delete(mm.activeMatches, match.Player2)
+	mm.activeMatches.Delete(match.Player1)
+	mm.activeMatches.Delete(match.Player2)
 }
 
 func (mm *Matchmaker) Join(player *Player, timeFormat TimeFormat) error {

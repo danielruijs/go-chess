@@ -90,16 +90,16 @@ func TestCache_SetIfAbsent(t *testing.T) {
 	assert.Nil(t, err)
 
 	// 1. SetIfAbsent on empty cache
-	added := c.SetIfAbsent("foo", 42)
-	assert.True(t, added)
+	wasSet := c.SetIfAbsent("foo", 42)
+	assert.True(t, wasSet)
 
 	val, found := c.Get("foo")
 	assert.True(t, found)
 	assert.Equal(t, 42, val)
 
 	// 2. SetIfAbsent on existing key
-	added = c.SetIfAbsent("foo", 100)
-	assert.False(t, added)
+	wasSet = c.SetIfAbsent("foo", 100)
+	assert.False(t, wasSet)
 
 	val, found = c.Get("foo")
 	assert.True(t, found)
