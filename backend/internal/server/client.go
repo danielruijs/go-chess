@@ -19,7 +19,12 @@ type Client struct {
 }
 
 func (c *Client) Close() {
-	c.closeOnce.Do(func() { close(c.Done) })
+	c.closeOnce.Do(func() {
+		close(c.Done)
+		if c.Conn != nil {
+			_ = c.Conn.Close()
+		}
+	})
 }
 
 func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
