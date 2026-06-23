@@ -12,6 +12,7 @@ import (
 type CleanupConfig[V any] struct {
 	Interval    time.Duration
 	ShouldEvict func(value V, lastUsed time.Time) bool
+	OnEvicted   func(count int)
 }
 
 // Options provides configuration settings for creating a new Cache instance.
@@ -63,7 +64,7 @@ func (c *Cache[K, V]) Get(key K) (V, bool) {
 	return entry.value, true
 }
 
-// GetOrCreate retrieves an existing value from the cache or atomicially computes
+// GetOrCreate retrieves an existing value from the cache or atomically computes
 // and stores a new one using the creator function if the key is missing.
 func (c *Cache[K, V]) GetOrCreate(key K, creator func() V) V {
 	c.mu.Lock()
@@ -101,6 +102,16 @@ func (c *Cache[K, V]) SetIfAbsent(key K, value V) bool {
 	return true
 }
 
+// Touch updates the last accessed time of a key if it exists in the cache.
+func (c *Cache[K, V]) Touch(key K) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if entry, ok := c.items[key]; ok {
+		entry.lastUsed.Store(time.Now().UnixNano())
+	}
+}
+
 // Delete removes a value from the cache by its key.
 func (c *Cache[K, V]) Delete(key K) {
 	c.mu.Lock()
@@ -131,14 +142,20 @@ func (c *Cache[K, V]) StartCleanup(ctx context.Context) {
 }
 
 func (c *Cache[K, V]) cleanup() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	var evictedCount int
 
+	c.mu.Lock()
 	for k, entry := range c.items {
 		lastUsed := time.Unix(0, entry.lastUsed.Load())
 		if c.cleanupConfig.ShouldEvict(entry.value, lastUsed) {
 			delete(c.items, k)
+			evictedCount++
 		}
+	}
+	c.mu.Unlock()
+
+	if evictedCount > 0 && c.cleanupConfig.OnEvicted != nil {
+		c.cleanupConfig.OnEvicted(evictedCount)
 	}
 }
 

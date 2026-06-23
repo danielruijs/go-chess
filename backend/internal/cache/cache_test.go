@@ -12,7 +12,7 @@ import (
 
 func TestCache_BasicOps(t *testing.T) {
 	c, err := New[string](Options[int]{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Get on empty cache
 	val, ok := c.Get("foo")
@@ -34,7 +34,7 @@ func TestCache_BasicOps(t *testing.T) {
 
 func TestCache_GetOrCreate(t *testing.T) {
 	c, err := New[string](Options[int]{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// 1. GetOrCreate on non-existent key
 	creatorCalls := 0
@@ -55,7 +55,7 @@ func TestCache_GetOrCreate(t *testing.T) {
 
 	// 3. Concurrent GetOrCreate on the same key
 	c2, err := New[string](Options[int]{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	var wg sync.WaitGroup
 	numGoroutines := 10
 	results := make([]int, numGoroutines)
@@ -87,7 +87,7 @@ func TestCache_GetOrCreate(t *testing.T) {
 
 func TestCache_SetIfAbsent(t *testing.T) {
 	c, err := New[string](Options[int]{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// 1. SetIfAbsent on empty cache
 	wasSet := c.SetIfAbsent("foo", 42)
@@ -106,6 +106,27 @@ func TestCache_SetIfAbsent(t *testing.T) {
 	assert.Equal(t, 42, val) // value should remain unchanged
 }
 
+func TestCache_Touch(t *testing.T) {
+	c, err := New[string](Options[int]{})
+	assert.NoError(t, err)
+
+	// Touch non-existent key (should not panic or error)
+	c.Touch("foo")
+
+	// Set and Touch
+	c.Set("foo", 42)
+	entry := c.items["foo"]
+	originalTime := entry.lastUsed.Load()
+
+	// Sleep slightly to guarantee clock tick
+	time.Sleep(2 * time.Millisecond)
+
+	c.Touch("foo")
+
+	newTime := entry.lastUsed.Load()
+	assert.Greater(t, newTime, originalTime)
+}
+
 func TestCache_Cleanup(t *testing.T) {
 	// Setup cache with evict condition: evict even numbers
 	c, err := New[string](Options[int]{
@@ -116,7 +137,7 @@ func TestCache_Cleanup(t *testing.T) {
 			},
 		},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	c.Set("odd", 1)
 	c.Set("even", 2)
@@ -150,7 +171,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 			},
 		},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	c.Set("foo", 1)
 
@@ -185,7 +206,7 @@ func TestCache_CleanupTTL(t *testing.T) {
 			},
 		},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	c.Set("short-lived", 1)
 	c.Set("long-lived", 2)
@@ -202,6 +223,46 @@ func TestCache_CleanupTTL(t *testing.T) {
 	// long-lived was updated, so it is only 5ms old. It should still be present.
 	_, ok = c.Get("long-lived")
 	assert.True(t, ok)
+}
+
+func TestCache_OnEvicted(t *testing.T) {
+	var evictedSum int64
+	var mu sync.Mutex
+
+	c, err := New[string](Options[int]{
+		Cleanup: &CleanupConfig[int]{
+			Interval: 10 * time.Millisecond,
+			ShouldEvict: func(v int, lastUsed time.Time) bool {
+				return v%2 == 0
+			},
+			OnEvicted: func(count int) {
+				mu.Lock()
+				evictedSum += int64(count)
+				mu.Unlock()
+			},
+		},
+	})
+	assert.NoError(t, err)
+
+	c.Set("odd1", 1)
+	c.Set("even2", 2)
+	c.Set("even4", 4)
+
+	c.cleanup()
+
+	mu.Lock()
+	sum := evictedSum
+	mu.Unlock()
+
+	assert.Equal(t, int64(2), sum)
+
+	// odd1 should still be there, even2 and even4 should be gone
+	_, ok := c.Get("odd1")
+	assert.True(t, ok)
+	_, ok = c.Get("even2")
+	assert.False(t, ok)
+	_, ok = c.Get("even4")
+	assert.False(t, ok)
 }
 
 func TestCache_NewErrors(t *testing.T) {
