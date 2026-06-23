@@ -1,17 +1,20 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"sync"
 	"sync/atomic"
 	"time"
+
+	"go-chess/internal/cache"
 
 	"github.com/google/uuid"
 )
 
 const (
-	SessionCookieName = "session_id"
-	SessionDuration   = 24 * time.Hour
+	SessionCookieName      = "session_id"
+	SessionDuration        = 24 * time.Hour
+	sessionCleanupInterval = 10 * time.Minute
 )
 
 type SessionID string
@@ -28,15 +31,28 @@ func (s Session) IsExpired() bool {
 }
 
 type SessionStore struct {
-	mu          sync.RWMutex
-	sessions    map[SessionID]Session
+	cache       *cache.Cache[SessionID, Session]
 	anonCounter atomic.Uint64
 }
 
-func NewSessionStore() *SessionStore {
-	return &SessionStore{
-		sessions: make(map[SessionID]Session),
+func NewSessionStore(ctx context.Context) (*SessionStore, error) {
+	cache, err := cache.New[SessionID](cache.Options[Session]{
+		Cleanup: &cache.CleanupConfig[Session]{
+			Interval: sessionCleanupInterval,
+			ShouldEvict: func(s Session, lastUsed time.Time) bool {
+				return s.IsExpired()
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
+
+	store := &SessionStore{
+		cache: cache,
+	}
+	store.cache.StartCleanup(ctx)
+	return store, nil
 }
 
 func (s *SessionStore) nextAnonName() string {
@@ -66,25 +82,19 @@ func (s *SessionStore) CreateSession(username, displayName string) Session {
 }
 
 func (s *SessionStore) CreateSessionWithID(sessionID SessionID, username, displayName string) Session {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	session := Session{
 		ID:          sessionID,
 		Username:    username,
 		DisplayName: displayName,
 		ExpiresAt:   time.Now().Add(SessionDuration),
 	}
-	s.sessions[sessionID] = session
+	s.cache.Set(sessionID, session)
 	return session
 }
 
 // returns the session and a boolean indicating if it was found and valid
 func (s *SessionStore) GetSession(sessionID SessionID) (Session, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	session, exists := s.sessions[sessionID]
+	session, exists := s.cache.Get(sessionID)
 	if !exists || session.IsExpired() {
 		return Session{}, false
 	}
@@ -92,9 +102,7 @@ func (s *SessionStore) GetSession(sessionID SessionID) (Session, bool) {
 }
 
 func (s *SessionStore) DeleteSession(sessionID SessionID) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.sessions, sessionID)
+	s.cache.Delete(sessionID)
 }
 
 // PlayerKey represents a unique identifier for a player's cached session.

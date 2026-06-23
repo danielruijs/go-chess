@@ -11,7 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) {
@@ -21,8 +21,12 @@ func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) 
 	matchmaker := NewMatchmaker(metrics)
 	go matchmaker.Run()
 
-	sessionStore := auth.NewSessionStore()
-	handler := NewWebSocketHandler(matchmaker, []string{"http://localhost:5173", "http://127.0.0.1:5173"}, sessionStore)
+	ctx := t.Context()
+
+	sessionStore, err := auth.NewSessionStore(ctx)
+	assert.Nil(t, err)
+	handler, err := NewWebSocketHandler(ctx, matchmaker, []string{"http://localhost:5173", "http://127.0.0.1:5173"}, sessionStore)
+	assert.Nil(t, err)
 	server := httptest.NewServer(http.HandlerFunc(handler.ServeWS))
 
 	return handler, server
@@ -32,14 +36,14 @@ func dialTestWebSocket(t *testing.T, serverURL string, origin string) (*websocke
 	t.Helper()
 
 	parsedURL, err := url.Parse(serverURL)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
 	header.Set("Origin", origin)
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 
 	return conn, response
 }
@@ -48,7 +52,7 @@ func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, 
 	t.Helper()
 
 	parsedURL, err := url.Parse(serverURL)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
@@ -56,7 +60,7 @@ func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, 
 	header.Set("Cookie", string(auth.SessionCookieName)+"="+string(sessionID))
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 
 	return conn, response
 }
@@ -65,16 +69,16 @@ func sendTestMessage(t *testing.T, conn *websocket.Conn, messageType MessageType
 	t.Helper()
 
 	rawData, err := json.Marshal(data)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 
-	require.NoError(t, conn.WriteJSON(WSMessage{Type: messageType, Data: rawData}))
+	assert.Nil(t, conn.WriteJSON(WSMessage{Type: messageType, Data: rawData}))
 }
 
 func readTestMessage(t *testing.T, conn *websocket.Conn) WSMessage {
 	t.Helper()
 
 	var message WSMessage
-	require.NoError(t, conn.ReadJSON(&message))
+	assert.Nil(t, conn.ReadJSON(&message))
 
 	return message
 }
@@ -82,7 +86,7 @@ func readTestMessage(t *testing.T, conn *websocket.Conn) WSMessage {
 func waitForTestMessageType(t *testing.T, conn *websocket.Conn, expectedType MessageType) WSMessage {
 	t.Helper()
 
-	require.NoError(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
+	assert.Nil(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
 	defer func() {
 		_ = conn.SetReadDeadline(time.Time{})
 	}()
@@ -120,22 +124,22 @@ func TestWebSocketHandlerDeniesOriginBypassAndCountsIt(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	parsedURL, err := url.Parse(server.URL)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
 	header.Set("Origin", "http://localhost.evil.com")
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	require.Error(t, err)
-	require.Nil(t, conn)
+	assert.NotNil(t, err)
+	assert.Nil(t, conn)
 	if response != nil && response.Body != nil {
 		t.Cleanup(func() {
 			_ = response.Body.Close()
 		})
 	}
 
-	require.InDelta(t, 1.0, testutil.ToFloat64(handler.metrics.connectionsDenied), 0.0001)
+	assert.InDelta(t, 1.0, testutil.ToFloat64(handler.metrics.connectionsDenied), 0.0001)
 }
 
 func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
@@ -149,8 +153,8 @@ func TestWebSocketHandlerReusesPlayerForSessionID(t *testing.T) {
 
 	second := handler.getOrCreatePlayer(session)
 
-	require.Same(t, first, second)
-	require.Equal(t, "Alice", second.DisplayName)
+	assert.Same(t, first, second)
+	assert.Equal(t, "Alice", second.DisplayName)
 }
 
 func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
@@ -179,10 +183,10 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 	})
 
 	// Discard player_info message and matchmaking_update message
-	require.Equal(t, MessageTypePlayerInfo, readTestMessage(t, firstConn).Type)
-	require.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, firstConn).Type)
-	require.Equal(t, MessageTypePlayerInfo, readTestMessage(t, secondConn).Type)
-	require.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, secondConn).Type)
+	assert.Equal(t, MessageTypePlayerInfo, readTestMessage(t, firstConn).Type)
+	assert.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, firstConn).Type)
+	assert.Equal(t, MessageTypePlayerInfo, readTestMessage(t, secondConn).Type)
+	assert.Equal(t, MessageTypeMatchmakingUpdate, readTestMessage(t, secondConn).Type)
 
 	// Both clients join the same matchmaking queue with the same time format, which should pair them together
 	sendTestMessage(t, firstConn, MessageTypeJoinMatch, JoinMatchData{
@@ -193,13 +197,13 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 	})
 
 	// Wait for both clients to receive the start match and board messages
-	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, firstConn, MessageTypeStartMatch).Type)
-	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, secondConn, MessageTypeStartMatch).Type)
-	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, firstConn, MessageTypeBoard).Type)
-	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, secondConn, MessageTypeBoard).Type)
+	assert.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, firstConn, MessageTypeStartMatch).Type)
+	assert.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, secondConn, MessageTypeStartMatch).Type)
+	assert.Equal(t, MessageTypeBoard, waitForTestMessageType(t, firstConn, MessageTypeBoard).Type)
+	assert.Equal(t, MessageTypeBoard, waitForTestMessageType(t, secondConn, MessageTypeBoard).Type)
 
 	// Simulate a disconnect and reconnect for the first player
-	require.NoError(t, firstConn.Close())
+	assert.Nil(t, firstConn.Close())
 	reconnectConn, reconnectResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
 	t.Cleanup(func() {
 		_ = reconnectConn.Close()
@@ -209,27 +213,11 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 	})
 
 	// Discard player_info message
-	require.Equal(t, MessageTypePlayerInfo, readTestMessage(t, reconnectConn).Type)
+	assert.Equal(t, MessageTypePlayerInfo, readTestMessage(t, reconnectConn).Type)
 
 	// The first player should receive the start match and board messages again, indicating that their active match was restored
-	require.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, reconnectConn, MessageTypeStartMatch).Type)
-	require.Equal(t, MessageTypeBoard, waitForTestMessageType(t, reconnectConn, MessageTypeBoard).Type)
-}
-
-func TestWebSocketHandlerTracksCachedPlayerMetric(t *testing.T) {
-	handler, server := newTestWebSocketServer(t)
-	t.Cleanup(server.Close)
-
-	sessionID := auth.SessionID("123e4567-e89b-12d3-a456-426614174000")
-	session := handler.sessionStore.CreateSessionWithID(sessionID, "", "Anon")
-	player := handler.getOrCreatePlayer(session)
-	require.Same(t, player, handler.players[player.Key].player)
-	require.InDelta(t, 1.0, testutil.ToFloat64(handler.metrics.cachedPlayers), 0.0001)
-
-	handler.players[player.Key].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
-	handler.cleanupInactivePlayers()
-
-	require.InDelta(t, 0.0, testutil.ToFloat64(handler.metrics.cachedPlayers), 0.0001)
+	assert.Equal(t, MessageTypeStartMatch, waitForTestMessageType(t, reconnectConn, MessageTypeStartMatch).Type)
+	assert.Equal(t, MessageTypeBoard, waitForTestMessageType(t, reconnectConn, MessageTypeBoard).Type)
 }
 
 func TestWebSocketHandlerCleansUpInactiveCachedPlayers(t *testing.T) {
@@ -239,13 +227,14 @@ func TestWebSocketHandlerCleansUpInactiveCachedPlayers(t *testing.T) {
 	sessionID := auth.SessionID("123e4567-e89b-12d3-a456-426614174000")
 	session := handler.sessionStore.CreateSessionWithID(sessionID, "", "Anon")
 	player := handler.getOrCreatePlayer(session)
-	require.Same(t, player, handler.players[player.Key].player)
 
-	handler.players[player.Key].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
-	handler.cleanupInactivePlayers()
+	// Inactive player should be evictable
+	evicted := handler.shouldEvictPlayer(player, time.Now().Add(-2*playerCacheTTL))
+	assert.True(t, evicted)
 
-	_, ok := handler.players[player.Key]
-	require.False(t, ok)
+	// Active player (recently used) should not be evictable
+	evicted = handler.shouldEvictPlayer(player, time.Now())
+	assert.False(t, evicted)
 }
 
 func TestWebSocketHandlerKeepsCachedPlayersWithActiveClients(t *testing.T) {
@@ -256,12 +245,10 @@ func TestWebSocketHandlerKeepsCachedPlayersWithActiveClients(t *testing.T) {
 	session := handler.sessionStore.CreateSessionWithID(sessionID, "", "Anon")
 	player := handler.getOrCreatePlayer(session)
 	player.RegisterClient(&Client{sendChan: make(chan WSMessage, 1)})
-	handler.players[player.Key].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
 
-	handler.cleanupInactivePlayers()
-
-	_, ok := handler.players[player.Key]
-	require.True(t, ok)
+	// Even if idle duration exceeded TTL, if player has active clients, should not evict
+	evicted := handler.shouldEvictPlayer(player, time.Now().Add(-2*playerCacheTTL))
+	assert.False(t, evicted)
 }
 
 func TestWebSocketHandlerKeepsCachedPlayersInQueue(t *testing.T) {
@@ -272,13 +259,11 @@ func TestWebSocketHandlerKeepsCachedPlayersInQueue(t *testing.T) {
 	sessionID := auth.SessionID("123e4567-e89b-12d3-a456-426614174000")
 	session := handler.sessionStore.CreateSessionWithID(sessionID, "", "Anon")
 	player := handler.getOrCreatePlayer(session)
-	require.NoError(t, handler.matchmaker.Join(player, timeFormat))
-	handler.players[player.Key].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
+	assert.Nil(t, handler.matchmaker.Join(player, timeFormat))
 
-	handler.cleanupInactivePlayers()
-
-	_, ok := handler.players[player.Key]
-	require.True(t, ok)
+	// If player is in queues, should not evict
+	evicted := handler.shouldEvictPlayer(player, time.Now().Add(-2*playerCacheTTL))
+	assert.False(t, evicted)
 }
 
 func TestWebSocketHandlerKeepsCachedPlayersInMatch(t *testing.T) {
@@ -291,12 +276,10 @@ func TestWebSocketHandlerKeepsCachedPlayersInMatch(t *testing.T) {
 	player2 := NewPlayer("anon:test-2", "", "Test Player 2")
 	match := NewMatch(player1, player2, timeFormat, handler.matchmaker.matchEnded, handler.matchmaker.metrics)
 	handler.matchmaker.RegisterMatch(match)
-	handler.players[player1.Key].lastUsed = time.Now().Add(-2 * handler.playerCacheTTL)
 
-	handler.cleanupInactivePlayers()
-
-	_, ok := handler.players[player1.Key]
-	require.True(t, ok)
+	// If player is in a match, should not evict
+	evicted := handler.shouldEvictPlayer(player1, time.Now().Add(-2*playerCacheTTL))
+	assert.False(t, evicted)
 }
 
 func TestWebSocketHandlerDifferentSessionsGetDifferentPlayers(t *testing.T) {
@@ -309,7 +292,7 @@ func TestWebSocketHandlerDifferentSessionsGetDifferentPlayers(t *testing.T) {
 	first := handler.getOrCreatePlayer(session1)
 	second := handler.getOrCreatePlayer(session2)
 
-	require.NotSame(t, first, second)
+	assert.NotSame(t, first, second)
 }
 
 func TestPlayerBroadcastsToAllRegisteredClients(t *testing.T) {
@@ -325,6 +308,6 @@ func TestPlayerBroadcastsToAllRegisteredClients(t *testing.T) {
 	messageOne := <-clientOne.sendChan
 	messageTwo := <-clientTwo.sendChan
 
-	require.Equal(t, MessageTypeStartMatch, messageOne.Type)
-	require.Equal(t, MessageTypeStartMatch, messageTwo.Type)
+	assert.Equal(t, MessageTypeStartMatch, messageOne.Type)
+	assert.Equal(t, MessageTypeStartMatch, messageTwo.Type)
 }

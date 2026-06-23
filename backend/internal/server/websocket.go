@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"go-chess/internal/auth"
+	"go-chess/internal/cache"
 	"log"
 	"net/http"
 	"slices"
@@ -12,14 +14,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type playerCacheEntry struct {
-	player   *Player
-	lastUsed time.Time
-}
-
 const (
-	defaultPlayerCacheTTL      = 15 * time.Minute
-	defaultPlayerCleanupPeriod = 1 * time.Minute
+	playerCacheTTL        = 15 * time.Minute
+	playerCleanupInterval = 1 * time.Minute
 )
 
 type WebSocketHandler struct {
@@ -27,30 +24,36 @@ type WebSocketHandler struct {
 	matchmaker     *Matchmaker
 	metrics        *metrics
 	allowedOrigins []string
-	playerCacheTTL time.Duration
-	cleanupPeriod  time.Duration
 	sessionStore   *auth.SessionStore
 
 	clients   map[*Client]struct{}
 	clientsMu sync.RWMutex
 
-	players   map[auth.PlayerKey]*playerCacheEntry
-	playersMu sync.RWMutex
+	players *cache.Cache[auth.PlayerKey, *Player]
 }
 
-func NewWebSocketHandler(matchmaker *Matchmaker, allowedOrigins []string, sessionStore *auth.SessionStore) *WebSocketHandler {
+func NewWebSocketHandler(ctx context.Context, matchmaker *Matchmaker, allowedOrigins []string, sessionStore *auth.SessionStore) (*WebSocketHandler, error) {
 	wsh := &WebSocketHandler{
 		upgrader:       websocket.Upgrader{},
 		matchmaker:     matchmaker,
 		metrics:        matchmaker.metrics,
 		allowedOrigins: allowedOrigins,
 		clients:        make(map[*Client]struct{}),
-		playerCacheTTL: defaultPlayerCacheTTL,
-		cleanupPeriod:  defaultPlayerCleanupPeriod,
-		players:        make(map[auth.PlayerKey]*playerCacheEntry),
 		sessionStore:   sessionStore,
 	}
 	wsh.upgrader.CheckOrigin = wsh.checkOrigin
+
+	cache, err := cache.New[auth.PlayerKey](cache.Options[*Player]{
+		Cleanup: &cache.CleanupConfig[*Player]{
+			Interval:    playerCleanupInterval,
+			ShouldEvict: wsh.shouldEvictPlayer,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	wsh.players = cache
+	wsh.players.StartCleanup(ctx)
 
 	go func() {
 		for range matchmaker.UpdateChan {
@@ -58,35 +61,18 @@ func NewWebSocketHandler(matchmaker *Matchmaker, allowedOrigins []string, sessio
 		}
 	}()
 
-	go wsh.runPlayerCleanup()
-
-	return wsh
+	return wsh, nil
 }
 
-func (wsh *WebSocketHandler) runPlayerCleanup() {
-	ticker := time.NewTicker(wsh.cleanupPeriod)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		wsh.cleanupInactivePlayers()
+func (wsh *WebSocketHandler) shouldEvictPlayer(player *Player, lastUsed time.Time) bool {
+	if player.HasClients() ||
+		player.IsInQueues() ||
+		wsh.matchmaker.GetMatch(player) != nil ||
+		time.Since(lastUsed) < playerCacheTTL {
+		return false
 	}
-}
-
-func (wsh *WebSocketHandler) cleanupInactivePlayers() {
-	wsh.playersMu.Lock()
-	defer wsh.playersMu.Unlock()
-
-	for playerKey, entry := range wsh.players {
-		if entry.player.HasClients() ||
-			entry.player.IsInQueues() ||
-			wsh.matchmaker.GetMatch(entry.player) != nil ||
-			time.Since(entry.lastUsed) < wsh.playerCacheTTL {
-			continue
-		}
-
-		delete(wsh.players, playerKey)
-		wsh.metrics.recordWebsocketPlayerEvicted()
-	}
+	wsh.metrics.recordWebsocketPlayerEvicted()
+	return true
 }
 
 func (wsh *WebSocketHandler) RegisterClient(client *Client) {
@@ -110,29 +96,17 @@ func (wsh *WebSocketHandler) refreshPlayer(playerKey auth.PlayerKey) {
 		return
 	}
 
-	wsh.playersMu.Lock()
-	defer wsh.playersMu.Unlock()
-
-	if entry, ok := wsh.players[playerKey]; ok {
-		entry.lastUsed = time.Now()
-	}
+	wsh.players.Get(playerKey)
 }
 
 func (wsh *WebSocketHandler) getOrCreatePlayer(session auth.Session) *Player {
 	key := session.PlayerKey()
 
-	wsh.playersMu.Lock()
-	defer wsh.playersMu.Unlock()
-
-	if entry, ok := wsh.players[key]; ok {
-		entry.lastUsed = time.Now()
-		return entry.player
-	}
-
-	player := NewPlayer(key, session.Username, session.DisplayName)
-	wsh.players[key] = &playerCacheEntry{player: player, lastUsed: time.Now()}
-	wsh.metrics.recordWebsocketPlayerCached()
-	return player
+	return wsh.players.GetOrCreate(key, func() *Player {
+		player := NewPlayer(key, session.Username, session.DisplayName)
+		wsh.metrics.recordWebsocketPlayerCached()
+		return player
+	})
 }
 
 func (wsh *WebSocketHandler) sessionFromRequest(r *http.Request) (auth.Session, bool) {
