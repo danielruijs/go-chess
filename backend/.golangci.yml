@@ -10,3 +10,9 @@ linters:
     - staticcheck
     - unused
     - ineffassign
+    - modernize
+    - errorlint
+    - nilerr
+    - rowserrcheck
+    - sqlclosecheck
+    - bodyclose
