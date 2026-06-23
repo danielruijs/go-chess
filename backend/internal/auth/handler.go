@@ -69,7 +69,7 @@ func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID SessionI
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		Expires:  time.Now().Add(SessionDuration),
+		MaxAge:   int(sessionCookieMaxAge.Seconds()),
 		Domain:   h.cookieDomain,
 	}
 	http.SetCookie(w, cookie)
