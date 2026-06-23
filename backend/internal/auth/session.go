@@ -102,17 +102,6 @@ func (s *SessionStore) DeleteSession(sessionID SessionID) {
 	s.cache.Delete(sessionID)
 }
 
-// PlayerKey represents a unique identifier for a player's cached session.
-// It is derived from a user's username (for authenticated users) or their session ID (for anonymous users).
-type PlayerKey string
-
-func (s Session) PlayerKey() PlayerKey {
-	if s.Username != "" {
-		return PlayerKey("user:" + s.Username)
-	}
-	return PlayerKey("anon:" + string(s.ID))
-}
-
 // SessionIDFromRequest extracts and validates the session ID from the request cookie, if present.
 // Returns the session ID and a boolean indicating if it was found and valid.
 func SessionIDFromRequest(r *http.Request) (SessionID, bool) {

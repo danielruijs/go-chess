@@ -8,8 +8,19 @@ import (
 	"sync"
 )
 
+// PlayerKey represents a unique identifier for a player's cached session.
+// It is derived from a user's username (for authenticated users) or their session ID (for anonymous users).
+type PlayerKey string
+
+func NewPlayerKey(session auth.Session) PlayerKey {
+	if session.Username != "" {
+		return PlayerKey("user:" + session.Username)
+	}
+	return PlayerKey("anon:" + string(session.ID))
+}
+
 type Player struct {
-	Key         auth.PlayerKey
+	Key         PlayerKey
 	Username    string
 	DisplayName string
 	color       chess.Color
@@ -21,7 +32,7 @@ type Player struct {
 	clientsMu sync.RWMutex
 }
 
-func NewPlayer(key auth.PlayerKey, username, displayName string) *Player {
+func NewPlayer(key PlayerKey, username, displayName string) *Player {
 	return &Player{
 		Key:         key,
 		Username:    username,
