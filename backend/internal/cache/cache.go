@@ -95,6 +95,24 @@ func (c *Cache[K, V]) Set(key K, value V) {
 	c.items[key] = entry
 }
 
+// SetIfAbsent inserts a value in the cache if the key does not already exist.
+// Returns true if the value was inserted, or false if the key already exists.
+func (c *Cache[K, V]) SetIfAbsent(key K, value V) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if _, ok := c.items[key]; ok {
+		return false
+	}
+
+	entry := &cacheEntry[V]{
+		value: value,
+	}
+	entry.lastUsed.Store(time.Now().UnixNano())
+	c.items[key] = entry
+	return true
+}
+
 // Delete removes a value from the cache by its key.
 func (c *Cache[K, V]) Delete(key K) {
 	c.mu.Lock()

@@ -85,6 +85,27 @@ func TestCache_GetOrCreate(t *testing.T) {
 	assert.Equal(t, int64(1), concurrentCreatorCalls)
 }
 
+func TestCache_SetIfAbsent(t *testing.T) {
+	c, err := New[string](Options[int]{})
+	assert.Nil(t, err)
+
+	// 1. SetIfAbsent on empty cache
+	added := c.SetIfAbsent("foo", 42)
+	assert.True(t, added)
+
+	val, found := c.Get("foo")
+	assert.True(t, found)
+	assert.Equal(t, 42, val)
+
+	// 2. SetIfAbsent on existing key
+	added = c.SetIfAbsent("foo", 100)
+	assert.False(t, added)
+
+	val, found = c.Get("foo")
+	assert.True(t, found)
+	assert.Equal(t, 42, val) // value should remain unchanged
+}
+
 func TestCache_Cleanup(t *testing.T) {
 	// Setup cache with evict condition: evict even numbers
 	c, err := New[string](Options[int]{
