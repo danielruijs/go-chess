@@ -6,7 +6,7 @@ This document explains the architecture of the go-chess backend, defines its cor
 
 The backend is built around a few central entities that manage user identity, network connections, and gameplay state:
 
-*   **User (`auth.User`)**: A persistent user account registered in the system. Contains credentials (hashed via bcrypt) and a display name. Stored and queried via the `UserStore`.
+*   **User (`auth.User`)**: A persistent user identity registered in the system (currently stored in-memory). Contains credentials (hashed via bcrypt) and a display name. Stored and queried via the `UserStore`.
 *   **Session (`auth.Session`)**: A temporary session representation. Each session can be **anonymous** (temp guest name, not registered) or **authenticated** (tied to a `User`). Sessions are identified by a `SessionID` (UUID) stored in the client's secure HTTP-only `session_id` cookie. Valid sessions are cached for 24 hours in the `SessionStore`.
 *   **PlayerKey (`server.PlayerKey`)**: A unique string key used to bridge the authentication layer (`auth`) and the gameplay layer (`server`). 
     *   For authenticated users, the format is `"user:<username>"`.
@@ -58,8 +58,8 @@ The codebase separates concerns into isolated packages. `chess` and `cache` are 
 ```mermaid
 graph TD
     subgraph Main [main]
-        main.go["main.go (Bootstrap)"]
-        config.go["config.go (Flags & Config)"]
+        main_go["main.go (Bootstrap)"]
+        config_go["config.go (Flags & Config)"]
     end
 
     subgraph Auth [internal/auth]
@@ -84,9 +84,9 @@ graph TD
         CacheWithoutCleanup["Cache (Persistent / No TTL Eviction)"]
     end
 
-    main.go --> AuthHandler
-    main.go --> WebSocketHandler
-    main.go --> Matchmaker
+    main_go --> AuthHandler
+    main_go --> WebSocketHandler
+    main_go --> Matchmaker
 
     AuthHandler --> UserStore
     AuthHandler --> SessionStore
@@ -139,7 +139,7 @@ sequenceDiagram
     WS->>Sessions: Get Session by ID
     Sessions-->>WS: Session info (authenticated)
     WS->>WS: Get or Create Player (user:username)
-    WS->>WS: Migrate or Register Client to Player
+    WS->>WS: Register Client to Player
     WS-->>Browser: player_info (authenticated)
 ```
 
