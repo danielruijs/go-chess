@@ -196,7 +196,6 @@ func (wsh *WebSocketHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		wsh.matchmaker.LeaveAll(client.Player)
 		wsh.UnregisterClient(client)
 		wsh.refreshPlayer(player.Key)
-		_ = client.Conn.Close()
 	}()
 
 	go client.SendMessages()
