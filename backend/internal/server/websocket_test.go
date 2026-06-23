@@ -17,17 +17,17 @@ import (
 func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) {
 	t.Helper()
 
-	metrics := NewMetrics()
-	matchmaker, err := NewMatchmaker(metrics)
-	assert.Nil(t, err)
-	go matchmaker.Run()
-
 	ctx := t.Context()
 
+	metrics := NewMetrics()
+	matchmaker, err := NewMatchmaker(metrics)
+	assert.NoError(t, err)
+	go matchmaker.Run(ctx)
+
 	sessionStore, err := auth.NewSessionStore(ctx)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	handler, err := NewWebSocketHandler(ctx, matchmaker, []string{"http://localhost:5173", "http://127.0.0.1:5173"}, sessionStore)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	server := httptest.NewServer(http.HandlerFunc(handler.ServeWS))
 
 	return handler, server
@@ -37,14 +37,14 @@ func dialTestWebSocket(t *testing.T, serverURL string, origin string) (*websocke
 	t.Helper()
 
 	parsedURL, err := url.Parse(serverURL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
 	header.Set("Origin", origin)
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	return conn, response
 }
@@ -53,7 +53,7 @@ func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, 
 	t.Helper()
 
 	parsedURL, err := url.Parse(serverURL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
@@ -61,7 +61,7 @@ func dialTestWebSocketWithCookie(t *testing.T, serverURL string, origin string, 
 	header.Set("Cookie", "session_id="+string(sessionID))
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	return conn, response
 }
@@ -70,16 +70,16 @@ func sendTestMessage(t *testing.T, conn *websocket.Conn, messageType MessageType
 	t.Helper()
 
 	rawData, err := json.Marshal(data)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
-	assert.Nil(t, conn.WriteJSON(WSMessage{Type: messageType, Data: rawData}))
+	assert.NoError(t, conn.WriteJSON(WSMessage{Type: messageType, Data: rawData}))
 }
 
 func readTestMessage(t *testing.T, conn *websocket.Conn) WSMessage {
 	t.Helper()
 
 	var message WSMessage
-	assert.Nil(t, conn.ReadJSON(&message))
+	assert.NoError(t, conn.ReadJSON(&message))
 
 	return message
 }
@@ -87,7 +87,7 @@ func readTestMessage(t *testing.T, conn *websocket.Conn) WSMessage {
 func waitForTestMessageType(t *testing.T, conn *websocket.Conn, expectedType MessageType) WSMessage {
 	t.Helper()
 
-	assert.Nil(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
+	assert.NoError(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
 	defer func() {
 		_ = conn.SetReadDeadline(time.Time{})
 	}()
@@ -125,14 +125,14 @@ func TestWebSocketHandlerDeniesOriginBypassAndCountsIt(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	parsedURL, err := url.Parse(server.URL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	parsedURL.Scheme = "ws"
 
 	header := http.Header{}
 	header.Set("Origin", "http://localhost.evil.com")
 
 	conn, response, err := websocket.DefaultDialer.Dial(parsedURL.String(), header)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.Nil(t, conn)
 	if response != nil && response.Body != nil {
 		t.Cleanup(func() {
@@ -204,7 +204,7 @@ func TestWebSocketHandlerRestoresActiveMatchOnReconnect(t *testing.T) {
 	assert.Equal(t, MessageTypeBoard, waitForTestMessageType(t, secondConn, MessageTypeBoard).Type)
 
 	// Simulate a disconnect and reconnect for the first player
-	assert.Nil(t, firstConn.Close())
+	assert.NoError(t, firstConn.Close())
 	reconnectConn, reconnectResponse := dialTestWebSocketWithCookie(t, server.URL, origin, firstSessionID)
 	t.Cleanup(func() {
 		_ = reconnectConn.Close()
@@ -260,7 +260,7 @@ func TestWebSocketHandlerKeepsCachedPlayersInQueue(t *testing.T) {
 	sessionID := auth.SessionID("123e4567-e89b-12d3-a456-426614174000")
 	session := handler.sessionStore.CreateSessionWithID(sessionID, "", "Anon")
 	player := handler.getOrCreatePlayer(session)
-	assert.Nil(t, handler.matchmaker.Join(player, timeFormat))
+	assert.NoError(t, handler.matchmaker.Join(player, timeFormat))
 
 	// If player is in queues, should not evict
 	evicted := handler.shouldEvictPlayer(player, time.Now().Add(-2*playerCacheTTL))
