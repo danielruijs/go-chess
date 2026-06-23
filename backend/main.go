@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"go-chess/internal/auth"
 	"go-chess/internal/server"
 	"log"
@@ -52,18 +53,18 @@ func main() {
 	http.HandleFunc("/api/logout", authHandler.CORSMiddleware(authHandler.Logout))
 	http.HandleFunc("/api/check", authHandler.CORSMiddleware(authHandler.CheckAuth))
 
-	srv := &http.Server{Addr: config.Port}
-	metricsSrv := &http.Server{Addr: config.MetricsPort, Handler: metricsMux}
+	srv := &http.Server{Addr: fmt.Sprintf(":%d", config.Port)}
+	metricsSrv := &http.Server{Addr: fmt.Sprintf(":%d", config.MetricsPort), Handler: metricsMux}
 
 	go func() {
-		log.Printf("started metrics server on %s", config.MetricsPort)
+		log.Printf("started metrics server on :%d", config.MetricsPort)
 		if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("metrics server failed: %v", err)
 		}
 	}()
 
 	go func() {
-		log.Printf("started server on %s", config.Port)
+		log.Printf("started server on :%d", config.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server failed: %v", err)
 		}
