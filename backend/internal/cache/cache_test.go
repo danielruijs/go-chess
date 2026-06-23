@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,6 +28,57 @@ func TestCache_BasicOps(t *testing.T) {
 	c.Delete("foo")
 	val, ok = c.Get("foo")
 	assert.False(t, ok)
+}
+
+func TestCache_GetOrCreate(t *testing.T) {
+	c := New[string](Options[int]{})
+
+	// 1. GetOrCreate on non-existent key
+	creatorCalls := 0
+	val := c.GetOrCreate("foo", func() int {
+		creatorCalls++
+		return 42
+	})
+	assert.Equal(t, 42, val)
+	assert.Equal(t, 1, creatorCalls)
+
+	// 2. GetOrCreate on existing key (should not call creator)
+	val = c.GetOrCreate("foo", func() int {
+		creatorCalls++
+		return 100
+	})
+	assert.Equal(t, 42, val)
+	assert.Equal(t, 1, creatorCalls) // still 1
+
+	// 3. Concurrent GetOrCreate on the same key
+	c2 := New[string](Options[int]{})
+	var wg sync.WaitGroup
+	numGoroutines := 10
+	results := make([]int, numGoroutines)
+	concurrentCreatorCalls := int64(0)
+
+	for i := range numGoroutines {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			val := c2.GetOrCreate("bar", func() int {
+				atomic.AddInt64(&concurrentCreatorCalls, 1)
+				time.Sleep(10 * time.Millisecond) // simulate work
+				return 999
+			})
+			results[idx] = val
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify all returned 999
+	for _, res := range results {
+		assert.Equal(t, 999, res)
+	}
+
+	// Creator should have been called exactly once
+	assert.Equal(t, int64(1), concurrentCreatorCalls)
 }
 
 func TestCache_Cleanup(t *testing.T) {
