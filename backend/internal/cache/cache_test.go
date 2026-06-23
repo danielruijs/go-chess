@@ -11,7 +11,8 @@ import (
 )
 
 func TestCache_BasicOps(t *testing.T) {
-	c := New[string](Options[int]{})
+	c, err := New[string](Options[int]{})
+	assert.Nil(t, err)
 
 	// Get on empty cache
 	val, ok := c.Get("foo")
@@ -31,7 +32,8 @@ func TestCache_BasicOps(t *testing.T) {
 }
 
 func TestCache_GetOrCreate(t *testing.T) {
-	c := New[string](Options[int]{})
+	c, err := New[string](Options[int]{})
+	assert.Nil(t, err)
 
 	// 1. GetOrCreate on non-existent key
 	creatorCalls := 0
@@ -51,7 +53,8 @@ func TestCache_GetOrCreate(t *testing.T) {
 	assert.Equal(t, 1, creatorCalls) // still 1
 
 	// 3. Concurrent GetOrCreate on the same key
-	c2 := New[string](Options[int]{})
+	c2, err := New[string](Options[int]{})
+	assert.Nil(t, err)
 	var wg sync.WaitGroup
 	numGoroutines := 10
 	results := make([]int, numGoroutines)
@@ -83,7 +86,7 @@ func TestCache_GetOrCreate(t *testing.T) {
 
 func TestCache_Cleanup(t *testing.T) {
 	// Setup cache with evict condition: evict even numbers
-	c := New[string](Options[int]{
+	c, err := New[string](Options[int]{
 		Cleanup: &CleanupConfig[int]{
 			Interval: 10 * time.Millisecond,
 			ShouldEvict: func(v int, lastUsed time.Time) bool {
@@ -91,6 +94,7 @@ func TestCache_Cleanup(t *testing.T) {
 			},
 		},
 	})
+	assert.Nil(t, err)
 
 	c.Set("odd", 1)
 	c.Set("even", 2)
@@ -113,7 +117,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 	var mu sync.Mutex
 	cleanupCalls := 0
 
-	c := New[string](Options[int]{
+	c, err := New[string](Options[int]{
 		Cleanup: &CleanupConfig[int]{
 			Interval: 5 * time.Millisecond,
 			ShouldEvict: func(v int, lastUsed time.Time) bool {
@@ -124,6 +128,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 			},
 		},
 	})
+	assert.Nil(t, err)
 
 	c.Set("foo", 1)
 
@@ -150,7 +155,7 @@ func TestCache_CleanupStopOnCancel(t *testing.T) {
 
 func TestCache_CleanupTTL(t *testing.T) {
 	// Evict entries unused for more than 15ms
-	c := New[string](Options[int]{
+	c, err := New[string](Options[int]{
 		Cleanup: &CleanupConfig[int]{
 			Interval: 15 * time.Millisecond,
 			ShouldEvict: func(v int, lastUsed time.Time) bool {
@@ -158,6 +163,7 @@ func TestCache_CleanupTTL(t *testing.T) {
 			},
 		},
 	})
+	assert.Nil(t, err)
 
 	c.Set("short-lived", 1)
 	c.Set("long-lived", 2)
@@ -174,4 +180,26 @@ func TestCache_CleanupTTL(t *testing.T) {
 	// long-lived was updated, so it is only 5ms old. It should still be present.
 	_, ok = c.Get("long-lived")
 	assert.True(t, ok)
+}
+
+func TestCache_NewErrors(t *testing.T) {
+	// 1. Negative cleanup interval
+	_, err := New[string](Options[int]{
+		Cleanup: &CleanupConfig[int]{
+			Interval: -1 * time.Second,
+			ShouldEvict: func(v int, lastUsed time.Time) bool {
+				return false
+			},
+		},
+	})
+	assert.Error(t, err)
+
+	// 2. Nil ShouldEvict
+	_, err = New[string](Options[int]{
+		Cleanup: &CleanupConfig[int]{
+			Interval:    1 * time.Second,
+			ShouldEvict: nil,
+		},
+	})
+	assert.Error(t, err)
 }
