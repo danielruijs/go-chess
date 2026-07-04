@@ -9,6 +9,7 @@ import (
 type Config struct {
 	AllowedOrigins []string
 	CookieDomain   string
+	DatabaseDSN    string
 
 	Port        int
 	MetricsPort int
@@ -20,6 +21,7 @@ func parseFlags() (Config, error) {
 
 	flag.StringVar(&origins, "allowed-origins", "", "comma-separated list of allowed CORS/WebSocket origins")
 	flag.StringVar(&cfg.CookieDomain, "cookie-domain", "", "domain for session cookies")
+	flag.StringVar(&cfg.DatabaseDSN, "db-dsn", "", "PostgreSQL connection DSN")
 	flag.IntVar(&cfg.Port, "port", 8085, "port for gameplay traffic")
 	flag.IntVar(&cfg.MetricsPort, "metrics-port", 2115, "port for metrics server")
 
@@ -30,6 +32,9 @@ func parseFlags() (Config, error) {
 	}
 	if cfg.CookieDomain == "" {
 		return Config{}, fmt.Errorf("-cookie-domain is required")
+	}
+	if cfg.DatabaseDSN == "" {
+		return Config{}, fmt.Errorf("-db-dsn is required")
 	}
 
 	if cfg.Port < 1 || cfg.Port > 65535 {
