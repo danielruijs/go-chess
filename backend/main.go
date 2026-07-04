@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"go-chess/internal/auth"
+	"go-chess/internal/db"
+	"go-chess/internal/db/sqlc"
 	"go-chess/internal/server"
 	"log"
 	"net/http"
@@ -28,7 +30,14 @@ func main() {
 	}
 	go matchmaker.Run(ctx)
 
-	userStore, err := auth.NewUserStore()
+	pool, err := db.Connect(ctx, config.DatabaseDSN)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer pool.Close()
+
+	queries := sqlc.New(pool)
+	userStore, err := auth.NewUserStore(queries)
 	if err != nil {
 		log.Fatalf("failed to create user store: %v", err)
 	}

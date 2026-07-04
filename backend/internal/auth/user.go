@@ -1,14 +1,16 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
 
-	"go-chess/internal/cache"
+	"go-chess/internal/db/sqlc"
 
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,22 +21,18 @@ type User struct {
 }
 
 type UserStore struct {
-	cache *cache.Cache[string, User] // username (lowercase) -> User
+	queries *sqlc.Queries
 }
 
-func NewUserStore() (*UserStore, error) {
-	cache, err := cache.New[string](cache.Options[User]{})
-	if err != nil {
-		return nil, err
-	}
-	return &UserStore{cache: cache}, nil
+func NewUserStore(queries *sqlc.Queries) (*UserStore, error) {
+	return &UserStore{queries: queries}, nil
 }
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,20}$`)
 
 func validateUsername(username string) error {
 	if !usernameRegex.MatchString(username) {
-		return errors.New("username must be between 3 and 20 characters and contain only letters, numbers, hyphens, or underscores")
+		return NewUserRegistrationError("username must be between 3 and 20 characters and contain only letters, numbers, hyphens, or underscores")
 	}
 	return nil
 }
@@ -42,7 +40,7 @@ func validateUsername(username string) error {
 func validateDisplayName(displayName string) error {
 	length := len([]rune(displayName))
 	if length < 3 || length > 30 {
-		return errors.New("display name must be between 3 and 30 characters")
+		return NewUserRegistrationError("display name must be between 3 and 30 characters")
 	}
 	return nil
 }
@@ -50,7 +48,7 @@ func validateDisplayName(displayName string) error {
 func validatePassword(password string) error {
 	length := len([]rune(password))
 	if length < 6 || length > 72 {
-		return errors.New("password must be between 6 and 72 characters")
+		return NewUserRegistrationError("password must be between 6 and 72 characters")
 	}
 	hasUpper := false
 	for _, r := range password {
@@ -60,12 +58,12 @@ func validatePassword(password string) error {
 		}
 	}
 	if !hasUpper {
-		return errors.New("password must contain at least one uppercase letter")
+		return NewUserRegistrationError("password must contain at least one uppercase letter")
 	}
 	return nil
 }
 
-func (s *UserStore) Register(username, password, displayName string) (User, error) {
+func (s *UserStore) Register(ctx context.Context, username, password, displayName string) (User, error) {
 	if err := validateUsername(username); err != nil {
 		return User{}, err
 	}
@@ -76,37 +74,54 @@ func (s *UserStore) Register(username, password, displayName string) (User, erro
 		return User{}, err
 	}
 
+	lowerUsername := strings.ToLower(username)
+	exists, err := s.queries.UserExists(ctx, lowerUsername)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to check if user exists: %w", err)
+	}
+	if exists {
+		return User{}, NewUserRegistrationError("username is already taken")
+	}
+
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	user := User{
-		Username:       username,
+	dbUser, err := s.queries.CreateUser(ctx, sqlc.CreateUserParams{
+		Username:       lowerUsername,
 		DisplayName:    displayName,
 		HashedPassword: hashed,
+	})
+	if err != nil {
+		return User{}, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	lowerUsername := strings.ToLower(username)
-	wasSet := s.cache.SetIfAbsent(lowerUsername, user)
-	if !wasSet {
-		return User{}, errors.New("username is already taken")
-	}
-
-	return user, nil
+	return User{
+		Username:       dbUser.Username,
+		DisplayName:    dbUser.DisplayName,
+		HashedPassword: dbUser.HashedPassword,
+	}, nil
 }
 
-func (s *UserStore) Login(username, password string) (User, error) {
+func (s *UserStore) Login(ctx context.Context, username, password string) (User, error) {
 	lowerUsername := strings.ToLower(username)
-	user, exists := s.cache.Get(lowerUsername)
-	if !exists {
-		return User{}, errors.New("invalid username or password")
-	}
-
-	err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password))
+	dbUser, err := s.queries.GetUserByUsername(ctx, lowerUsername)
 	if err != nil {
-		return User{}, errors.New("invalid username or password")
+		if errors.Is(err, pgx.ErrNoRows) {
+			return User{}, ErrInvalidCredentials
+		}
+		return User{}, fmt.Errorf("failed to query user: %w", err)
 	}
 
-	return user, nil
+	err = bcrypt.CompareHashAndPassword(dbUser.HashedPassword, []byte(password))
+	if err != nil {
+		return User{}, ErrInvalidCredentials
+	}
+
+	return User{
+		Username:       dbUser.Username,
+		DisplayName:    dbUser.DisplayName,
+		HashedPassword: dbUser.HashedPassword,
+	}, nil
 }
