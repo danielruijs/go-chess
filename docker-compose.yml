@@ -1,10 +1,47 @@
 services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gochess
+      POSTGRES_USER: gochess
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gochess"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_DSN: postgres://gochess:secret@postgres:5432/gochess?sslmode=disable
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: ["-allowed-origins", "https://gochess.dev", "-cookie-domain", ".gochess.dev"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: [
+      "-allowed-origins", "https://gochess.dev",
+      "-cookie-domain", ".gochess.dev",
+      "-db-dsn", "postgres://gochess:secret@postgres:5432/gochess?sslmode=disable"
+    ]
     ports:
       - "8085:8085"
       - "2115:2115"
+
+volumes:
+  postgres_data:
