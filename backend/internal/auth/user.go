@@ -10,7 +10,9 @@ import (
 
 	"go-chess/internal/db/sqlc"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -74,26 +76,22 @@ func (s *UserStore) Register(ctx context.Context, username, password, displayNam
 		return User{}, err
 	}
 
-	lowerUsername := strings.ToLower(username)
-	exists, err := s.queries.UserExists(ctx, lowerUsername)
-	if err != nil {
-		return User{}, fmt.Errorf("failed to check if user exists: %w", err)
-	}
-	if exists {
-		return User{}, NewUserRegistrationError("username is already taken")
-	}
-
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to hash password: %w", err)
 	}
 
+	lowerUsername := strings.ToLower(username)
 	dbUser, err := s.queries.CreateUser(ctx, sqlc.CreateUserParams{
 		Username:       lowerUsername,
 		DisplayName:    displayName,
 		HashedPassword: hashed,
 	})
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return User{}, NewUserRegistrationError("username is already taken")
+		}
 		return User{}, fmt.Errorf("failed to create user: %w", err)
 	}
 
