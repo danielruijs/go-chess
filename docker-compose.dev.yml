@@ -1,0 +1,8 @@
+services:
+  migrate:
+    volumes:
+      # Mount the host migrations directory directly into the container.
+      # This allows goose to run migrations using the live local files 
+      # without needing to rebuild the Docker image during local development.
+      - ./backend/db/migrations:/migrations
+
