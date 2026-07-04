@@ -69,10 +69,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Build and run backend
+      - name: Build stack
+        run: docker compose -f docker-compose.yml build
+
+      - name: Pre-deployment database backup
         run: |
-          docker compose build backend
-          docker compose up -d backend
+          mkdir -p ~/db_backups
+          if [ "$(docker compose -f docker-compose.yml ps -q postgres)" ]; then
+            docker compose -f docker-compose.yml exec -T postgres pg_dump -U gochess gochess > ~/db_backups/gochess_pre_deploy_backup.sql
+          fi
+
+      - name: Run database migrations
+        run: docker compose -f docker-compose.yml run --rm migrate
+
+      - name: Start backend
+        run: docker compose -f docker-compose.yml up -d backend
 
       - name: Cleanup old Docker data
         if: always() # This ensures it runs even if the build fails
