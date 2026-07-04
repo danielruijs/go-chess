@@ -24,7 +24,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DB_DSN: postgres://gochess:secret@postgres:5432/gochess?sslmode=disable
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: postgres://gochess:secret@postgres:5432/gochess?sslmode=disable
 
   backend:
     build:
