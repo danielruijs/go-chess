@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"slices"
@@ -104,9 +105,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userStore.Register(creds.Username, creds.Password, creds.DisplayName)
+	user, err := h.userStore.Register(r.Context(), creds.Username, creds.Password, creds.DisplayName)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if valErr, ok := errors.AsType[*UserRegistrationError](err); ok {
+			http.Error(w, valErr.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -139,9 +144,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userStore.Login(creds.Username, creds.Password)
+	user, err := h.userStore.Login(r.Context(), creds.Username, creds.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		if errors.Is(err, ErrInvalidCredentials) {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
