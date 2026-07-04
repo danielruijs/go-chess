@@ -8,11 +8,19 @@ For a comprehensive overview of the backend's architecture, including concept ex
 
 ## Running the backend
 
-To run the backend, use the following command:
+To run the backend locally:
 
-```bash
-task run
-```
+1. **Start the database and run migrations:**
+    ```bash
+    task db
+    ```
+    This starts the PostgreSQL container, exposes port `5433` to the host, and runs database migrations. Use `task db-down` to stop the database.
+
+2. **Run and iterate on the backend Go application:**
+   ```bash
+   task run
+   ```
+   This compiles and runs the Go backend locally on your host machine, connecting to the running PostgreSQL container.
 
 The backend serves gameplay traffic on `localhost:8085`.
 
@@ -22,11 +30,13 @@ For monitoring the backend, see the [Monitoring](monitoring/README.md) documenta
 
 ## Deploying in a container
 
-Use the docker compose file in the project root to run the backend in a container by running the following command in the project root:
+To run the full stack in a containerized environment, execute the following from the root directory:
 
 ```bash
-docker compose up -d backend
+docker compose up -d
 ```
+
+This will start PostgreSQL, run database schema migrations, and deploy the backend service.
 
 ## Linting and running tests
 

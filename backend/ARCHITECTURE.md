@@ -6,7 +6,7 @@ This document explains the architecture of the go-chess backend, defines its cor
 
 The backend is built around a few central entities that manage user identity, network connections, and gameplay state:
 
-*   **User (`auth.User`)**: A persistent user identity registered in the system (currently stored in-memory). Contains credentials (hashed via bcrypt) and a display name. Stored and queried via the `UserStore`.
+*   **User (`auth.User`)**: A persistent user identity registered in the system (stored in the PostgreSQL database). Contains credentials (hashed via bcrypt) and a display name. Stored and queried via the `UserStore`.
 *   **Session (`auth.Session`)**: A temporary session representation. Each session can be **anonymous** (temp guest name, not registered) or **authenticated** (tied to a `User`). Sessions are identified by a `SessionID` (UUID) stored in the client's secure HTTP-only `session_id` cookie. Valid sessions are cached for 24 hours in the `SessionStore`.
 *   **PlayerKey (`server.PlayerKey`)**: A unique string key used to bridge the authentication layer (`auth`) and the gameplay layer (`server`). 
     *   For authenticated users, the format is `"user:<username>"`.
@@ -68,6 +68,11 @@ graph TD
         UserStore["UserStore (Bcrypt Auth)"]
     end
 
+    subgraph DB [internal/db]
+        DBQueries["Queries (sqlc generated)"]
+        DBConnection["Pool (pgxpool)"]
+    end
+
     subgraph Server [internal/server]
         WebSocketHandler["WebSocketHandler (/ws)"]
         Matchmaker["Matchmaker (Queue & Pair)"]
@@ -87,11 +92,12 @@ graph TD
     main_go --> AuthHandler
     main_go --> WebSocketHandler
     main_go --> Matchmaker
+    main_go --> DBConnection
 
     AuthHandler --> UserStore
     AuthHandler --> SessionStore
     SessionStore -->|Session| CacheWithCleanup
-    UserStore -->|User| CacheWithoutCleanup
+    UserStore -->|Queries| DBQueries
 
     WebSocketHandler --> SessionStore
     WebSocketHandler --> Matchmaker
