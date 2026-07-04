@@ -30,7 +30,32 @@ tasks:
     desc: "Run full backend ci"
     deps: [deps, build, test, vet, lint]
 
+  db:
+    desc: "Start Postgres and run database migrations"
+    cmds:
+      - docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml run --rm migrate
+
+  db-down:
+    desc: "Stop the database container"
+    cmds:
+      - docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml down
+
+  db-clean:
+    desc: "Stop the database container and delete persistent volumes (full cleanup)"
+    cmds:
+      - docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml down -v
+
+  db-shell:
+    desc: "Open an interactive psql shell inside the database container"
+    cmds:
+      - docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml exec -it postgres psql -U gochess -d gochess
+
+  generate:
+    desc: "Generate Go database queries using sqlc"
+    cmds:
+      - sqlc generate
+
   run:
     desc: "Run the backend"
     cmds:
-      - go run . -allowed-origins "http://localhost:5173" -cookie-domain "localhost"
+      - go run . -allowed-origins "http://localhost:5173" -cookie-domain "localhost" -db-dsn "postgres://gochess:secret@localhost:5433/gochess?sslmode=disable"
