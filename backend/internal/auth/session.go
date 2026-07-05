@@ -2,9 +2,7 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	"go-chess/internal/cache"
@@ -22,6 +20,8 @@ const (
 
 	sessionDuration        = 24 * time.Hour
 	sessionCleanupInterval = 10 * time.Minute
+
+	AnonDisplayName = "Anonymous"
 )
 
 type SessionID string
@@ -33,8 +33,7 @@ type Session struct {
 }
 
 type SessionStore struct {
-	cache       *cache.Cache[SessionID, Session]
-	anonCounter atomic.Uint64
+	cache *cache.Cache[SessionID, Session]
 }
 
 func NewSessionStore(ctx context.Context) (*SessionStore, error) {
@@ -57,11 +56,6 @@ func NewSessionStore(ctx context.Context) (*SessionStore, error) {
 	return store, nil
 }
 
-func (s *SessionStore) nextAnonName() string {
-	val := s.anonCounter.Add(1)
-	return fmt.Sprintf("Anonymous %d", val)
-}
-
 func GenerateSessionID() SessionID {
 	return SessionID(uuid.New().String())
 }
@@ -76,7 +70,7 @@ func (s *SessionStore) CreateAnonSession() Session {
 }
 
 func (s *SessionStore) CreateAnonSessionWithID(sessionID SessionID) Session {
-	return s.CreateSessionWithID(sessionID, "", s.nextAnonName())
+	return s.CreateSessionWithID(sessionID, "", AnonDisplayName)
 }
 
 func (s *SessionStore) CreateSession(username, displayName string) Session {
