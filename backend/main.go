@@ -37,10 +37,7 @@ func main() {
 	defer pool.Close()
 
 	queries := sqlc.New(pool)
-	userStore, err := auth.NewUserStore(queries)
-	if err != nil {
-		log.Fatalf("failed to create user store: %v", err)
-	}
+	userStore := auth.NewUserStore(queries)
 	sessionStore, err := auth.NewSessionStore(ctx)
 	if err != nil {
 		log.Fatalf("failed to create session store: %v", err)
