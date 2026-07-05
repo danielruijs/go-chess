@@ -26,8 +26,8 @@ type UserStore struct {
 	queries *sqlc.Queries
 }
 
-func NewUserStore(queries *sqlc.Queries) (*UserStore, error) {
-	return &UserStore{queries: queries}, nil
+func NewUserStore(queries *sqlc.Queries) *UserStore {
+	return &UserStore{queries: queries}
 }
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,20}$`)
