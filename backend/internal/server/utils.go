@@ -1,9 +1,32 @@
 package server
 
 import (
+	"crypto/rand"
 	"fmt"
 	"go-chess/internal/chess"
+	"math/big"
 )
+
+const (
+	base62Alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	matchIDLen     = 12
+)
+
+// GenerateMatchID creates a random 12-character base62 string for match routing.
+func GenerateMatchID() (string, error) {
+	result := make([]byte, matchIDLen)
+	alphabetLen := big.NewInt(int64(len(base62Alphabet)))
+
+	for i := range matchIDLen {
+		num, err := rand.Int(rand.Reader, alphabetLen)
+		if err != nil {
+			return "", err
+		}
+		result[i] = base62Alphabet[num.Int64()]
+	}
+
+	return string(result), nil
+}
 
 func moveDataToMove(data MoveData) (chess.Move, error) {
 	from, err := chess.StrToSquare(data.From)
