@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"go-chess/internal/chess"
 	"time"
@@ -105,6 +106,31 @@ func (c *MatchClock) getTimeout() *chess.Color {
 		}
 	}
 	return nil
+}
+
+const (
+	MaxInitialTime = 24 * time.Hour
+	MaxIncrement   = 1 * time.Hour
+)
+
+func (tf TimeFormat) Validate() error {
+	if tf.initial <= 0 {
+		return errors.New("initial time must be greater than zero")
+	}
+	if tf.increment < 0 {
+		return errors.New("increment cannot be negative")
+	}
+	if tf.initial > MaxInitialTime {
+		return fmt.Errorf("initial time exceeds maximum limit (%v)", MaxInitialTime)
+	}
+	if tf.increment > MaxIncrement {
+		return fmt.Errorf("increment exceeds maximum limit (%v)", MaxIncrement)
+	}
+	return nil
+}
+
+func (tf TimeFormatMs) Validate() error {
+	return MsToTimeFormat(tf).Validate()
 }
 
 func (tf TimeFormat) String() string {
