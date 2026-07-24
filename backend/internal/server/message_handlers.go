@@ -26,6 +26,10 @@ func (h JoinMatchMessageHandler) Handle(c *Client, messageData json.RawMessage, 
 		return fmt.Errorf("invalid join match data format: %w", err)
 	}
 
+	if err := data.TimeFormat.Validate(); err != nil {
+		return fmt.Errorf("invalid time format: %w", err)
+	}
+
 	if matchmaker.GetMatch(c.Player) != nil {
 		return fmt.Errorf("player is already in a match")
 	}
@@ -46,6 +50,10 @@ func (h LeaveMatchMessageHandler) Handle(c *Client, messageData json.RawMessage,
 	if err := json.Unmarshal(messageData, &data); err != nil {
 		return fmt.Errorf("invalid leave match data format: %w", err)
 	}
+	if err := data.TimeFormat.Validate(); err != nil {
+		return fmt.Errorf("invalid time format: %w", err)
+	}
+
 	timeFormat := MsToTimeFormat(data.TimeFormat)
 	matchmaker.Leave(c.Player, timeFormat)
 	return nil
