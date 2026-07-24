@@ -5,8 +5,75 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type MatchEventType string
+
+const (
+	MatchEventTypeGameStarted MatchEventType = "game_started"
+	MatchEventTypeMove        MatchEventType = "move"
+	MatchEventTypeGameEnded   MatchEventType = "game_ended"
+)
+
+func (e *MatchEventType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MatchEventType(s)
+	case string:
+		*e = MatchEventType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MatchEventType: %T", src)
+	}
+	return nil
+}
+
+type NullMatchEventType struct {
+	MatchEventType MatchEventType
+	Valid          bool // Valid is true if MatchEventType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMatchEventType) Scan(value interface{}) error {
+	if value == nil {
+		ns.MatchEventType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MatchEventType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMatchEventType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MatchEventType), nil
+}
+
+type Match struct {
+	ID               int64
+	PublicID         string
+	WhiteUserID      pgtype.Int8
+	BlackUserID      pgtype.Int8
+	WhiteDisplayName string
+	BlackDisplayName string
+	InitialTimeMs    int64
+	IncrementMs      int64
+	CreatedAt        pgtype.Timestamptz
+}
+
+type MatchEvent struct {
+	ID        int64
+	MatchID   int64
+	SeqNum    int32
+	EventType MatchEventType
+	Payload   []byte
+	CreatedAt pgtype.Timestamptz
+}
 
 type User struct {
 	ID             int64
