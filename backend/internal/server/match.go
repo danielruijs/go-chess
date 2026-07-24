@@ -52,8 +52,10 @@ func (m *Match) Run() {
 			}
 
 			m.metrics.recordMatchEvent(event.Type)
-			ended := handler.Handle(m, event)
-			if ended {
+			result, _ := handler.Handle(m, event)
+
+			if result != nil {
+				m.end(result)
 				return
 			}
 
