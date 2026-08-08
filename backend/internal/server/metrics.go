@@ -27,11 +27,12 @@ type metrics struct {
 	queueJoinsTotal  *prometheus.CounterVec
 	queueLeavesTotal prometheus.Counter
 
-	activeMatches   prometheus.Gauge
-	matchesStarted  *prometheus.CounterVec
-	matchesFinished prometheus.Counter
-	eventsTotal     *prometheus.CounterVec
-	resultsTotal    *prometheus.CounterVec
+	activeMatches    prometheus.Gauge
+	matchesStarted   *prometheus.CounterVec
+	matchesFinished  prometheus.Counter
+	eventsTotal      *prometheus.CounterVec
+	eventErrorsTotal *prometheus.CounterVec
+	resultsTotal     *prometheus.CounterVec
 }
 
 func NewMetrics() *metrics {
@@ -71,12 +72,12 @@ func NewMetrics() *metrics {
 		}, []string{"type"}),
 		messageSendErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_websocket_message_send_errors_total",
-			Help: "Total websocket message send errors by type and category.",
-		}, []string{"type", "category"}),
+			Help: "Total websocket message send errors by type.",
+		}, []string{"type"}),
 		messageReceiveErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_websocket_message_receive_errors_total",
-			Help: "Total websocket message handling errors by type and category.",
-		}, []string{"type", "category"}),
+			Help: "Total websocket message handling errors by type.",
+		}, []string{"type"}),
 		queueSize: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "go_chess_matchmaking_queue_size",
 			Help: "Current queue size per time format.",
@@ -105,6 +106,10 @@ func NewMetrics() *metrics {
 			Name: "go_chess_match_events_total",
 			Help: "Total match events by type.",
 		}, []string{"type"}),
+		eventErrorsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "go_chess_match_event_errors_total",
+			Help: "Total match event handling errors by event type.",
+		}, []string{"type"}),
 		resultsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "go_chess_match_results_total",
 			Help: "Total match results by outcome and reason.",
@@ -128,6 +133,7 @@ func NewMetrics() *metrics {
 		m.matchesStarted,
 		m.matchesFinished,
 		m.eventsTotal,
+		m.eventErrorsTotal,
 		m.resultsTotal,
 	)
 
@@ -168,12 +174,12 @@ func (m *metrics) recordWebsocketMessageReceived(messageType MessageType) {
 	m.messagesReceived.WithLabelValues(string(messageType)).Inc()
 }
 
-func (m *metrics) recordWebsocketMessageSendError(messageType MessageType, category string) {
-	m.messageSendErrors.WithLabelValues(string(messageType), category).Inc()
+func (m *metrics) recordWebsocketMessageSendError(messageType MessageType) {
+	m.messageSendErrors.WithLabelValues(string(messageType)).Inc()
 }
 
-func (m *metrics) recordWebsocketMessageError(messageType MessageType, category string) {
-	m.messageReceiveErrors.WithLabelValues(string(messageType), category).Inc()
+func (m *metrics) recordWebsocketMessageReceiveError(messageType MessageType) {
+	m.messageReceiveErrors.WithLabelValues(string(messageType)).Inc()
 }
 
 func (m *metrics) recordQueueJoin(timeFormat TimeFormat, queueSize int) {
@@ -203,4 +209,8 @@ func (m *metrics) recordMatchFinished(result *chess.Result) {
 
 func (m *metrics) recordMatchEvent(eventType eventType) {
 	m.eventsTotal.WithLabelValues(string(eventType)).Inc()
+}
+
+func (m *metrics) recordMatchEventError(eventType eventType) {
+	m.eventErrorsTotal.WithLabelValues(string(eventType)).Inc()
 }

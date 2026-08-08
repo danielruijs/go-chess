@@ -78,10 +78,14 @@ func (m *Match) Run(ctx context.Context) {
 			}
 
 			m.metrics.recordMatchEvent(event.Type)
-			result, valid := handler.Handle(m, event)
-			if valid {
-				m.persistMatchEvent(ctx, event)
+			result, err := handler.Handle(m, event)
+			if err != nil {
+				log.Printf("failed to handle event %s: %v", event.Type, err)
+				m.metrics.recordMatchEventError(event.Type)
+				continue
 			}
+
+			m.persistMatchEvent(ctx, event)
 
 			if result != nil {
 				m.end(ctx, result)
