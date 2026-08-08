@@ -121,7 +121,7 @@ sequenceDiagram
     participant WS as server.WebSocketHandler
     
     Note over Browser, Sessions: Phase 1: Anonymous Initialization
-    Browser->>Auth: GET /api/check (No Cookie)
+    Browser->>Auth: GET /api/auth/check (No Cookie)
     Auth->>Sessions: CreateAnonSession()
     Sessions-->>Auth: Session (ID, temp DisplayName)
     Auth-->>Browser: 200 OK + Set-Cookie: session_id=<UUID>
@@ -135,7 +135,7 @@ sequenceDiagram
     WS-->>Browser: player_info message + matchmaking_update
     
     Note over Browser, Auth: Phase 3: Registration / Upgrade
-    Browser->>Auth: POST /api/register (username, password, displayName)
+    Browser->>Auth: POST /api/auth/register (username, password, displayName)
     Auth->>Sessions: CreateSession(username, displayName)
     Sessions-->>Auth: Authenticated Session
     Auth-->>Browser: 200 OK + Set-Cookie: session_id=<UUID> (new session)

@@ -5,7 +5,7 @@ const API_URL: string = import.meta.env.VITE_API_URL as string;
 
 /** Returns session data if a valid session exists, otherwise null. */
 export async function checkSession(): Promise<PlayerInfoData | null> {
-  const response = await fetch(`${API_URL}/api/check`, { method: "GET", credentials: "include" });
+  const response = await fetch(`${API_URL}/api/auth/check`, { method: "GET", credentials: "include" });
   if (!response.ok) {
     return null;
   }
@@ -14,7 +14,7 @@ export async function checkSession(): Promise<PlayerInfoData | null> {
 
 /** Sends logout request. Throws on network error. */
 export async function logout(): Promise<void> {
-  await fetch(`${API_URL}/api/logout`, { method: "POST", credentials: "include" });
+  await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
 }
 
 /** Sends login request. Returns the player info on success, or an Error on failure. */
@@ -22,7 +22,7 @@ export async function login(
   credentials: Credentials
 ): Promise<{ data: PlayerInfoData | null; error: Error | null }> {
   try {
-    const response = await fetch(`${API_URL}/api/login`, {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
@@ -47,7 +47,7 @@ export async function register(
   credentials: Credentials
 ): Promise<{ data: PlayerInfoData | null; error: Error | null }> {
   try {
-    const response = await fetch(`${API_URL}/api/register`, {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
