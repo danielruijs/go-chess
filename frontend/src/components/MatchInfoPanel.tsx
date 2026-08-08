@@ -54,6 +54,7 @@ function MatchInfoPanel({
               <Button
                 sx={{ width: "40px", height: "30px", fontSize: "22px" }}
                 variant="contained"
+                disabled={!inMatch}
                 color="success"
                 onClick={() => onRespondToDrawOffer(true)}
               >
@@ -62,6 +63,7 @@ function MatchInfoPanel({
               <Button
                 sx={{ width: "40px", height: "30px", fontSize: "22px" }}
                 variant="contained"
+                disabled={!inMatch}
                 color="error"
                 onClick={() => onRespondToDrawOffer(false)}
               >
