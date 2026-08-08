@@ -186,12 +186,12 @@ func TestMoveListToLegalMoves(t *testing.T) {
 	}
 }
 
-func TestGenerateMatchID(t *testing.T) {
-	id1, err := GenerateMatchID()
+func TestGeneratePublicMatchID(t *testing.T) {
+	id1, err := GeneratePublicMatchID()
 	assert.NoError(t, err)
 	assert.Len(t, id1, 12)
 
-	id2, err := GenerateMatchID()
+	id2, err := GeneratePublicMatchID()
 	assert.NoError(t, err)
 	assert.NotEqual(t, id1, id2)
 }

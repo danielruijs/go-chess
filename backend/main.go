@@ -23,13 +23,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	metrics := server.NewMetrics()
-	matchmaker, err := server.NewMatchmaker(metrics)
-	if err != nil {
-		log.Fatalf("failed to create matchmaker: %v", err)
-	}
-	go matchmaker.Run(ctx)
-
 	pool, err := db.Connect(ctx, config.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
@@ -37,6 +30,15 @@ func main() {
 	defer pool.Close()
 
 	queries := sqlc.New(pool)
+
+	metrics := server.NewMetrics()
+	matchStore := server.NewMatchStore(queries)
+	matchmaker, err := server.NewMatchmaker(metrics, matchStore)
+	if err != nil {
+		log.Fatalf("failed to create matchmaker: %v", err)
+	}
+	go matchmaker.Run(ctx)
+
 	userStore := auth.NewUserStore(queries)
 	sessionStore, err := auth.NewSessionStore(ctx)
 	if err != nil {
@@ -88,6 +90,8 @@ func main() {
 	if err := metricsSrv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("metrics server shutdown error: %v", err)
 	}
+
+	matchStore.Close()
 
 	log.Println("server exited")
 }

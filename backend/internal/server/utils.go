@@ -8,21 +8,21 @@ import (
 )
 
 const (
-	base62Alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	matchIDLen     = 12
+	base62Alphabet   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	publicMatchIDLen = 12
 )
 
-// GenerateMatchID creates a random 12-character base62 string for match routing.
-func GenerateMatchID() (string, error) {
-	result := make([]byte, matchIDLen)
+// GeneratePublicMatchID creates a random 12-character base62 string for match routing.
+func GeneratePublicMatchID() (string, error) {
+	result := make([]byte, publicMatchIDLen)
 	alphabetLen := big.NewInt(int64(len(base62Alphabet)))
 
-	for i := range matchIDLen {
-		num, err := rand.Int(rand.Reader, alphabetLen)
+	for i := range publicMatchIDLen {
+		n, err := rand.Int(rand.Reader, alphabetLen)
 		if err != nil {
 			return "", err
 		}
-		result[i] = base62Alphabet[num.Int64()]
+		result[i] = base62Alphabet[n.Int64()]
 	}
 
 	return string(result), nil
