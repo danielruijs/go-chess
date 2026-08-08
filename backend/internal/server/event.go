@@ -50,7 +50,8 @@ func (h MoveEventHandler) Handle(m *Match, event Event) (result *chess.Result, e
 		return nil, fmt.Errorf("failed to check match clock before move: %w", err)
 	}
 	if loserByTimeout != nil {
-		return getTimeoutResult(*loserByTimeout), nil
+		timeoutResult := getTimeoutResult(*loserByTimeout)
+		return &timeoutResult, nil
 	}
 
 	move, err := moveDataToMove(data)
