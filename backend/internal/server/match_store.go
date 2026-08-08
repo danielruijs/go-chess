@@ -147,8 +147,7 @@ func (ms *MatchEventStore) StoreGameEndedEvent(ctx context.Context, result *ches
 		return
 	}
 	payload, err := json.Marshal(GameEndedPayload{
-		Outcome: result.Outcome,
-		Reason:  result.Reason,
+		Result: *result,
 	})
 	if err != nil {
 		log.Printf("ERROR [MatchStore]: failed to marshal game_ended payload: %v", err)
