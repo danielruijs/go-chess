@@ -47,10 +47,10 @@ func main() {
 	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.CookieDomain)
 
 	cors := server.NewCORSMiddleware(config.AllowedOrigins)
-	http.HandleFunc("/api/register", cors.Handler(authHandler.Register))
-	http.HandleFunc("/api/login", cors.Handler(authHandler.Login))
-	http.HandleFunc("/api/logout", cors.Handler(authHandler.Logout))
-	http.HandleFunc("/api/check", cors.Handler(authHandler.CheckAuth))
+	http.HandleFunc("/api/auth/register", cors.Handler(authHandler.Register))
+	http.HandleFunc("/api/auth/login", cors.Handler(authHandler.Login))
+	http.HandleFunc("/api/auth/logout", cors.Handler(authHandler.Logout))
+	http.HandleFunc("/api/auth/check", cors.Handler(authHandler.CheckAuth))
 
 	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
 	if err != nil {

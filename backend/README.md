@@ -63,7 +63,7 @@ All authentication endpoints utilize a secure session cookie named `session_id`.
 
 Check if the user has an active session. If the session cookie is missing or invalid, the server automatically initializes a new anonymous session and returns it in the response cookie.
 
-- **URL**: `/api/check`
+- **URL**: `/api/auth/check`
 - **Method**: `GET`
 - **Response Headers**: `Set-Cookie: session_id=<sessionID>` (if cookie is set/renewed)
 - **Response Content-Type**: `application/json`
@@ -90,7 +90,7 @@ Check if the user has an active session. If the session cookie is missing or inv
 
 Registers a new user account and upgrades the active session.
 
-- **URL**: `/api/register`
+- **URL**: `/api/auth/register`
 - **Method**: `POST`
 - **Request Content-Type**: `application/json`
 - **Request Body**:
@@ -120,7 +120,7 @@ Registers a new user account and upgrades the active session.
 
 Authenticates user credentials and upgrades/establishes the session.
 
-- **URL**: `/api/login`
+- **URL**: `/api/auth/login`
 - **Method**: `POST`
 - **Request Content-Type**: `application/json`
 - **Request Body**:
@@ -149,7 +149,7 @@ Authenticates user credentials and upgrades/establishes the session.
 
 Logs out the user, invalidates the session record on the backend, and clears the client's session cookie.
 
-- **URL**: `/api/logout`
+- **URL**: `/api/auth/logout`
 - **Method**: `POST`
 - **Response Headers**: `Set-Cookie: session_id=; Max-Age=0` (expires in the past)
 - **Response Body**: _Empty (200 OK)_
