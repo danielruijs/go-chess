@@ -53,14 +53,14 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 
 		handler, ok := messageHandlers[message.Type]
 		if !ok {
-			c.metrics.recordWebsocketMessageError(message.Type, "unsupported_type")
+			c.metrics.recordWebsocketMessageReceiveError(message.Type)
 			log.Println("Unsupported message type:", message.Type)
 			continue
 		}
 
 		err = handler.Handle(c, message.Data, matchmaker)
 		if err != nil {
-			c.metrics.recordWebsocketMessageError(message.Type, "handler_error")
+			c.metrics.recordWebsocketMessageReceiveError(message.Type)
 			log.Printf("Error handling message with type %v: %v\n", message.Type, err)
 		}
 	}
@@ -72,7 +72,7 @@ func (c *Client) SendMessages() {
 		case message := <-c.sendChan:
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
-				c.metrics.recordWebsocketMessageSendError(message.Type, "write_error")
+				c.metrics.recordWebsocketMessageSendError(message.Type)
 				log.Println("Error sending message:", err)
 			} else {
 				c.metrics.recordWebsocketMessageSent(message.Type)

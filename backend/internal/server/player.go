@@ -139,7 +139,7 @@ func (p *Player) Send(msgType MessageType, data any) {
 		case client.sendChan <- msg:
 		default:
 			log.Printf("WARN: send buffer full, evicting client for player %s (msg=%s)", p.DisplayName, msgType)
-			client.metrics.recordWebsocketMessageSendError(msgType, "buffer_full_evicted")
+			client.metrics.recordWebsocketMessageSendError(msgType)
 			client.Close()
 			p.UnregisterClient(client)
 		}
