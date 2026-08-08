@@ -2,7 +2,7 @@ import BoardComponent from "../components/Board";
 import MatchClock from "../components/MatchClock.tsx";
 import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getMaterialDiff, pgnToMoves } from "../utils/chess.ts";
 import {
   MessageTypeOfferDraw,
@@ -12,12 +12,13 @@ import {
 } from "../types/message.ts";
 import { MessageTypeMove } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
 import useInterpolatedClock from "../hooks/useInterpolatedClock.ts";
 
 function Game() {
   const navigate = useNavigate();
+  const { publicId: urlPublicId } = useParams<{ publicId: string }>();
   const {
     sendMessage,
     board,
@@ -34,7 +35,16 @@ function Game() {
     setIsDrawOfferSent,
     respondToDrawOffer,
     inMatch,
+    publicId: wsPublicId,
+    isConnected,
   } = useWebSocket();
+
+  useEffect(() => {
+    if (isConnected && wsPublicId !== urlPublicId) {
+      navigate("/", { replace: true });
+    }
+  }, [isConnected, wsPublicId, urlPublicId, navigate]);
+
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
   const interpolatedClock = useInterpolatedClock({ clock, activeColor, inMatch, intervalMs: 100 });
 
