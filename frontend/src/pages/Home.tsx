@@ -10,7 +10,7 @@ import type { TimeFormat } from "../types/chess.ts";
 
 function Home() {
   const { playerInfo } = useAuth();
-  const { isConnected, queues, inMatch, sendMessage } = useWebSocket();
+  const { isConnected, queues, inMatch, publicId, sendMessage } = useWebSocket();
   const navigate = useNavigate();
 
   function handleToggleQueue(timeFormat: TimeFormat, queueData: QueueData | undefined) {
@@ -31,7 +31,9 @@ function Home() {
           variant="contained"
           disabled={!isConnected}
           onClick={() => {
-            navigate("/game");
+            if (publicId) {
+              navigate(`/match/${publicId}`);
+            }
           }}
           size="large"
         >

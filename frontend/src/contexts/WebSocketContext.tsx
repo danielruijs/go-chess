@@ -42,6 +42,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   const [blackPlayerName, setBlackPlayerName] = useState<string>("");
   const [queues, setQueues] = useState<QueueData[] | null>(null);
   const [inMatch, setInMatch] = useState<boolean>(false);
+  const [publicId, setPublicId] = useState<string | null>(null);
   const [matchResult, setMatchResult] = useState<Result | null>(null);
   const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
   const [isDrawOfferSent, setIsDrawOfferSent] = useState(false);
@@ -69,6 +70,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     setWhitePlayerName("");
     setBlackPlayerName("");
     setInMatch(false);
+    setPublicId(null);
     setMatchResult(null);
     setIsDrawOfferPending(false);
     setIsDrawOfferSent(false);
@@ -122,11 +124,12 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
           const startMatchData: StartMatchData = message.data;
           resetMatchState();
           setInMatch(true);
+          setPublicId(startMatchData.publicId);
           setPlayerColor(startMatchData.color);
           setWhitePlayerName(startMatchData.whitePlayerName);
           setBlackPlayerName(startMatchData.blackPlayerName);
           setClock(startMatchData.clock);
-          navigateRef.current("/game");
+          navigateRef.current(`/match/${startMatchData.publicId}`);
           break;
         }
         case MessageTypeMatchmakingUpdate: {
@@ -185,6 +188,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         blackPlayerName,
         queues,
         inMatch,
+        publicId,
         matchResult,
         pgn,
         activeColor,
