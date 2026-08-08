@@ -44,6 +44,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   const [inMatch, setInMatch] = useState<boolean>(false);
   const [matchResult, setMatchResult] = useState<Result | null>(null);
   const [isDrawOfferPending, setIsDrawOfferPending] = useState(false);
+  const [isDrawOfferSent, setIsDrawOfferSent] = useState(false);
 
   const { playerInfo, isLoading, setPlayerInfo } = useAuth();
   const { showNotification } = useNotification();
@@ -70,6 +71,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     setInMatch(false);
     setMatchResult(null);
     setIsDrawOfferPending(false);
+    setIsDrawOfferSent(false);
   }
 
   function sendMessage(message: WSMessage) {
@@ -140,9 +142,12 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         }
         case MessageTypeDrawOffered: {
           setIsDrawOfferPending(true);
+          showNotification("Your opponent has offered a draw.", "info");
           break;
         }
         case MessageTypeDrawDeclined: {
+          setIsDrawOfferPending(false);
+          setIsDrawOfferSent(false);
           showNotification("Your draw offer was declined.", "info");
           break;
         }
@@ -185,6 +190,8 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         activeColor,
         clock,
         isDrawOfferPending,
+        isDrawOfferSent,
+        setIsDrawOfferSent,
         respondToDrawOffer,
       }}
     >

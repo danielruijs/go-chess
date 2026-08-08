@@ -8,6 +8,7 @@ type MoveRow = {
 type MatchInfoPanelProps = {
   groupedMoves: MoveRow[];
   isDrawOfferPending: boolean;
+  isDrawOfferSent: boolean;
   inMatch: boolean;
   onRespondToDrawOffer: (accept: boolean) => void;
   onResign: () => void;
@@ -17,6 +18,7 @@ type MatchInfoPanelProps = {
 function MatchInfoPanel({
   groupedMoves,
   isDrawOfferPending,
+  isDrawOfferSent,
   inMatch,
   onRespondToDrawOffer,
   onResign,
@@ -80,10 +82,10 @@ function MatchInfoPanel({
             <Button
               sx={{ width: "100px" }}
               variant="contained"
-              disabled={!inMatch}
+              disabled={!inMatch || isDrawOfferSent}
               onClick={onOfferDraw}
             >
-              Draw
+              {isDrawOfferSent ? "Offered" : "Draw"}
             </Button>
           </div>
         )}
