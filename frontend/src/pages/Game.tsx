@@ -30,6 +30,8 @@ function Game() {
     matchResult,
     pgn,
     isDrawOfferPending,
+    isDrawOfferSent,
+    setIsDrawOfferSent,
     respondToDrawOffer,
     inMatch,
   } = useWebSocket();
@@ -65,6 +67,7 @@ function Game() {
       type: MessageTypeOfferDraw,
     };
     sendMessage(message);
+    setIsDrawOfferSent(true);
   }
 
   function sendMove(from: string, to: string, promotion: PieceType | null) {
@@ -105,6 +108,7 @@ function Game() {
               <MatchInfoPanel
                 groupedMoves={groupedMoves}
                 isDrawOfferPending={isDrawOfferPending}
+                isDrawOfferSent={isDrawOfferSent}
                 inMatch={inMatch}
                 onRespondToDrawOffer={respondToDrawOffer}
                 onResign={handleResign}

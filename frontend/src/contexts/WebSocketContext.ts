@@ -18,6 +18,8 @@ export interface WebSocketContextType {
   inMatch: boolean;
   matchResult: Result | null;
   isDrawOfferPending: boolean;
+  isDrawOfferSent: boolean;
+  setIsDrawOfferSent: (sent: boolean) => void;
   respondToDrawOffer: (accept: boolean) => void;
 }
 
