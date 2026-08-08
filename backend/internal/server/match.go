@@ -88,7 +88,7 @@ func (m *Match) Run(ctx context.Context) {
 			m.persistMatchEvent(ctx, event)
 
 			if result != nil {
-				m.end(ctx, result)
+				m.end(ctx, *result)
 				return
 			}
 
@@ -157,7 +157,7 @@ func (m *Match) sendFinalPositionUpdate() {
 	}
 }
 
-func (m *Match) end(ctx context.Context, result *chess.Result) {
+func (m *Match) end(ctx context.Context, result chess.Result) {
 	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
 	m.metrics.recordMatchFinished(result)
@@ -167,17 +167,17 @@ func (m *Match) end(ctx context.Context, result *chess.Result) {
 	}
 
 	m.sendFinalPositionUpdate()
-	m.sendMatchEnd(*result)
+	m.sendMatchEnd(result)
 	close(m.EventChan)
 	m.MatchEnded <- m
 	log.Printf("ended match between %s and %s with result: %s\n", m.Player1.DisplayName, m.Player2.DisplayName, result.Outcome)
 }
 
-func getTimeoutResult(loser chess.Color) *chess.Result {
+func getTimeoutResult(loser chess.Color) chess.Result {
 	if loser == chess.White {
-		return &chess.Result{Outcome: chess.BlackWin, Reason: chess.Timeout}
+		return chess.Result{Outcome: chess.BlackWin, Reason: chess.Timeout}
 	}
-	return &chess.Result{Outcome: chess.WhiteWin, Reason: chess.Timeout}
+	return chess.Result{Outcome: chess.WhiteWin, Reason: chess.Timeout}
 }
 
 func (m *Match) sendMatchEnd(result chess.Result) {

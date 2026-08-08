@@ -21,7 +21,7 @@ type MatchStorer interface {
 
 type MatchEventStorer interface {
 	StoreMatchEvent(ctx context.Context, event Event, clockSnap ClockData)
-	StoreGameEndedEvent(ctx context.Context, result *chess.Result)
+	StoreGameEndedEvent(ctx context.Context, result chess.Result)
 }
 
 type MatchStore struct {
@@ -142,12 +142,9 @@ func (ms *MatchEventStore) StoreMatchEvent(ctx context.Context, event Event, clo
 	}
 }
 
-func (ms *MatchEventStore) StoreGameEndedEvent(ctx context.Context, result *chess.Result) {
-	if result == nil {
-		return
-	}
+func (ms *MatchEventStore) StoreGameEndedEvent(ctx context.Context, result chess.Result) {
 	payload, err := json.Marshal(GameEndedPayload{
-		Result: *result,
+		Result: result,
 	})
 	if err != nil {
 		log.Printf("ERROR [MatchStore]: failed to marshal game_ended payload: %v", err)

@@ -54,7 +54,7 @@ func TestApplyMoveFullMatchWhiteCheckmate(t *testing.T) {
 		}
 
 		assert.Equal(t, &Result{Outcome: WhiteWin, Reason: Checkmate}, result)
-		e.ApplyResult(result)
+		e.ApplyResult(*result)
 	}
 
 	assert.Equal(t, PGN("1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6 4.Qxf7# 1-0"), e.GetPGN())
@@ -79,7 +79,7 @@ func TestApplyMoveFullMatchBlackCheckmate(t *testing.T) {
 		}
 
 		assert.Equal(t, &Result{Outcome: BlackWin, Reason: Checkmate}, result)
-		e.ApplyResult(result)
+		e.ApplyResult(*result)
 	}
 
 	assert.Equal(t, PGN("1.f3 e6 2.g4 Qh4# 0-1"), e.GetPGN())
@@ -118,7 +118,7 @@ func TestApplyMoveFullMatchThreefoldRepetitionNonConsecutive(t *testing.T) {
 		}
 
 		assert.Equal(t, &Result{Outcome: Draw, Reason: ThreefoldRepetition}, result)
-		e.ApplyResult(result)
+		e.ApplyResult(*result)
 	}
 
 	assert.Equal(

@@ -90,43 +90,43 @@ func TestAppendResult(t *testing.T) {
 	tests := []struct {
 		name     string
 		pgn      PGN
-		result   *Result
+		result   Result
 		expected PGN
 	}{
 		{
 			name:     "white win",
 			pgn:      PGN("1.e4 e5 2.Nf3 Nc6 "),
-			result:   &Result{Outcome: WhiteWin},
+			result:   Result{Outcome: WhiteWin},
 			expected: PGN("1.e4 e5 2.Nf3 Nc6 1-0"),
 		},
 		{
 			name:     "black win",
 			pgn:      PGN("1.e4 e5 2.Nf3 Nc6 "),
-			result:   &Result{Outcome: BlackWin},
+			result:   Result{Outcome: BlackWin},
 			expected: PGN("1.e4 e5 2.Nf3 Nc6 0-1"),
 		},
 		{
 			name:     "draw",
 			pgn:      PGN("1.e4 e5 2.Nf3 Nc6 "),
-			result:   &Result{Outcome: Draw},
+			result:   Result{Outcome: Draw},
 			expected: PGN("1.e4 e5 2.Nf3 Nc6 1/2-1/2"),
 		},
 		{
 			name:     "unknown result",
 			pgn:      PGN("1.e4 e5 "),
-			result:   &Result{},
+			result:   Result{},
 			expected: PGN("1.e4 e5 *"),
 		},
 		{
 			name:     "white win no trailing space",
 			pgn:      PGN("1.e4 e5 2.Nf3 Nc6"),
-			result:   &Result{Outcome: WhiteWin},
+			result:   Result{Outcome: WhiteWin},
 			expected: PGN("1.e4 e5 2.Nf3 Nc6 1-0"),
 		},
 		{
 			name:     "unknown result no trailing space",
 			pgn:      PGN("1.e4 e5"),
-			result:   &Result{},
+			result:   Result{},
 			expected: PGN("1.e4 e5 *"),
 		},
 	}
