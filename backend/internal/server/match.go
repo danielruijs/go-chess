@@ -132,6 +132,7 @@ func (m *Match) getBoardData(player *Player) BoardData {
 
 func (m *Match) getStartMatchData(player *Player) StartMatchData {
 	return StartMatchData{
+		PublicID:        m.PublicID,
 		Color:           player.GetColor(),
 		WhitePlayerName: m.getPlayerByColor(chess.White).DisplayName,
 		BlackPlayerName: m.getPlayerByColor(chess.Black).DisplayName,

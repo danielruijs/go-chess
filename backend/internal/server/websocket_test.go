@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"go-chess/internal/auth"
+	"go-chess/internal/chess"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,13 +16,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type noopMatchStore struct{}
+
+func (n *noopMatchStore) CreateMatch(ctx context.Context, publicID string, player1, player2 *Player, timeFormat TimeFormat) (MatchEventStorer, error) {
+	return &noopMatchSessionStore{}, nil
+}
+func (n *noopMatchStore) Close() {}
+
+type noopMatchSessionStore struct{}
+
+func (n *noopMatchSessionStore) StoreMatchEvent(ctx context.Context, event Event, clockSnap ClockData) {}
+func (n *noopMatchSessionStore) StoreGameEndedEvent(ctx context.Context, result *chess.Result)        {}
+
 func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) {
 	t.Helper()
 
 	ctx := t.Context()
 
 	metrics := NewMetrics()
-	matchmaker, err := NewMatchmaker(metrics)
+	matchmaker, err := NewMatchmaker(metrics, &noopMatchStore{})
 	assert.NoError(t, err)
 	go matchmaker.Run(ctx)
 
@@ -275,7 +289,8 @@ func TestWebSocketHandlerKeepsCachedPlayersInMatch(t *testing.T) {
 	session1 := handler.sessionStore.CreateSessionWithID(auth.SessionID("123e4567-e89b-12d3-a456-426614174000"), "", "Anon")
 	player1 := handler.getOrCreatePlayer(session1)
 	player2 := NewPlayer("anon:test-2", "", "Test Player 2")
-	match := NewMatch(player1, player2, timeFormat, handler.matchmaker.matchEnded, handler.matchmaker.metrics)
+	match, err := NewMatch(t.Context(), &noopMatchStore{}, player1, player2, timeFormat, handler.matchmaker.matchEnded, handler.matchmaker.metrics)
+	assert.NoError(t, err)
 	handler.matchmaker.RegisterMatch(match)
 
 	// If player is in a match, should not evict
