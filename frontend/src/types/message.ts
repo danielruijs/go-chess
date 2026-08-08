@@ -49,6 +49,7 @@ type MatchmakingUpdateData = {
 };
 
 type StartMatchData = {
+  publicId: string;
   color: Color;
   whitePlayerName: string;
   blackPlayerName: string;
