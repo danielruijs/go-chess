@@ -17,10 +17,11 @@ type Matchmaker struct {
 
 	activeMatches *cache.Cache[*Player, *Match]
 
-	metrics *metrics
+	metrics     *metrics
+	matchStorer MatchStorer
 }
 
-func NewMatchmaker(metrics *metrics) (*Matchmaker, error) {
+func NewMatchmaker(metrics *metrics, matchStorer MatchStorer) (*Matchmaker, error) {
 	activeMatches, err := cache.New[*Player](cache.Options[*Match]{})
 	if err != nil {
 		return nil, err
@@ -32,6 +33,7 @@ func NewMatchmaker(metrics *metrics) (*Matchmaker, error) {
 		matchEnded:    make(chan *Match),
 		activeMatches: activeMatches,
 		metrics:       metrics,
+		matchStorer:   matchStorer,
 	}, nil
 }
 
@@ -135,7 +137,7 @@ func (mm *Matchmaker) Run(ctx context.Context) {
 				}
 				p1, p2 := mm.matchPlayers(timeFormat)
 
-				mm.startMatch(p1, p2, timeFormat)
+				mm.startMatch(ctx, p1, p2, timeFormat)
 			}
 
 			select {
@@ -167,9 +169,7 @@ func (mm *Matchmaker) matchPlayers(timeFormat TimeFormat) (*Player, *Player) {
 	return p1, p2
 }
 
-func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat) {
-	match := NewMatch(player1, player2, timeFormat, mm.matchEnded, mm.metrics)
-
+func (mm *Matchmaker) startMatch(ctx context.Context, player1, player2 *Player, timeFormat TimeFormat) {
 	// Randomly assign colors
 	if rand.Intn(2) == 0 {
 		player1.SetColor(chess.White)
@@ -179,12 +179,18 @@ func (mm *Matchmaker) startMatch(player1, player2 *Player, timeFormat TimeFormat
 		player2.SetColor(chess.White)
 	}
 
+	match, err := NewMatch(ctx, mm.matchStorer, player1, player2, timeFormat, mm.matchEnded, mm.metrics)
+	if err != nil {
+		log.Printf("ERROR [startMatch]: failed to create match: %v", err)
+		return
+	}
+
 	mm.RegisterMatch(match)
 	mm.metrics.recordMatchStarted(timeFormat)
 
-	log.Printf("Starting match: %s (color: %s) vs %s (color: %s)\n", player1.DisplayName, player1.GetColor(), player2.DisplayName, player2.GetColor())
+	log.Printf("Starting match %s: %s (color: %s) vs %s (color: %s)\n", match.PublicID, player1.DisplayName, player1.GetColor(), player2.DisplayName, player2.GetColor())
 
-	go match.Run()
+	go match.Run(ctx)
 
 	match.EventChan <- Event{Type: EventTypeGameStarted}
 }

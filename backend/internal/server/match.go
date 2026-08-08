@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"go-chess/internal/chess"
 	"log"
 	"time"
@@ -12,31 +14,53 @@ const (
 )
 
 type Match struct {
-	Player1 *Player
-	Player2 *Player
+	PublicID string
+	Player1  *Player
+	Player2  *Player
 
-	Engine     *chess.Engine
-	Clock      *MatchClock
-	EventChan  chan Event
-	MatchEnded chan<- *Match
-
+	Engine        *chess.Engine
+	Clock         *MatchClock
+	EventChan     chan Event
+	MatchEnded    chan<- *Match
 	DrawOfferedBy *Player
-	metrics       *metrics
+
+	metrics     *metrics
+	eventStorer MatchEventStorer
 }
 
-func NewMatch(player1, player2 *Player, timeFormat TimeFormat, matchEnded chan<- *Match, metrics *metrics) *Match {
-	return &Match{
-		Player1:    player1,
-		Player2:    player2,
-		Engine:     chess.NewEngine(),
-		Clock:      NewMatchClock(timeFormat),
-		EventChan:  make(chan Event),
-		MatchEnded: matchEnded,
-		metrics:    metrics,
+func NewMatch(ctx context.Context, matchStorer MatchStorer, player1, player2 *Player, timeFormat TimeFormat, matchEnded chan<- *Match, metrics *metrics) (*Match, error) {
+	publicID, err := GeneratePublicMatchID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate match public ID: %w", err)
 	}
+
+	eventStorer, err := matchStorer.CreateMatch(ctx, publicID, player1, player2, timeFormat)
+	if err != nil {
+		log.Printf("ERROR [NewMatch]: failed to create match record: %v", err)
+	}
+
+	return &Match{
+		PublicID:    publicID,
+		Player1:     player1,
+		Player2:     player2,
+		Engine:      chess.NewEngine(),
+		Clock:       NewMatchClock(timeFormat),
+		EventChan:   make(chan Event),
+		MatchEnded:  matchEnded,
+		metrics:     metrics,
+		eventStorer: eventStorer,
+	}, nil
 }
 
-func (m *Match) Run() {
+func (m *Match) persistMatchEvent(ctx context.Context, event Event) {
+	if m.eventStorer == nil {
+		return
+	}
+	clockSnap := m.Clock.Snapshot(m.Engine.GetActiveColor())
+	m.eventStorer.StoreMatchEvent(ctx, event, clockSnap)
+}
+
+func (m *Match) Run(ctx context.Context) {
 	clockCheckTicker := time.NewTicker(clockCheckInterval)
 	clockBroadcastTicker := time.NewTicker(clockBroadcastInterval)
 	defer clockCheckTicker.Stop()
@@ -44,6 +68,8 @@ func (m *Match) Run() {
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case event := <-m.EventChan:
 			handler, ok := eventHandlers[event.Type]
 			if !ok {
@@ -52,10 +78,13 @@ func (m *Match) Run() {
 			}
 
 			m.metrics.recordMatchEvent(event.Type)
-			result, _ := handler.Handle(m, event)
+			result, valid := handler.Handle(m, event)
+			if valid {
+				m.persistMatchEvent(ctx, event)
+			}
 
 			if result != nil {
-				m.end(result)
+				m.end(ctx, result)
 				return
 			}
 
@@ -66,7 +95,7 @@ func (m *Match) Run() {
 			}
 			loser := m.Clock.Advance(m.Engine.GetActiveColor())
 			if loser != nil {
-				m.end(getTimeoutResult(*loser))
+				m.end(ctx, getTimeoutResult(*loser))
 				return
 			}
 		case <-clockBroadcastTicker.C:
@@ -123,10 +152,15 @@ func (m *Match) sendFinalPositionUpdate() {
 	}
 }
 
-func (m *Match) end(result *chess.Result) {
+func (m *Match) end(ctx context.Context, result *chess.Result) {
 	m.Clock.Stop(m.Engine.GetActiveColor())
 	m.Engine.ApplyResult(result)
 	m.metrics.recordMatchFinished(result)
+
+	if m.eventStorer != nil {
+		m.eventStorer.StoreGameEndedEvent(ctx, result)
+	}
+
 	m.sendFinalPositionUpdate()
 	m.sendMatchEnd(*result)
 	close(m.EventChan)
