@@ -17,7 +17,7 @@ func (p PGN) AppendMove(move Move, position *Position, generator *Generator) PGN
 	}
 }
 
-func (p PGN) AppendResult(result *Result) PGN {
+func (p PGN) AppendResult(result Result) PGN {
 	if len(p) > 0 && p[len(p)-1] != ' ' {
 		p += " "
 	}

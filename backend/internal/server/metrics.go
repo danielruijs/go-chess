@@ -199,12 +199,10 @@ func (m *metrics) recordMatchStarted(timeFormat TimeFormat) {
 	m.matchesStarted.WithLabelValues(timeFormat.String()).Inc()
 }
 
-func (m *metrics) recordMatchFinished(result *chess.Result) {
+func (m *metrics) recordMatchFinished(result chess.Result) {
 	m.activeMatches.Dec()
 	m.matchesFinished.Inc()
-	if result != nil {
-		m.resultsTotal.WithLabelValues(string(result.Outcome), string(result.Reason)).Inc()
-	}
+	m.resultsTotal.WithLabelValues(string(result.Outcome), string(result.Reason)).Inc()
 }
 
 func (m *metrics) recordMatchEvent(eventType eventType) {

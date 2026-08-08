@@ -26,7 +26,7 @@ func (n *noopMatchStore) Close() {}
 type noopMatchSessionStore struct{}
 
 func (n *noopMatchSessionStore) StoreMatchEvent(ctx context.Context, event Event, clockSnap ClockData) {}
-func (n *noopMatchSessionStore) StoreGameEndedEvent(ctx context.Context, result *chess.Result)        {}
+func (n *noopMatchSessionStore) StoreGameEndedEvent(ctx context.Context, result chess.Result)        {}
 
 func newTestWebSocketServer(t *testing.T) (*WebSocketHandler, *httptest.Server) {
 	t.Helper()

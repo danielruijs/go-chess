@@ -74,9 +74,6 @@ func (e *Engine) validateMove(move Move, color Color) error {
 	return nil
 }
 
-func (e *Engine) ApplyResult(result *Result) {
-	if result == nil {
-		return
-	}
+func (e *Engine) ApplyResult(result Result) {
 	e.pgn = e.pgn.AppendResult(result)
 }
