@@ -71,7 +71,7 @@ Check if the user has an active session. If the session cookie is missing or inv
   ```json
   {
     "username": "",
-    "displayName": "Anonymous 1",
+    "displayName": "Anonymous",
     "isAuthenticated": false
   }
   ```
@@ -170,7 +170,7 @@ Establishes a persistent bi-directional connection for gameplay and matchmaking 
     "type": "player_info",
     "data": {
       "username": "",
-      "displayName": "Anonymous 1",
+      "displayName": "Anonymous",
       "isAuthenticated": false
     }
   }
