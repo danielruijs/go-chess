@@ -5,7 +5,10 @@ const API_URL: string = import.meta.env.VITE_API_URL as string;
 
 /** Returns session data if a valid session exists, otherwise null. */
 export async function checkSession(): Promise<PlayerInfoData | null> {
-  const response = await fetch(`${API_URL}/api/auth/check`, { method: "GET", credentials: "include" });
+  const response = await fetch(`${API_URL}/api/auth/check`, {
+    method: "GET",
+    credentials: "include",
+  });
   if (!response.ok) {
     return null;
   }
