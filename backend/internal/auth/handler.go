@@ -5,48 +5,20 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"slices"
 	"time"
 )
 
 type AuthHandler struct {
-	userStore      *UserStore
-	sessionStore   *SessionStore
-	allowedOrigins []string
-	cookieDomain   string
+	userStore    *UserStore
+	sessionStore *SessionStore
+	cookieDomain string
 }
 
-func NewAuthHandler(userStore *UserStore, sessionStore *SessionStore, allowedOrigins []string, cookieDomain string) *AuthHandler {
+func NewAuthHandler(userStore *UserStore, sessionStore *SessionStore, cookieDomain string) *AuthHandler {
 	return &AuthHandler{
-		userStore:      userStore,
-		sessionStore:   sessionStore,
-		allowedOrigins: allowedOrigins,
-		cookieDomain:   cookieDomain,
-	}
-}
-
-func (h *AuthHandler) CORSMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			allowed := slices.Contains(h.allowedOrigins, origin)
-			if !allowed {
-				http.Error(w, "Forbidden: Invalid CORS Origin", http.StatusForbidden)
-				return
-			}
-
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Cookie")
-			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		}
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next(w, r)
+		userStore:    userStore,
+		sessionStore: sessionStore,
+		cookieDomain: cookieDomain,
 	}
 }
 

@@ -44,22 +44,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create session store: %v", err)
 	}
-	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.AllowedOrigins, config.CookieDomain)
+	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.CookieDomain)
+
+	cors := server.NewCORSMiddleware(config.AllowedOrigins)
+	http.HandleFunc("/api/register", cors.Handler(authHandler.Register))
+	http.HandleFunc("/api/login", cors.Handler(authHandler.Login))
+	http.HandleFunc("/api/logout", cors.Handler(authHandler.Logout))
+	http.HandleFunc("/api/check", cors.Handler(authHandler.CheckAuth))
 
 	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
 	if err != nil {
 		log.Fatalf("failed to create websocket handler: %v", err)
 	}
+	http.HandleFunc("/ws", webSocketHandler.ServeWS)
 
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", metrics.MetricsHandler())
-
-	http.HandleFunc("/ws", webSocketHandler.ServeWS)
-
-	http.HandleFunc("/api/register", authHandler.CORSMiddleware(authHandler.Register))
-	http.HandleFunc("/api/login", authHandler.CORSMiddleware(authHandler.Login))
-	http.HandleFunc("/api/logout", authHandler.CORSMiddleware(authHandler.Logout))
-	http.HandleFunc("/api/check", authHandler.CORSMiddleware(authHandler.CheckAuth))
 
 	srv := &http.Server{Addr: fmt.Sprintf(":%d", config.Port)}
 	metricsSrv := &http.Server{Addr: fmt.Sprintf(":%d", config.MetricsPort), Handler: metricsMux}
