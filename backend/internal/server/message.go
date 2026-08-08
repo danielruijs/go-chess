@@ -67,6 +67,7 @@ type MatchmakingUpdateData struct {
 }
 
 type StartMatchData struct {
+	PublicID        string      `json:"publicId"`
 	Color           chess.Color `json:"color"`
 	WhitePlayerName string      `json:"whitePlayerName"`
 	BlackPlayerName string      `json:"blackPlayerName"`
