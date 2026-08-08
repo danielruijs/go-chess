@@ -13,6 +13,5 @@ type MovePayload struct {
 }
 
 type GameEndedPayload struct {
-	Outcome chess.Outcome `json:"outcome"`
-	Reason  chess.Reason  `json:"reason"`
+	Result chess.Result `json:"result"`
 }
