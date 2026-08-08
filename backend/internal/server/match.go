@@ -85,7 +85,10 @@ func (m *Match) Run(ctx context.Context) {
 				continue
 			}
 
-			m.persistMatchEvent(ctx, event)
+			// on timeout the move is not applied and should not be persisted
+			if result == nil || result.Reason != chess.Timeout {
+				m.persistMatchEvent(ctx, event)
+			}
 
 			if result != nil {
 				m.end(ctx, *result)
