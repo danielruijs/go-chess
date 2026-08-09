@@ -17,18 +17,22 @@ function coordsToString(square: Square): string {
 
 function pgnToMoves(pgn: string): string[] {
   const moves: string[] = [];
-  const tokens = pgn.split(/\s+/); // split on whitespace
+  const tokens = pgn.trim().split(/\s+/);
   for (const token of tokens) {
-    if (token.trim() === "") continue; // skip empty tokens
-    if (token.includes("-") || token.includes("*")) continue; // skip result tokens
-    if (token.includes(".")) {
-      const parts = token.split(".");
-      if (parts.length === 2) {
-        moves.push(parts[1]);
-      }
-    } else {
-      moves.push(token);
+    // Remove move numbers
+    const moveCandidate = token.replace(/^\d+\./, "").trim();
+    if (!moveCandidate) continue;
+
+    if (
+      moveCandidate === "1-0" ||
+      moveCandidate === "0-1" ||
+      moveCandidate === "1/2-1/2" ||
+      moveCandidate === "*"
+    ) {
+      continue;
     }
+
+    moves.push(moveCandidate);
   }
   return moves;
 }

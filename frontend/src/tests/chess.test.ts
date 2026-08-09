@@ -34,6 +34,34 @@ describe("pgnToMoves", () => {
     const moves = pgnToMoves(pgn);
     expect(moves).toEqual(["d4", "e5"]);
   });
+  it("parses PGN with castling moves", () => {
+    const pgn =
+      "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 Qe7 6. Be3 b6 7. Nc3 Bb7 8. Re1 O-O-O 1-0";
+    const moves = pgnToMoves(pgn);
+    expect(moves).toEqual([
+      "e4",
+      "e5",
+      "Nf3",
+      "Nc6",
+      "Bc4",
+      "Bc5",
+      "O-O",
+      "Nf6",
+      "d3",
+      "Qe7",
+      "Be3",
+      "b6",
+      "Nc3",
+      "Bb7",
+      "Re1",
+      "O-O-O",
+    ]);
+  });
+  it("parses PGN with check and checkmate", () => {
+    const pgn = "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0";
+    const moves = pgnToMoves(pgn);
+    expect(moves).toEqual(["e4", "e5", "Qh5", "Nc6", "Bc4", "Nf6", "Qxf7#"]);
+  });
 });
 
 describe("displayIndexToSquare", () => {
