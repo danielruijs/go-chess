@@ -32,5 +32,14 @@ const REASON_TEXT: Record<Reason, string> = {
   timeout: "by Timeout",
 } as const;
 
+function getResultString(result: Result | null): string | null {
+  if (!result) return null;
+
+  const outcomeText = OUTCOME_TEXT[result.outcome];
+  const reasonText = REASON_TEXT[result.reason];
+
+  return `${outcomeText} ${reasonText}`;
+}
+
 export type { Result };
-export { OUTCOME_TEXT, REASON_TEXT };
+export { getResultString };

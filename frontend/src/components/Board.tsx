@@ -4,7 +4,7 @@ import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
 import type { Board, Color, PieceType, Square } from "../types/chess";
 import type { LegalMove } from "../types/message";
-import { OUTCOME_TEXT, REASON_TEXT, type Result } from "../types/result";
+import { getResultString, type Result } from "../types/result";
 import { coordsToString, displayIndexToSquare } from "../utils/chess";
 
 const PROMOTION_PIECES = ["queen", "rook", "bishop", "knight"] as const;
@@ -108,16 +108,7 @@ function BoardComponent({
     return { selectedMoves, selectedMoveTargets };
   }, [selected, legalMoves]);
 
-  function getResultString() {
-    if (!matchResult) return null;
-
-    const outcomeText = OUTCOME_TEXT[matchResult.outcome];
-    const reasonText = REASON_TEXT[matchResult.reason];
-
-    return `${outcomeText} ${reasonText}`;
-  }
-
-  const resultString = getResultString();
+  const resultString = getResultString(matchResult);
 
   function hasLegalMoves(square: Square) {
     const squareString = coordsToString(square);
