@@ -4,25 +4,8 @@ import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
 import type { Board, Color, PieceType, Square } from "../types/chess";
 import type { LegalMove } from "../types/message";
-import type { Result } from "../types/result";
+import { OUTCOME_TEXT, REASON_TEXT, type Result } from "../types/result";
 import { coordsToString, displayIndexToSquare } from "../utils/chess";
-
-const OUTCOME_TEXT = {
-  white_win: "White wins",
-  black_win: "Black wins",
-  draw: "Draw",
-} as const;
-
-const REASON_TEXT = {
-  checkmate: "by Checkmate",
-  stalemate: "by Stalemate",
-  threefold_repetition: "by Threefold Repetition",
-  fifty_moves_rule: "by Fifty-Move Rule",
-  insufficient_material: "by Insufficient Material",
-  resignation: "by Resignation",
-  agreed_draw: "by Agreement",
-  timeout: "by Timeout",
-} as const;
 
 const PROMOTION_PIECES = ["queen", "rook", "bishop", "knight"] as const;
 
