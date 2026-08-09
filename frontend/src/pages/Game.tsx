@@ -7,14 +7,15 @@ import { getMaterialDiff, pgnToMoves } from "../utils/chess.ts";
 import {
   MessageTypeOfferDraw,
   MessageTypeResign,
+  MessageTypeMove,
   type MoveData,
   type WSMessage,
 } from "../types/message.ts";
-import { MessageTypeMove } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
 import { useEffect, useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
 import useInterpolatedClock from "../hooks/useInterpolatedClock.ts";
+import { type MoveRow } from "../components/MoveList";
 
 function Game() {
   const navigate = useNavigate();
@@ -56,12 +57,12 @@ function Game() {
   }
 
   const moves = pgnToMoves(pgn);
-  const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
+  const groupedMoves: MoveRow[] = [];
   for (let i = 0; i < moves.length; i += 2) {
     groupedMoves.push({
       moveNumber: Math.floor(i / 2) + 1,
-      whiteMove: moves[i],
-      blackMove: moves[i + 1] || "",
+      white: { san: moves[i], positionIndex: i + 1 },
+      black: moves[i + 1] ? { san: moves[i + 1], positionIndex: i + 2 } : null,
     });
   }
 
