@@ -22,22 +22,18 @@ function MoveList({ groupedMoves, currentPosition, onSelectPosition }: MoveListP
   const selectedMoveCellRef = useRef<HTMLTableCellElement | null>(null);
 
   useEffect(() => {
-    // Scroll back to the top when navigating to the starting position
-    if (currentPosition === 0 && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      // Scroll the selected move into view if it is partially or fully outside the visible area
-    } else if (selectedMoveCellRef.current) {
+    // Keep the selected move visible within the scroll container
+    if (selectedMoveCellRef.current) {
       selectedMoveCellRef.current.scrollIntoView({
         block: "nearest",
         inline: "nearest",
         behavior: "smooth",
       });
-      // Live match mode: auto-scroll to bottom when a new move is made
-    } else if (currentPosition === undefined && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+      // Scroll to bottom on new live moves, or reset to top
+      // at starting position (position 0 has no selected move cell)
+    } else if (scrollContainerRef.current) {
+      const top = currentPosition === undefined ? scrollContainerRef.current.scrollHeight : 0;
+      scrollContainerRef.current.scrollTo({ top, behavior: "smooth" });
     }
   }, [currentPosition, groupedMoves]);
 
