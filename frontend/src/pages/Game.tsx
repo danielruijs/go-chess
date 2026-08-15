@@ -56,15 +56,18 @@ function Game() {
     return "Loading board...";
   }
 
-  const moves = pgnToMoves(pgn);
-  const groupedMoves: MoveRow[] = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    groupedMoves.push({
-      moveNumber: Math.floor(i / 2) + 1,
-      white: { san: moves[i], positionIndex: i + 1 },
-      black: moves[i + 1] ? { san: moves[i + 1], positionIndex: i + 2 } : null,
-    });
-  }
+  const groupedMoves = useMemo<MoveRow[]>(() => {
+    const moves = pgnToMoves(pgn);
+    const rows: MoveRow[] = [];
+    for (let i = 0; i < moves.length; i += 2) {
+      rows.push({
+        moveNumber: Math.floor(i / 2) + 1,
+        white: { san: moves[i], positionIndex: i + 1 },
+        black: moves[i + 1] ? { san: moves[i + 1], positionIndex: i + 2 } : null,
+      });
+    }
+    return rows;
+  }, [pgn]);
 
   function handleResign() {
     const message: WSMessage = {

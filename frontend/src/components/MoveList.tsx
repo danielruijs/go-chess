@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 type MoveItem = {
   san: string;
   positionIndex: number;
@@ -16,6 +18,29 @@ type MoveListProps = {
 };
 
 function MoveList({ groupedMoves, currentPosition, onSelectPosition }: MoveListProps) {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const selectedMoveCellRef = useRef<HTMLTableCellElement | null>(null);
+
+  useEffect(() => {
+    // Scroll back to the top when navigating to the starting position
+    if (currentPosition === 0 && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      // Scroll the selected move into view if it is partially or fully outside the visible area
+    } else if (selectedMoveCellRef.current) {
+      selectedMoveCellRef.current.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: "smooth",
+      });
+      // Live match mode: auto-scroll to bottom when a new move is made
+    } else if (currentPosition === undefined && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [currentPosition, groupedMoves]);
+
   const renderCell = (move: MoveItem | null) => {
     if (!move) {
       return <td className="px-1" />;
@@ -29,6 +54,7 @@ function MoveList({ groupedMoves, currentPosition, onSelectPosition }: MoveListP
 
     return (
       <td
+        ref={isSelected ? selectedMoveCellRef : null} // Attach ref only to the currently active move
         onClick={isSelected ? undefined : () => onSelectPosition(move.positionIndex)}
         className={
           isSelected
@@ -42,7 +68,7 @@ function MoveList({ groupedMoves, currentPosition, onSelectPosition }: MoveListP
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-gray-400">
