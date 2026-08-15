@@ -68,10 +68,10 @@ function Analysis() {
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         goNext();
-      } else if (e.key === "Home") {
+      } else if (e.key === "ArrowUp" || e.key === "Home") {
         e.preventDefault();
         goFirst();
-      } else if (e.key === "End") {
+      } else if (e.key === "ArrowDown" || e.key === "End") {
         e.preventDefault();
         goLast();
       }
