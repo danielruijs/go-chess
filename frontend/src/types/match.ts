@@ -4,7 +4,7 @@ import type { Result } from "./result";
 type Position = {
   index: number;
   board: Board;
-  san?: string; // empty/omitted for starting position (index 0)
+  san?: string; // omitted for starting position (index 0)
   whiteTimeMs: number;
   blackTimeMs: number;
 };

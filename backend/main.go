@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go-chess/internal/api"
 	"go-chess/internal/auth"
 	"go-chess/internal/db"
 	"go-chess/internal/db/sqlc"
@@ -45,12 +46,14 @@ func main() {
 		log.Fatalf("failed to create session store: %v", err)
 	}
 	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.CookieDomain)
+	matchHandler := api.NewMatchHandler(queries)
 
 	cors := server.NewCORSMiddleware(config.AllowedOrigins)
 	http.HandleFunc("/api/auth/register", cors.Handler(authHandler.Register))
 	http.HandleFunc("/api/auth/login", cors.Handler(authHandler.Login))
 	http.HandleFunc("/api/auth/logout", cors.Handler(authHandler.Logout))
 	http.HandleFunc("/api/auth/check", cors.Handler(authHandler.CheckAuth))
+	http.HandleFunc("/api/match/{publicId}", cors.Handler(matchHandler.GetMatch))
 
 	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
 	if err != nil {
