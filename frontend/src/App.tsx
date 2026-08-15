@@ -3,6 +3,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme.ts";
 import Home from "./pages/Home.tsx";
 import Game from "./pages/Game.tsx";
+import Analysis from "./pages/Analysis.tsx";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 import WebSocketProvider from "./contexts/WebSocketContext.tsx";
 import NotificationProvider from "./contexts/NotificationProvider.tsx";
@@ -25,6 +26,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/match/:publicId" element={<Game />} />
+                    <Route path="/analysis/:publicId" element={<Analysis />} />
                   </Routes>
                 </div>
               </div>

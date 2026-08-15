@@ -113,6 +113,11 @@ function Game() {
               matchResult={matchResult}
               sendMoveMessage={sendMove}
               onBackToMenu={() => navigate("/")}
+              onAnalyze={() => {
+                if (urlPublicId) {
+                  navigate(`/analysis/${urlPublicId}`);
+                }
+              }}
             />
             <div className="flex flex-col justify-between">
               <MatchClock timeMs={opponentTimeRemainingMs} isActive={playerColor !== activeColor} />

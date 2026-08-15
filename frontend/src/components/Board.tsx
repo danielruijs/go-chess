@@ -84,6 +84,7 @@ type BoardComponentProps = {
   matchResult: Result | null;
   sendMoveMessage: (from: string, to: string, promotion: PieceType | null) => void;
   onBackToMenu: () => void;
+  onAnalyze?: () => void;
 };
 
 function BoardComponent({
@@ -93,6 +94,7 @@ function BoardComponent({
   matchResult,
   sendMoveMessage,
   onBackToMenu,
+  onAnalyze,
 }: BoardComponentProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const [promotionDialog, setPromotionDialog] = useState<{
@@ -222,9 +224,16 @@ function BoardComponent({
                         `}
             >
               <div>{resultString}</div>
-              <Button onClick={onBackToMenu} variant="contained">
-                Back to Menu
-              </Button>
+              <div className="flex gap-2">
+                {onAnalyze && (
+                  <Button onClick={onAnalyze} variant="contained">
+                    Analysis
+                  </Button>
+                )}
+                <Button onClick={onBackToMenu} variant="contained">
+                  Back to Menu
+                </Button>
+              </div>
             </div>
           )}
         </div>
