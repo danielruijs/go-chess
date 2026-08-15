@@ -11,8 +11,12 @@ import type { Color } from "../types/chess";
 import type { MoveRow } from "../components/MoveList";
 
 function Analysis() {
-  const navigate = useNavigate();
   const { publicId } = useParams<{ publicId: string }>();
+  return <AnalysisView key={publicId} publicId={publicId} />;
+}
+
+function AnalysisView({ publicId }: { publicId: string | undefined }) {
+  const navigate = useNavigate();
 
   const [matchData, setMatchData] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,9 +27,6 @@ function Analysis() {
   // Load analysis data on mount
   useEffect(() => {
     if (!publicId) return;
-
-    setLoading(true);
-    setError(null);
 
     fetchMatch(publicId)
       .then((res) => {

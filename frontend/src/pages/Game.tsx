@@ -48,14 +48,6 @@ function Game() {
 
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
   const interpolatedClock = useInterpolatedClock({ clock, activeColor, inMatch, intervalMs: 100 });
-
-  if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
-    return "Starting match...";
-  }
-  if (!board) {
-    return "Loading board...";
-  }
-
   const groupedMoves = useMemo<MoveRow[]>(() => {
     const moves = pgnToMoves(pgn);
     const rows: MoveRow[] = [];
@@ -68,6 +60,13 @@ function Game() {
     }
     return rows;
   }, [pgn]);
+
+  if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
+    return "Starting match...";
+  }
+  if (!board) {
+    return "Loading board...";
+  }
 
   function handleResign() {
     const message: WSMessage = {
