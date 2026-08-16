@@ -3,8 +3,10 @@ package server
 import (
 	"crypto/rand"
 	"fmt"
-	"go-chess/internal/chess"
 	"math/big"
+	"strings"
+
+	"go-chess/internal/chess"
 )
 
 const (
@@ -26,6 +28,18 @@ func GeneratePublicMatchID() (string, error) {
 	}
 
 	return string(result), nil
+}
+
+func IsValidPublicMatchID(id string) bool {
+	if len(id) != publicMatchIDLen {
+		return false
+	}
+	for _, c := range id {
+		if !strings.ContainsRune(base62Alphabet, c) {
+			return false
+		}
+	}
+	return true
 }
 
 func moveDataToMove(data MoveData) (chess.Move, error) {

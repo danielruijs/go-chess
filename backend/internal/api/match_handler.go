@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"go-chess/internal/chess"
 	"go-chess/internal/db/sqlc"
@@ -49,10 +48,11 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 	publicID := r.PathValue("publicId")
 	if publicID == "" {
-		publicID = strings.TrimPrefix(r.URL.Path, "/api/match/")
-	}
-	if publicID == "" {
 		http.Error(w, "Missing match ID", http.StatusBadRequest)
+		return
+	}
+	if !server.IsValidPublicMatchID(publicID) {
+		http.Error(w, "Invalid match ID", http.StatusBadRequest)
 		return
 	}
 
