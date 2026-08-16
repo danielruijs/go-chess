@@ -5,7 +5,8 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import FlipIcon from "@mui/icons-material/Flip";
 import { getResultString, type Result } from "../types/result";
-import MoveList, { type MoveRow } from "./MoveList";
+import MoveList from "./MoveList";
+import type { MoveRow } from "../utils/chess";
 
 type AnalysisInfoPanelProps = {
   groupedMoves: MoveRow[];

@@ -1,5 +1,6 @@
 import { Button } from "@mui/material";
-import MoveList, { type MoveRow } from "./MoveList";
+import MoveList from "./MoveList";
+import type { MoveRow } from "../utils/chess";
 
 type MatchInfoPanelProps = {
   groupedMoves: MoveRow[];
