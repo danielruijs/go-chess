@@ -3,7 +3,7 @@ import MatchClock from "../components/MatchClock.tsx";
 import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMaterialDiff, pgnToMoves } from "../utils/chess.ts";
+import { buildMoveRows, getMaterialDiff, pgnToMoves, type MoveRow } from "../utils/chess.ts";
 import {
   MessageTypeOfferDraw,
   MessageTypeResign,
@@ -15,7 +15,6 @@ import type { PieceType } from "../types/chess.ts";
 import { useEffect, useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
 import useInterpolatedClock from "../hooks/useInterpolatedClock.ts";
-import { type MoveRow } from "../components/MoveList";
 
 function Game() {
   const navigate = useNavigate();
@@ -49,16 +48,11 @@ function Game() {
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
   const interpolatedClock = useInterpolatedClock({ clock, activeColor, inMatch, intervalMs: 100 });
   const groupedMoves = useMemo<MoveRow[]>(() => {
-    const moves = pgnToMoves(pgn);
-    const rows: MoveRow[] = [];
-    for (let i = 0; i < moves.length; i += 2) {
-      rows.push({
-        moveNumber: Math.floor(i / 2) + 1,
-        white: { san: moves[i], positionIndex: i + 1 },
-        black: moves[i + 1] ? { san: moves[i + 1], positionIndex: i + 2 } : null,
-      });
-    }
-    return rows;
+    const moves = pgnToMoves(pgn).map((san, idx) => ({
+      san,
+      positionIndex: idx + 1,
+    }));
+    return buildMoveRows(moves);
   }, [pgn]);
 
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {

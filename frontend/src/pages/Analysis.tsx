@@ -5,10 +5,9 @@ import MatchClock from "../components/MatchClock";
 import AnalysisInfoPanel from "../components/AnalysisInfoPanel";
 import PlayerInfo from "../components/PlayerInfo";
 import { fetchMatch } from "../api/match";
-import { getMaterialDiff } from "../utils/chess";
+import { buildMoveRows, getMaterialDiff, type MoveRow } from "../utils/chess";
 import type { Match } from "../types/match";
 import type { Color } from "../types/chess";
-import type { MoveRow } from "../components/MoveList";
 
 function Analysis() {
   const { publicId } = useParams<{ publicId: string }>();
@@ -77,6 +76,7 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
         goLast();
       }
     }
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goPrev, goNext, goFirst, goLast]);
@@ -86,18 +86,11 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
   const groupedMoves = useMemo<MoveRow[]>(() => {
     if (!matchData) return [];
     const movePositions = matchData.positions.slice(1); // skip starting position
-    const rows: MoveRow[] = [];
-
-    for (let i = 0; i < movePositions.length; i += 2) {
-      const whitePos = movePositions[i];
-      const blackPos = movePositions[i + 1];
-      rows.push({
-        moveNumber: Math.floor(i / 2) + 1,
-        white: { san: whitePos.san ?? "", positionIndex: whitePos.index },
-        black: blackPos ? { san: blackPos.san ?? "", positionIndex: blackPos.index } : null,
-      });
-    }
-    return rows;
+    const moves = movePositions.map((pos) => ({
+      san: pos.san ?? "",
+      positionIndex: pos.index,
+    }));
+    return buildMoveRows(moves);
   }, [matchData]);
 
   const materialDiff = useMemo(

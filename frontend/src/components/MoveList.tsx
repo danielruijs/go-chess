@@ -1,15 +1,5 @@
 import { useEffect, useRef } from "react";
-
-type MoveItem = {
-  san: string;
-  positionIndex: number;
-};
-
-export type MoveRow = {
-  moveNumber: number;
-  white: MoveItem;
-  black: MoveItem | null;
-};
+import type { MoveItem, MoveRow } from "../utils/chess";
 
 type MoveListProps = {
   groupedMoves: MoveRow[];

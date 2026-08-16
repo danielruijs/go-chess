@@ -82,4 +82,36 @@ function getMaterialDiff(board: Board | null): MaterialDiff {
   return materialDiff;
 }
 
-export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData, getMaterialDiff };
+type MoveItem = {
+  san: string;
+  positionIndex: number;
+};
+
+type MoveRow = {
+  moveNumber: number;
+  white: MoveItem;
+  black: MoveItem | null;
+};
+
+function buildMoveRows(moves: MoveItem[]): MoveRow[] {
+  const rows: MoveRow[] = [];
+  for (let i = 0; i < moves.length; i += 2) {
+    rows.push({
+      moveNumber: Math.floor(i / 2) + 1,
+      white: moves[i],
+      black: moves[i + 1] ?? null,
+    });
+  }
+  return rows;
+}
+
+export {
+  coordsToString,
+  pgnToMoves,
+  displayIndexToSquare,
+  getQueueData,
+  getMaterialDiff,
+  buildMoveRows,
+};
+
+export type { MoveItem, MoveRow };

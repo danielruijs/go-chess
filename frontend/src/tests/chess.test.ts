@@ -6,6 +6,7 @@ import {
   displayIndexToSquare,
   getQueueData,
   getMaterialDiff,
+  buildMoveRows,
 } from "../utils/chess";
 
 describe("coordsToString", () => {
@@ -199,5 +200,54 @@ describe("getMaterialDiff", () => {
     expect(result.score).toBe(0);
     expect(result.extraPieces.white).toEqual({});
     expect(result.extraPieces.black).toEqual({});
+  });
+});
+
+describe("buildMoveRows", () => {
+  it("returns empty array for no moves", () => {
+    expect(buildMoveRows([])).toEqual([]);
+  });
+
+  it("handles odd number of moves (white move only in last row)", () => {
+    const moves = [
+      { san: "e4", positionIndex: 1 },
+      { san: "e5", positionIndex: 2 },
+      { san: "Nf3", positionIndex: 3 },
+    ];
+    const rows = buildMoveRows(moves);
+    expect(rows).toEqual([
+      {
+        moveNumber: 1,
+        white: { san: "e4", positionIndex: 1 },
+        black: { san: "e5", positionIndex: 2 },
+      },
+      {
+        moveNumber: 2,
+        white: { san: "Nf3", positionIndex: 3 },
+        black: null,
+      },
+    ]);
+  });
+
+  it("handles even number of moves", () => {
+    const moves = [
+      { san: "d4", positionIndex: 1 },
+      { san: "d5", positionIndex: 2 },
+      { san: "c4", positionIndex: 3 },
+      { san: "c6", positionIndex: 4 },
+    ];
+    const rows = buildMoveRows(moves);
+    expect(rows).toEqual([
+      {
+        moveNumber: 1,
+        white: { san: "d4", positionIndex: 1 },
+        black: { san: "d5", positionIndex: 2 },
+      },
+      {
+        moveNumber: 2,
+        white: { san: "c4", positionIndex: 3 },
+        black: { san: "c6", positionIndex: 4 },
+      },
+    ]);
   });
 });
