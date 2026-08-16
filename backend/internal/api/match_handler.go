@@ -1,11 +1,15 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"go-chess/internal/cache"
 	"go-chess/internal/chess"
 	"go-chess/internal/db/sqlc"
 	"go-chess/internal/server"
@@ -13,16 +17,36 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const (
+	matchCacheCleanupInterval = 1 * time.Hour
+	matchCacheTTL             = 24 * time.Hour
+)
+
 type MatchHandler struct {
 	queries   *sqlc.Queries
 	generator *chess.Generator
+	cache     *cache.Cache[string, []byte]
 }
 
-func NewMatchHandler(queries *sqlc.Queries) *MatchHandler {
+func NewMatchHandler(ctx context.Context, queries *sqlc.Queries) (*MatchHandler, error) {
+	cache, err := cache.New[string](cache.Options[[]byte]{
+		Cleanup: &cache.CleanupConfig[[]byte]{
+			Interval: matchCacheCleanupInterval,
+			ShouldEvict: func(_ []byte, lastUsed time.Time) bool {
+				return time.Since(lastUsed) > matchCacheTTL
+			},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create match cache: %w", err)
+	}
+	cache.StartCleanup(ctx)
+
 	return &MatchHandler{
 		queries:   queries,
 		generator: chess.NewGenerator(),
-	}
+		cache:     cache,
+	}, nil
 }
 
 type Position struct {
@@ -53,6 +77,14 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 	}
 	if !server.IsValidPublicMatchID(publicID) {
 		http.Error(w, "Invalid match ID", http.StatusBadRequest)
+		return
+	}
+
+	if cached, ok := h.cache.Get(publicID); ok {
+		w.Header().Set("Content-Type", "application/json")
+		if _, err := w.Write(cached); err != nil {
+			log.Printf("ERROR [MatchHandler]: failed to write cached response: %v", err)
+		}
 		return
 	}
 
@@ -140,9 +172,17 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 		Positions:       positions,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
+	respBytes, err := json.Marshal(resp)
 	if err != nil {
 		log.Printf("ERROR [MatchHandler]: failed to encode response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	h.cache.Set(publicID, respBytes)
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(respBytes); err != nil {
+		log.Printf("ERROR [MatchHandler]: failed to write response: %v", err)
 	}
 }

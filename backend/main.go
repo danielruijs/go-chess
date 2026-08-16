@@ -46,7 +46,10 @@ func main() {
 		log.Fatalf("failed to create session store: %v", err)
 	}
 	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.CookieDomain)
-	matchHandler := api.NewMatchHandler(queries)
+	matchHandler, err := api.NewMatchHandler(ctx, queries)
+	if err != nil {
+		log.Fatalf("failed to create match handler: %v", err)
+	}
 
 	cors := server.NewCORSMiddleware(config.AllowedOrigins)
 	http.HandleFunc("/api/auth/register", cors.Handler(authHandler.Register))
