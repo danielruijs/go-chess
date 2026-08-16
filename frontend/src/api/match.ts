@@ -21,7 +21,8 @@ export async function fetchMatch(publicId: string): Promise<MatchResult> {
   if (response.status === 409) return { status: "in-progress" };
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch match analysis: ${response.status}`);
+    const errorText = (await response.text()).trim();
+    throw new Error(errorText || `Failed to fetch match analysis: ${response.status}`);
   }
 
   const data = (await response.json()) as Match;
