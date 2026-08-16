@@ -51,7 +51,7 @@ function AnalysisInfoPanel({
         </div>
       )}
 
-      <div className="flex justify-center items-center gap-1  border-gray-300 pt-1">
+      <div className="flex justify-center items-center gap-1 border-gray-300 pt-1">
         <Tooltip title="First position">
           <span>
             <IconButton size="small" onClick={onFirst} disabled={isFirst}>
