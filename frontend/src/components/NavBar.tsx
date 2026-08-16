@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@mui/material";
@@ -12,9 +13,12 @@ export default function NavBar() {
   return (
     <nav className="w-full bg-white/80 px-6 py-3 flex justify-between items-center shadow-sm relative z-50">
       {/* Left: Logo */}
-      <div className="flex gap-0.5 font-bold text-xl text-slate-800 tracking-tight select-none">
+      <Link
+        to="/"
+        className="flex gap-0.5 font-bold text-xl text-slate-800 tracking-tight select-none"
+      >
         <span className="text-[#00ADD8] font-extrabold">Go</span>Chess
-      </div>
+      </Link>
 
       {/* Right: Info & Actions */}
       <div className="flex gap-6">
