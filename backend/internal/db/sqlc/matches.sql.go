@@ -60,6 +60,61 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 	return i, err
 }
 
+const getMatchByPublicID = `-- name: GetMatchByPublicID :one
+SELECT id, public_id, white_user_id, black_user_id, white_display_name, black_display_name, initial_time_ms, increment_ms, created_at FROM match
+WHERE public_id = $1
+`
+
+func (q *Queries) GetMatchByPublicID(ctx context.Context, publicID string) (Match, error) {
+	row := q.db.QueryRow(ctx, getMatchByPublicID, publicID)
+	var i Match
+	err := row.Scan(
+		&i.ID,
+		&i.PublicID,
+		&i.WhiteUserID,
+		&i.BlackUserID,
+		&i.WhiteDisplayName,
+		&i.BlackDisplayName,
+		&i.InitialTimeMs,
+		&i.IncrementMs,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getMatchEventsByMatchID = `-- name: GetMatchEventsByMatchID :many
+SELECT id, match_id, seq_num, event_type, payload, created_at FROM match_event
+WHERE match_id = $1
+ORDER BY seq_num ASC
+`
+
+func (q *Queries) GetMatchEventsByMatchID(ctx context.Context, matchID int64) ([]MatchEvent, error) {
+	rows, err := q.db.Query(ctx, getMatchEventsByMatchID, matchID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MatchEvent
+	for rows.Next() {
+		var i MatchEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.MatchID,
+			&i.SeqNum,
+			&i.EventType,
+			&i.Payload,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertMatchEvent = `-- name: InsertMatchEvent :one
 INSERT INTO match_event (
     match_id,

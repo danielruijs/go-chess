@@ -190,8 +190,23 @@ func TestGeneratePublicMatchID(t *testing.T) {
 	id1, err := GeneratePublicMatchID()
 	assert.NoError(t, err)
 	assert.Len(t, id1, 12)
+	assert.True(t, IsValidPublicMatchID(id1))
 
 	id2, err := GeneratePublicMatchID()
 	assert.NoError(t, err)
 	assert.NotEqual(t, id1, id2)
+	assert.True(t, IsValidPublicMatchID(id2))
+}
+
+func TestIsValidPublicMatchID(t *testing.T) {
+	assert.True(t, IsValidPublicMatchID("abcdef123456"))
+	assert.True(t, IsValidPublicMatchID("012345678901"))
+	assert.True(t, IsValidPublicMatchID("ABCDEFGHIJKL"))
+
+	assert.False(t, IsValidPublicMatchID(""))
+	assert.False(t, IsValidPublicMatchID("short"))
+	assert.False(t, IsValidPublicMatchID("toolongstring12345"))
+	assert.False(t, IsValidPublicMatchID("abcdef_12345"))
+	assert.False(t, IsValidPublicMatchID("abcdef-12345"))
+	assert.False(t, IsValidPublicMatchID("../../../etc/"))
 }

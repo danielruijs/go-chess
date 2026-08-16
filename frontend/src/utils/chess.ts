@@ -17,18 +17,22 @@ function coordsToString(square: Square): string {
 
 function pgnToMoves(pgn: string): string[] {
   const moves: string[] = [];
-  const tokens = pgn.split(/\s+/); // split on whitespace
+  const tokens = pgn.trim().split(/\s+/);
   for (const token of tokens) {
-    if (token.trim() === "") continue; // skip empty tokens
-    if (token.includes("-") || token.includes("*")) continue; // skip result tokens
-    if (token.includes(".")) {
-      const parts = token.split(".");
-      if (parts.length === 2) {
-        moves.push(parts[1]);
-      }
-    } else {
-      moves.push(token);
+    // Remove move numbers
+    const moveCandidate = token.replace(/^\d+\./, "").trim();
+    if (!moveCandidate) continue;
+
+    if (
+      moveCandidate === "1-0" ||
+      moveCandidate === "0-1" ||
+      moveCandidate === "1/2-1/2" ||
+      moveCandidate === "*"
+    ) {
+      continue;
     }
+
+    moves.push(moveCandidate);
   }
   return moves;
 }
@@ -78,4 +82,36 @@ function getMaterialDiff(board: Board | null): MaterialDiff {
   return materialDiff;
 }
 
-export { coordsToString, pgnToMoves, displayIndexToSquare, getQueueData, getMaterialDiff };
+type MoveItem = {
+  san: string;
+  positionIndex: number;
+};
+
+type MoveRow = {
+  moveNumber: number;
+  white: MoveItem;
+  black: MoveItem | null;
+};
+
+function buildMoveRows(moves: MoveItem[]): MoveRow[] {
+  const rows: MoveRow[] = [];
+  for (let i = 0; i < moves.length; i += 2) {
+    rows.push({
+      moveNumber: Math.floor(i / 2) + 1,
+      white: moves[i],
+      black: moves[i + 1] ?? null,
+    });
+  }
+  return rows;
+}
+
+export {
+  coordsToString,
+  pgnToMoves,
+  displayIndexToSquare,
+  getQueueData,
+  getMaterialDiff,
+  buildMoveRows,
+};
+
+export type { MoveItem, MoveRow };

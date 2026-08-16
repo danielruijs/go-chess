@@ -4,25 +4,8 @@ import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/react";
 import type { Board, Color, PieceType, Square } from "../types/chess";
 import type { LegalMove } from "../types/message";
-import type { Result } from "../types/result";
+import { getResultString, type Result } from "../types/result";
 import { coordsToString, displayIndexToSquare } from "../utils/chess";
-
-const OUTCOME_TEXT = {
-  white_win: "White wins",
-  black_win: "Black wins",
-  draw: "Draw",
-} as const;
-
-const REASON_TEXT = {
-  checkmate: "by Checkmate",
-  stalemate: "by Stalemate",
-  threefold_repetition: "by Threefold Repetition",
-  fifty_moves_rule: "by Fifty-Move Rule",
-  insufficient_material: "by Insufficient Material",
-  resignation: "by Resignation",
-  agreed_draw: "by Agreement",
-  timeout: "by Timeout",
-} as const;
 
 const PROMOTION_PIECES = ["queen", "rook", "bishop", "knight"] as const;
 
@@ -101,6 +84,7 @@ type BoardComponentProps = {
   matchResult: Result | null;
   sendMoveMessage: (from: string, to: string, promotion: PieceType | null) => void;
   onBackToMenu: () => void;
+  onAnalyze?: () => void;
 };
 
 function BoardComponent({
@@ -110,6 +94,7 @@ function BoardComponent({
   matchResult,
   sendMoveMessage,
   onBackToMenu,
+  onAnalyze,
 }: BoardComponentProps) {
   const [selected, setSelected] = useState<Square | null>(null);
   const [promotionDialog, setPromotionDialog] = useState<{
@@ -125,16 +110,7 @@ function BoardComponent({
     return { selectedMoves, selectedMoveTargets };
   }, [selected, legalMoves]);
 
-  function getResultString() {
-    if (!matchResult) return null;
-
-    const outcomeText = OUTCOME_TEXT[matchResult.outcome];
-    const reasonText = REASON_TEXT[matchResult.reason];
-
-    return `${outcomeText} ${reasonText}`;
-  }
-
-  const resultString = getResultString();
+  const resultString = getResultString(matchResult);
 
   function hasLegalMoves(square: Square) {
     const squareString = coordsToString(square);
@@ -248,9 +224,16 @@ function BoardComponent({
                         `}
             >
               <div>{resultString}</div>
-              <Button onClick={onBackToMenu} variant="contained">
-                Back to Menu
-              </Button>
+              <div className="flex gap-2">
+                {onAnalyze && (
+                  <Button onClick={onAnalyze} variant="contained">
+                    Analysis
+                  </Button>
+                )}
+                <Button onClick={onBackToMenu} variant="contained">
+                  Back to Menu
+                </Button>
+              </div>
             </div>
           )}
         </div>

@@ -6,6 +6,7 @@ import {
   displayIndexToSquare,
   getQueueData,
   getMaterialDiff,
+  buildMoveRows,
 } from "../utils/chess";
 
 describe("coordsToString", () => {
@@ -33,6 +34,34 @@ describe("pgnToMoves", () => {
     const pgn = "1.d4 e5 0-1";
     const moves = pgnToMoves(pgn);
     expect(moves).toEqual(["d4", "e5"]);
+  });
+  it("parses PGN with castling moves", () => {
+    const pgn =
+      "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 Qe7 6. Be3 b6 7. Nc3 Bb7 8. Re1 O-O-O 1-0";
+    const moves = pgnToMoves(pgn);
+    expect(moves).toEqual([
+      "e4",
+      "e5",
+      "Nf3",
+      "Nc6",
+      "Bc4",
+      "Bc5",
+      "O-O",
+      "Nf6",
+      "d3",
+      "Qe7",
+      "Be3",
+      "b6",
+      "Nc3",
+      "Bb7",
+      "Re1",
+      "O-O-O",
+    ]);
+  });
+  it("parses PGN with check and checkmate", () => {
+    const pgn = "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0";
+    const moves = pgnToMoves(pgn);
+    expect(moves).toEqual(["e4", "e5", "Qh5", "Nc6", "Bc4", "Nf6", "Qxf7#"]);
   });
 });
 
@@ -171,5 +200,54 @@ describe("getMaterialDiff", () => {
     expect(result.score).toBe(0);
     expect(result.extraPieces.white).toEqual({});
     expect(result.extraPieces.black).toEqual({});
+  });
+});
+
+describe("buildMoveRows", () => {
+  it("returns empty array for no moves", () => {
+    expect(buildMoveRows([])).toEqual([]);
+  });
+
+  it("handles odd number of moves (white move only in last row)", () => {
+    const moves = [
+      { san: "e4", positionIndex: 1 },
+      { san: "e5", positionIndex: 2 },
+      { san: "Nf3", positionIndex: 3 },
+    ];
+    const rows = buildMoveRows(moves);
+    expect(rows).toEqual([
+      {
+        moveNumber: 1,
+        white: { san: "e4", positionIndex: 1 },
+        black: { san: "e5", positionIndex: 2 },
+      },
+      {
+        moveNumber: 2,
+        white: { san: "Nf3", positionIndex: 3 },
+        black: null,
+      },
+    ]);
+  });
+
+  it("handles even number of moves", () => {
+    const moves = [
+      { san: "d4", positionIndex: 1 },
+      { san: "d5", positionIndex: 2 },
+      { san: "c4", positionIndex: 3 },
+      { san: "c6", positionIndex: 4 },
+    ];
+    const rows = buildMoveRows(moves);
+    expect(rows).toEqual([
+      {
+        moveNumber: 1,
+        white: { san: "d4", positionIndex: 1 },
+        black: { san: "d5", positionIndex: 2 },
+      },
+      {
+        moveNumber: 2,
+        white: { san: "c4", positionIndex: 3 },
+        black: { san: "c6", positionIndex: 4 },
+      },
+    ]);
   });
 });

@@ -20,3 +20,13 @@ INSERT INTO match_event (
 ) VALUES (
     $1, $2, $3, $4
 ) RETURNING *;
+
+-- name: GetMatchByPublicID :one
+SELECT * FROM match
+WHERE public_id = $1;
+
+-- name: GetMatchEventsByMatchID :many
+SELECT * FROM match_event
+WHERE match_id = $1
+ORDER BY seq_num ASC;
+

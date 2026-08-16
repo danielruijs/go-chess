@@ -3,14 +3,14 @@ import MatchClock from "../components/MatchClock.tsx";
 import MatchInfoPanel from "../components/MatchInfoPanel.tsx";
 import { useWebSocket } from "../contexts/WebSocketContext.ts";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMaterialDiff, pgnToMoves } from "../utils/chess.ts";
+import { buildMoveRows, getMaterialDiff, pgnToMoves, type MoveRow } from "../utils/chess.ts";
 import {
   MessageTypeOfferDraw,
   MessageTypeResign,
+  MessageTypeMove,
   type MoveData,
   type WSMessage,
 } from "../types/message.ts";
-import { MessageTypeMove } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
 import { useEffect, useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
@@ -47,22 +47,19 @@ function Game() {
 
   const materialDiff = useMemo(() => getMaterialDiff(board), [board]);
   const interpolatedClock = useInterpolatedClock({ clock, activeColor, inMatch, intervalMs: 100 });
+  const groupedMoves = useMemo<MoveRow[]>(() => {
+    const moves = pgnToMoves(pgn).map((san, idx) => ({
+      san,
+      positionIndex: idx + 1,
+    }));
+    return buildMoveRows(moves);
+  }, [pgn]);
 
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
     return "Starting match...";
   }
   if (!board) {
     return "Loading board...";
-  }
-
-  const moves = pgnToMoves(pgn);
-  const groupedMoves: { moveNumber: number; whiteMove: string; blackMove: string }[] = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    groupedMoves.push({
-      moveNumber: Math.floor(i / 2) + 1,
-      whiteMove: moves[i],
-      blackMove: moves[i + 1] || "",
-    });
   }
 
   function handleResign() {
@@ -112,6 +109,9 @@ function Game() {
               matchResult={matchResult}
               sendMoveMessage={sendMove}
               onBackToMenu={() => navigate("/")}
+              onAnalyze={
+                matchResult && urlPublicId ? () => navigate(`/analysis/${urlPublicId}`) : undefined
+              }
             />
             <div className="flex flex-col justify-between">
               <MatchClock timeMs={opponentTimeRemainingMs} isActive={playerColor !== activeColor} />
