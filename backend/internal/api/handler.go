@@ -10,6 +10,7 @@ import (
 
 type Handler struct {
 	matchHandler *matchHandler
+	userHandler  *userHandler
 }
 
 func NewHandler(ctx context.Context, queries *sqlc.Queries) (*Handler, error) {
@@ -20,9 +21,14 @@ func NewHandler(ctx context.Context, queries *sqlc.Queries) (*Handler, error) {
 
 	return &Handler{
 		matchHandler: matchHandler,
+		userHandler:  newUserHandler(queries),
 	}, nil
 }
 
 func (h *Handler) GetMatch(w http.ResponseWriter, r *http.Request) {
 	h.matchHandler.getMatch(w, r)
+}
+
+func (h *Handler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	h.userHandler.getUserProfile(w, r)
 }

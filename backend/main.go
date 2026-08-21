@@ -56,7 +56,8 @@ func main() {
 	http.HandleFunc("/api/auth/login", cors.Handler(authHandler.Login))
 	http.HandleFunc("/api/auth/logout", cors.Handler(authHandler.Logout))
 	http.HandleFunc("/api/auth/check", cors.Handler(authHandler.CheckAuth))
-	http.HandleFunc("/api/match/{publicId}", cors.Handler(matchHandler.GetMatch))
+	http.HandleFunc("/api/match/{publicId}", cors.Handler(apiHandler.GetMatch))
+	http.HandleFunc("/api/users/{username}", cors.Handler(apiHandler.GetUserProfile))
 
 	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
 	if err != nil {
