@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-type AuthHandler struct {
+type Handler struct {
 	userStore    *UserStore
 	sessionStore *SessionStore
 	cookieDomain string
 }
 
-func NewAuthHandler(userStore *UserStore, sessionStore *SessionStore, cookieDomain string) *AuthHandler {
-	return &AuthHandler{
+func NewHandler(userStore *UserStore, sessionStore *SessionStore, cookieDomain string) *Handler {
+	return &Handler{
 		userStore:    userStore,
 		sessionStore: sessionStore,
 		cookieDomain: cookieDomain,
@@ -34,7 +34,7 @@ type PlayerInfoData struct {
 	IsAuthenticated bool   `json:"isAuthenticated"`
 }
 
-func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID SessionID) {
+func (h *Handler) setSessionCookie(w http.ResponseWriter, sessionID SessionID) {
 	cookie := &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    string(sessionID),
@@ -48,7 +48,7 @@ func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID SessionI
 	http.SetCookie(w, cookie)
 }
 
-func (h *AuthHandler) clearSessionCookie(w http.ResponseWriter) {
+func (h *Handler) clearSessionCookie(w http.ResponseWriter) {
 	cookie := &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "",
@@ -63,7 +63,7 @@ func (h *AuthHandler) clearSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -102,7 +102,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -140,7 +140,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -155,7 +155,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
