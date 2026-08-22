@@ -4,6 +4,8 @@ import BoardComponent from "../components/Board";
 import MatchClock from "../components/MatchClock";
 import AnalysisInfoPanel from "../components/AnalysisInfoPanel";
 import PlayerInfo from "../components/PlayerInfo";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 import { fetchMatch } from "../api/match";
 import { buildMoveRows, getMaterialDiff, type MoveRow } from "../utils/chess";
 import type { Match } from "../types/match";
@@ -20,6 +22,7 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
   const [matchData, setMatchData] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [boardOrientation, setBoardOrientation] = useState<Color>("white");
 
@@ -42,9 +45,11 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
             break;
         }
       })
-      .catch(() => setError("Failed to load match data."))
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load match data.");
+      })
       .finally(() => setLoading(false));
-  }, [publicId, navigate]);
+  }, [publicId, navigate, reloadKey]);
 
   // Navigation handlers
   const goFirst = useCallback(() => setCurrentPosition(0), []);
@@ -99,16 +104,19 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
   );
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-lg">Loading analysis...</div>
-    );
+    return <LoadingState message="Loading analysis..." />;
   }
 
   if (error || !matchData || !currentPositionData) {
     return (
-      <div className="flex-1 flex items-center justify-center text-lg text-red-600">
-        {error ?? "Something went wrong."}
-      </div>
+      <ErrorState
+        message={error ?? "Failed to load match data."}
+        onRetry={() => {
+          setLoading(true);
+          setError(null);
+          setReloadKey((k) => k + 1);
+        }}
+      />
     );
   }
 
