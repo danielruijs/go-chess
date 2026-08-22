@@ -1,5 +1,7 @@
 type Outcome = "white_win" | "black_win" | "draw";
 
+type PlayerResult = "win" | "loss" | "draw";
+
 type Reason =
   | "checkmate"
   | "stalemate"
@@ -41,5 +43,5 @@ function getResultString(result: Result | null): string | null {
   return `${outcomeText} ${reasonText}`;
 }
 
-export type { Result };
-export { getResultString };
+export type { Result, PlayerResult };
+export { getResultString, REASON_TEXT };
