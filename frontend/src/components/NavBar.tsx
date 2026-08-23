@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@mui/material";
 import Auth from "./Auth";
 import UserAvatar from "./UserAvatar";
+import ConnectionStatus from "./ConnectionStatus";
 
 export default function NavBar() {
   const { isConnected } = useWebSocket();
@@ -12,7 +13,7 @@ export default function NavBar() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
-    <nav className="w-full h-16 bg-white/80 px-6 flex justify-between items-center shadow-sm relative z-50">
+    <nav className="w-full h-16 bg-white/80 px-4 sm:px-6 flex justify-between items-center shadow-sm relative z-50">
       {/* Left: Logo */}
       <Link
         to="/"
@@ -22,7 +23,8 @@ export default function NavBar() {
       </Link>
 
       {/* Right: Info & Actions */}
-      <div className="flex gap-6">
+      <div className="flex items-center gap-2">
+        <ConnectionStatus />
         {/* Identity & Button */}
         {isConnected && playerInfo?.displayName && (
           <div className="flex items-center gap-2">
