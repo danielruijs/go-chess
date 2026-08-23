@@ -40,3 +40,5 @@ These instructions guide automated code review across this repository. Apply jud
 - Clear, descriptive naming; avoid abbreviations that aren't already idiomatic in the language.
 - Errors are handled or explicitly and deliberately ignored (with reasoning) — never silently swallowed.
 - No dead code, unused imports, or commented-out blocks left in.
+- No unnecessary styling/config bloat: Flag classes, style props, or config options that don't change behavior or duplicate something already available (e.g. redundant Tailwind classes).
+- No duplicated logic: Flag logic, blocks, or queries copy-pasted instead of extracted or reused (e.g. near-identical functions or components) — not just exact duplicates, but close enough that it should be shared.

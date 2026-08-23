@@ -115,6 +115,76 @@ func (q *Queries) GetMatchEventsByMatchID(ctx context.Context, matchID int64) ([
 	return items, nil
 }
 
+const getUserEndedMatches = `-- name: GetUserEndedMatches :many
+SELECT 
+    m.public_id,
+    m.white_user_id,
+    m.black_user_id,
+    m.white_display_name,
+    m.black_display_name,
+    wu.username AS white_username,
+    bu.username AS black_username,
+    m.initial_time_ms,
+    m.increment_ms,
+    m.created_at,
+    e.payload AS ended_payload,
+    (SELECT COUNT(*) FROM match_event me WHERE me.match_id = m.id AND me.event_type = 'move') AS move_count
+FROM match m
+INNER JOIN match_event e ON e.match_id = m.id AND e.event_type = 'game_ended'
+LEFT JOIN users wu ON wu.id = m.white_user_id
+LEFT JOIN users bu ON bu.id = m.black_user_id
+WHERE m.white_user_id = $1 OR m.black_user_id = $1
+ORDER BY m.created_at DESC
+`
+
+type GetUserEndedMatchesRow struct {
+	PublicID         string
+	WhiteUserID      pgtype.Int8
+	BlackUserID      pgtype.Int8
+	WhiteDisplayName string
+	BlackDisplayName string
+	WhiteUsername    pgtype.Text
+	BlackUsername    pgtype.Text
+	InitialTimeMs    int64
+	IncrementMs      int64
+	CreatedAt        pgtype.Timestamptz
+	EndedPayload     []byte
+	MoveCount        int64
+}
+
+func (q *Queries) GetUserEndedMatches(ctx context.Context, userID pgtype.Int8) ([]GetUserEndedMatchesRow, error) {
+	rows, err := q.db.Query(ctx, getUserEndedMatches, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserEndedMatchesRow
+	for rows.Next() {
+		var i GetUserEndedMatchesRow
+		if err := rows.Scan(
+			&i.PublicID,
+			&i.WhiteUserID,
+			&i.BlackUserID,
+			&i.WhiteDisplayName,
+			&i.BlackDisplayName,
+			&i.WhiteUsername,
+			&i.BlackUsername,
+			&i.InitialTimeMs,
+			&i.IncrementMs,
+			&i.CreatedAt,
+			&i.EndedPayload,
+			&i.MoveCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertMatchEvent = `-- name: InsertMatchEvent :one
 INSERT INTO match_event (
     match_id,

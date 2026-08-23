@@ -22,13 +22,13 @@ const (
 	matchCacheTTL             = 24 * time.Hour
 )
 
-type MatchHandler struct {
+type matchHandler struct {
 	queries   *sqlc.Queries
 	generator *chess.Generator
 	cache     *cache.Cache[string, []byte]
 }
 
-func NewMatchHandler(ctx context.Context, queries *sqlc.Queries) (*MatchHandler, error) {
+func newMatchHandler(ctx context.Context, queries *sqlc.Queries) (*matchHandler, error) {
 	cache, err := cache.New[string](cache.Options[[]byte]{
 		Cleanup: &cache.CleanupConfig[[]byte]{
 			Interval: matchCacheCleanupInterval,
@@ -42,7 +42,7 @@ func NewMatchHandler(ctx context.Context, queries *sqlc.Queries) (*MatchHandler,
 	}
 	cache.StartCleanup(ctx)
 
-	return &MatchHandler{
+	return &matchHandler{
 		queries:   queries,
 		generator: chess.NewGenerator(),
 		cache:     cache,
@@ -64,7 +64,7 @@ type Match struct {
 	Positions       []Position   `json:"positions"`
 }
 
-func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
+func (h *matchHandler) getMatch(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -83,7 +83,7 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 	if cached, ok := h.cache.Get(publicID); ok {
 		w.Header().Set("Content-Type", "application/json")
 		if _, err := w.Write(cached); err != nil {
-			log.Printf("ERROR [MatchHandler]: failed to write cached response: %v", err)
+			log.Printf("ERROR [Handler]: failed to write cached response: %v", err)
 		}
 		return
 	}
@@ -94,14 +94,14 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Match not found", http.StatusNotFound)
 			return
 		}
-		log.Printf("ERROR [MatchHandler]: failed to get match: %v", err)
+		log.Printf("ERROR [Handler]: failed to get match: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	events, err := h.queries.GetMatchEventsByMatchID(r.Context(), match.ID)
 	if err != nil {
-		log.Printf("ERROR [MatchHandler]: failed to get match events: %v", err)
+		log.Printf("ERROR [Handler]: failed to get match events: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +119,7 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 	gameEndedPayload, err := server.ParseGameEndedPayload(lastEvent.Payload)
 	if err != nil {
-		log.Printf("ERROR [MatchHandler]: failed to parse game ended payload: %v", err)
+		log.Printf("ERROR [Handler]: failed to parse game ended payload: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -141,14 +141,14 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 		movePayload, err := server.ParseMovePayload(event.Payload)
 		if err != nil {
-			log.Printf("ERROR [MatchHandler]: failed to parse move payload: %v", err)
+			log.Printf("ERROR [Handler]: failed to parse move payload: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		move, err := movePayload.ToMove()
 		if err != nil {
-			log.Printf("ERROR [MatchHandler]: failed to parse move: %v", err)
+			log.Printf("ERROR [Handler]: failed to parse move: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -174,7 +174,7 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("ERROR [MatchHandler]: failed to encode response: %v", err)
+		log.Printf("ERROR [Handler]: failed to encode response: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -183,6 +183,6 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(respBytes); err != nil {
-		log.Printf("ERROR [MatchHandler]: failed to write response: %v", err)
+		log.Printf("ERROR [Handler]: failed to write response: %v", err)
 	}
 }

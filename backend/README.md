@@ -156,7 +156,109 @@ Logs out the user, invalidates the session record on the backend, and clears the
 
 ---
 
-### 5. WebSocket Gameplay Connection
+### 5. Get Match
+
+Retrieves the recorded move history, board positions, move timestamps, and final result of an ended match by its public ID for post-game analysis and replay.
+
+- **URL**: `/api/match/{publicId}`
+- **Method**: `GET`
+- **Response Content-Type**: `application/json`
+- **Response Body (Success 200 OK)**:
+  ```json
+  {
+    "whitePlayerName": "Alice Smith 👑",
+    "blackPlayerName": "Bob",
+    "result": {
+      "outcome": "white_win",
+      "reason": "checkmate"
+    },
+    "positions": [
+      {
+        "index": 0,
+        "board": [
+          ["r", "n", "b", "q", "k", "b", "n", "r"],
+          ["p", "p", "p", "p", "p", "p", "p", "p"],
+          [" ", " ", " ", " ", " ", " ", " ", " "],
+          [" ", " ", " ", " ", " ", " ", " ", " "],
+          [" ", " ", " ", " ", " ", " ", " ", " "],
+          [" ", " ", " ", " ", " ", " ", " ", " "],
+          ["P", "P", "P", "P", "P", "P", "P", "P"],
+          ["R", "N", "B", "Q", "K", "B", "N", "R"]
+        ],
+        "whiteTimeMs": 300000,
+        "blackTimeMs": 300000
+      },
+      {
+        "index": 1,
+        "board": [ ... ],
+        "san": "e4",
+        "whiteTimeMs": 298500,
+        "blackTimeMs": 300000
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Invalid match public ID format.
+  - `404 Not Found`: Match not found.
+  - `409 Conflict`: Match is currently in progress.
+
+---
+
+### 6. Get User Profile & Match History
+
+Retrieves public user profile information, performance statistics, and match history for the specified user.
+
+- **URL**: `/api/users/{username}`
+- **Method**: `GET`
+- **Response Content-Type**: `application/json`
+- **Response Body (Success 200 OK)**:
+  ```json
+  {
+    "user": {
+      "username": "alice",
+      "displayName": "Alice Smith 👑",
+      "createdAt": "2024-01-15T12:00:00Z"
+    },
+    "stats": {
+      "white": {
+        "wins": 10,
+        "losses": 2,
+        "draws": 1
+      },
+      "black": {
+        "wins": 8,
+        "losses": 4,
+        "draws": 0
+      }
+    },
+    "matches": [
+      {
+        "publicId": "7b6e92f1-9d2a-4c28-98e3-4f91d08e1a12",
+        "playedColor": "white",
+        "opponentDisplayName": "Bob",
+        "opponentUsername": "bob",
+        "result": {
+          "outcome": "white_win",
+          "reason": "checkmate"
+        },
+        "timeFormat": {
+          "initialMs": 300000,
+          "incrementMs": 0
+        },
+        "moveCount": 35,
+        "createdAt": "2024-01-16T15:30:00Z"
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing username in URL path.
+  - `404 Not Found`: User not found.
+
+---
+
+### 7. WebSocket Gameplay Connection
 
 Establishes a persistent bi-directional connection for gameplay and matchmaking updates.
 

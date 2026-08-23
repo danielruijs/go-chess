@@ -1,4 +1,4 @@
-import { formatMatchTime, formatTimeFormat } from "../utils/time";
+import { formatMatchTime, formatTimeFormat, formatJoinDate, formatMatchDate } from "../utils/time";
 
 describe("formatMatchTime", () => {
   it("formats 0ms as 0:00", () => {
@@ -81,5 +81,62 @@ describe("formatTimeFormat", () => {
 
   it("formats 15min initial and 10s increment as 15+10", () => {
     expect(formatTimeFormat({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 })).toBe("15+10");
+  });
+});
+
+describe("formatJoinDate", () => {
+  it("formats valid date string", () => {
+    const result = formatJoinDate("2024-01-15T12:00:00Z");
+    expect(result).toContain("2024");
+    expect(result).toContain("January");
+  });
+
+  it("falls back to raw string on invalid date", () => {
+    expect(formatJoinDate("invalid-date")).toBe("invalid-date");
+  });
+});
+
+describe("formatMatchDate", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-16T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("formats less than 1 min as Just now", () => {
+    const recent = "2026-08-16T11:59:45Z";
+    expect(formatMatchDate(recent)).toBe("Just now");
+  });
+
+  it("formats minutes ago", () => {
+    const minAgo = "2026-08-16T11:45:00Z";
+    expect(formatMatchDate(minAgo)).toBe("15m ago");
+  });
+
+  it("formats hours ago", () => {
+    const hoursAgo = "2026-08-16T08:00:00Z";
+    expect(formatMatchDate(hoursAgo)).toBe("4h ago");
+  });
+
+  it("formats days ago", () => {
+    const daysAgo = "2026-08-13T12:00:00Z";
+    expect(formatMatchDate(daysAgo)).toBe("3d ago");
+  });
+
+  it("falls back to formatted calendar date after 7 days without year for same year", () => {
+    const oldDate = "2026-08-01T12:00:00Z";
+    const result = formatMatchDate(oldDate);
+    expect(result).toContain("Aug");
+    expect(result).not.toContain("2026");
+  });
+
+  it("includes the year for a date in a previous year", () => {
+    const prevYearDate = "2025-11-20T12:00:00Z";
+    const result = formatMatchDate(prevYearDate);
+    expect(result).toContain("Nov");
+    expect(result).toContain("2025");
   });
 });

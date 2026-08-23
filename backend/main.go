@@ -45,10 +45,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create session store: %v", err)
 	}
-	authHandler := auth.NewAuthHandler(userStore, sessionStore, config.CookieDomain)
-	matchHandler, err := api.NewMatchHandler(ctx, queries)
+	authHandler := auth.NewHandler(userStore, sessionStore, config.CookieDomain)
+	apiHandler, err := api.NewHandler(ctx, queries)
 	if err != nil {
-		log.Fatalf("failed to create match handler: %v", err)
+		log.Fatalf("failed to create api handler: %v", err)
 	}
 
 	cors := server.NewCORSMiddleware(config.AllowedOrigins)
@@ -56,7 +56,8 @@ func main() {
 	http.HandleFunc("/api/auth/login", cors.Handler(authHandler.Login))
 	http.HandleFunc("/api/auth/logout", cors.Handler(authHandler.Logout))
 	http.HandleFunc("/api/auth/check", cors.Handler(authHandler.CheckAuth))
-	http.HandleFunc("/api/match/{publicId}", cors.Handler(matchHandler.GetMatch))
+	http.HandleFunc("/api/match/{publicId}", cors.Handler(apiHandler.GetMatch))
+	http.HandleFunc("/api/users/{username}", cors.Handler(apiHandler.GetUserProfile))
 
 	webSocketHandler, err := server.NewWebSocketHandler(ctx, matchmaker, config.AllowedOrigins, sessionStore)
 	if err != nil {
