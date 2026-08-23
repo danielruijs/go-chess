@@ -4,6 +4,7 @@ import { theme } from "./theme.ts";
 import Home from "./pages/Home.tsx";
 import Game from "./pages/Game.tsx";
 import Analysis from "./pages/Analysis.tsx";
+import ProfilePage from "./pages/ProfilePage/ProfilePage.tsx";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 import WebSocketProvider from "./contexts/WebSocketContext.tsx";
 import NotificationProvider from "./contexts/NotificationProvider.tsx";
@@ -27,6 +28,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/match/:publicId" element={<Game />} />
                     <Route path="/analysis/:publicId" element={<Analysis />} />
+                    <Route path="/user/:username" element={<ProfilePage />} />
                   </Routes>
                 </div>
               </div>
