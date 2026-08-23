@@ -1,21 +1,14 @@
 import { Tooltip } from "@mui/material";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
-import { getPct } from "../../../utils/math";
 import { pluralize } from "../../../utils/text";
-import type { UserStats } from "../../../types/user";
+import type { DerivedStats } from "../../../types/user";
 
 interface OverallRecordCardProps {
-  stats: UserStats;
+  derivedStats: DerivedStats;
 }
 
-function OverallRecordCard({ stats }: OverallRecordCardProps) {
-  const totalWins = stats.white.wins + stats.black.wins;
-  const totalDraws = stats.white.draws + stats.black.draws;
-  const totalLosses = stats.white.losses + stats.black.losses;
-  const totalGames = totalWins + totalDraws + totalLosses;
-  const winPct = getPct(totalWins, totalGames);
-  const drawPct = getPct(totalDraws, totalGames);
-  const lossPct = getPct(totalLosses, totalGames);
+function OverallRecordCard({ derivedStats }: OverallRecordCardProps) {
+  const { wins, draws, losses, totalGames, winPct, drawPct, lossPct } = derivedStats;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
@@ -27,21 +20,21 @@ function OverallRecordCard({ stats }: OverallRecordCardProps) {
 
         <div className="grid grid-cols-3 gap-2 text-center my-4">
           <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-            <div className="text-xl font-bold text-emerald-700">{totalWins}</div>
+            <div className="text-xl font-bold text-emerald-700">{wins}</div>
             <div className="text-xs font-semibold text-emerald-600 uppercase mt-0.5">
-              {pluralize(totalWins, "Win", "Wins", false)}
+              {pluralize(wins, "Win", "Wins", false)}
             </div>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-            <div className="text-xl font-bold text-slate-700">{totalDraws}</div>
+            <div className="text-xl font-bold text-slate-700">{draws}</div>
             <div className="text-xs font-semibold text-slate-600 uppercase mt-0.5">
-              {pluralize(totalDraws, "Draw", "Draws", false)}
+              {pluralize(draws, "Draw", "Draws", false)}
             </div>
           </div>
           <div className="bg-rose-50 border border-rose-100 rounded-xl p-3">
-            <div className="text-xl font-bold text-rose-700">{totalLosses}</div>
+            <div className="text-xl font-bold text-rose-700">{losses}</div>
             <div className="text-xs font-semibold text-rose-600 uppercase mt-0.5">
-              {pluralize(totalLosses, "Loss", "Losses", false)}
+              {pluralize(losses, "Loss", "Losses", false)}
             </div>
           </div>
         </div>

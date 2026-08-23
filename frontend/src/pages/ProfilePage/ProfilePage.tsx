@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "../../components/ErrorState";
 import { fetchUserProfile } from "../../api/user";
+import { computeDerivedStats } from "../../utils/stats";
 import type { UserProfile } from "../../types/user";
 import ProfileHeader from "./components/ProfileHeader";
 import OverallRecordCard from "./components/OverallRecordCard";
@@ -55,13 +56,14 @@ function ProfilePageView({ username }: { username: string | undefined }) {
   }
 
   const { stats, user, matches } = profile;
+  const derivedStats = computeDerivedStats(stats);
 
   return (
     <div className="max-w-5xl mx-auto w-full px-4 py-6 flex flex-col gap-6">
-      <ProfileHeader user={user} stats={stats} />
+      <ProfileHeader user={user} derivedStats={derivedStats} />
 
       <div className="grid md:grid-cols-3 gap-6">
-        <OverallRecordCard stats={stats} />
+        <OverallRecordCard derivedStats={derivedStats} />
         <ColorPerformanceCard color="white" record={stats.white} />
         <ColorPerformanceCard color="black" record={stats.black} />
       </div>

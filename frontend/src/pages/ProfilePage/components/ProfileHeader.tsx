@@ -1,19 +1,15 @@
 import UserAvatar from "../../../components/UserAvatar";
 import { formatJoinDate } from "../../../utils/time";
-import { getPct } from "../../../utils/math";
-import type { UserInfo, UserStats } from "../../../types/user";
+import type { DerivedStats, UserInfo } from "../../../types/user";
 
 interface ProfileHeaderProps {
   user: UserInfo;
-  stats: UserStats;
+  derivedStats: DerivedStats;
 }
 
-function ProfileHeader({ user, stats }: ProfileHeaderProps) {
-  const totalWins = stats.white.wins + stats.black.wins;
-  const totalDraws = stats.white.draws + stats.black.draws;
-  const totalLosses = stats.white.losses + stats.black.losses;
-  const totalGames = totalWins + totalDraws + totalLosses;
-  const winPct = getPct(totalWins, totalGames);
+function ProfileHeader({ user, derivedStats }: ProfileHeaderProps) {
+  const { totalGames, winPct } = derivedStats;
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
       <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">

@@ -35,4 +35,14 @@ type UserProfile = {
   matches: UserMatchItem[];
 };
 
-export type { UserInfo, GameRecord, UserStats, UserMatchItem, UserProfile };
+type DerivedStats = {
+  wins: number;
+  draws: number;
+  losses: number;
+  totalGames: number;
+  winPct: number;
+  drawPct: number;
+  lossPct: number;
+};
+
+export type { UserInfo, GameRecord, UserStats, UserMatchItem, UserProfile, DerivedStats };
