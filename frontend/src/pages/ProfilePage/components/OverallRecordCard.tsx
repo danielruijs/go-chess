@@ -1,6 +1,7 @@
 import { Tooltip } from "@mui/material";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import { getPct } from "../../../utils/math";
+import { pluralize } from "../../../utils/text";
 import type { UserStats } from "../../../types/user";
 
 interface OverallRecordCardProps {
@@ -28,19 +29,19 @@ function OverallRecordCard({ stats }: OverallRecordCardProps) {
           <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
             <div className="text-xl font-bold text-emerald-700">{totalWins}</div>
             <div className="text-xs font-semibold text-emerald-600 uppercase mt-0.5">
-              {totalWins == 1 ? "Win" : "Wins"}
+              {pluralize(totalWins, "Win", "Wins", false)}
             </div>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
             <div className="text-xl font-bold text-slate-700">{totalDraws}</div>
             <div className="text-xs font-semibold text-slate-600 uppercase mt-0.5">
-              {totalDraws == 1 ? "Draw" : "Draws"}
+              {pluralize(totalDraws, "Draw", "Draws", false)}
             </div>
           </div>
           <div className="bg-rose-50 border border-rose-100 rounded-xl p-3">
             <div className="text-xl font-bold text-rose-700">{totalLosses}</div>
             <div className="text-xs font-semibold text-rose-600 uppercase mt-0.5">
-              {totalLosses == 1 ? "Loss" : "Losses"}
+              {pluralize(totalLosses, "Loss", "Losses", false)}
             </div>
           </div>
         </div>

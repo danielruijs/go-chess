@@ -57,7 +57,7 @@ function MatchRow({ match }: MatchRowProps) {
             )}
           </div>
           <span className="text-xs text-slate-400 mt-0.5">
-            {REASON_TEXT[match.result.reason]} • {pluralize(match.moveCount, "move", "moves")}
+            {REASON_TEXT[match.result.reason]} • {pluralize(match.moveCount, "move", "moves", true)}
           </span>
         </div>
       </div>

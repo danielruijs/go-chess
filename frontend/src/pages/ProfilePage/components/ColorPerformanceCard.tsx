@@ -26,7 +26,7 @@ function ColorPerformanceCard({ color, record }: ColorPerformanceCardProps) {
             <span>{isWhite ? "As White" : "As Black"}</span>
           </div>
           <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-            {pluralize(games, "game", "games")}
+            {pluralize(games, "game", "games", true)}
           </span>
         </div>
 
