@@ -16,13 +16,11 @@ function ProfileHeader({ user, stats }: ProfileHeaderProps) {
   const winPct = getPct(totalWins, totalGames);
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-      <div className="flex flex-col sm:flex-row items-center gap-5 text-center">
+      <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
         <UserAvatar name={user.displayName} size="lg" />
 
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            {user.displayName}
-          </h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">{user.displayName}</h1>
           <p className="text-slate-500 font-medium text-sm">@{user.username}</p>
           <p className="text-xs text-slate-400">Member since {formatJoinDate(user.createdAt)}</p>
         </div>
