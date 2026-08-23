@@ -83,6 +83,13 @@ export default function NavBar() {
                   anchorEl={userMenuAnchorElement}
                   open={isUserMenuOpen}
                   onClose={handleCloseUserMenu}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        minWidth: 150,
+                      },
+                    },
+                  }}
                 >
                   <MenuItem onClick={handleProfileClick}>
                     <ListItemIcon>

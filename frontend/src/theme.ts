@@ -73,7 +73,6 @@ export const theme = createTheme({
         paper: {
           borderRadius: 16,
           marginTop: 4,
-          minWidth: 150,
         },
       },
     },
