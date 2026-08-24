@@ -1,4 +1,5 @@
 import type { TimeFormat } from "../types/chess";
+import { pluralize } from "./text";
 
 function formatMatchTime(ms: number): string {
   const minutes = Math.floor(ms / 60000);
@@ -16,6 +17,30 @@ function formatTimeFormat(timeFormat: TimeFormat): string {
   const initialMinutes = timeFormat.initialMs / 60000;
   const incrementSeconds = timeFormat.incrementMs / 1000;
   return `${initialMinutes}+${incrementSeconds}`;
+}
+
+function formatBaseTime(timeFormat: TimeFormat): string {
+  const baseMinutes = Math.floor(timeFormat.initialMs / 60000);
+  const baseSeconds = Math.floor((timeFormat.initialMs % 60000) / 1000);
+
+  if (baseMinutes > 0 && baseSeconds === 0) {
+    return pluralize(baseMinutes, "minute", "minutes", true);
+  }
+  if (baseMinutes === 0 && baseSeconds > 0) {
+    return pluralize(baseSeconds, "second", "seconds", true);
+  }
+  if (baseMinutes > 0 && baseSeconds > 0) {
+    return `${baseMinutes}m ${baseSeconds}s`;
+  }
+  return "0 seconds";
+}
+
+function formatIncrement(timeFormat: TimeFormat): string {
+  const incrementSeconds = Math.floor(timeFormat.incrementMs / 1000);
+  if (incrementSeconds > 0) {
+    return pluralize(incrementSeconds, "second", "seconds", true);
+  }
+  return "None";
 }
 
 function formatJoinDate(dateStr: string): string {
@@ -58,4 +83,11 @@ function formatMatchDate(dateStr: string): string {
   }
 }
 
-export { formatMatchTime, formatTimeFormat, formatJoinDate, formatMatchDate };
+export {
+  formatMatchTime,
+  formatTimeFormat,
+  formatJoinDate,
+  formatMatchDate,
+  formatBaseTime,
+  formatIncrement,
+};
