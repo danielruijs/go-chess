@@ -1,4 +1,11 @@
-import { formatMatchTime, formatTimeFormat, formatJoinDate, formatMatchDate } from "../utils/time";
+import {
+  formatMatchTime,
+  formatTimeFormat,
+  formatJoinDate,
+  formatMatchDate,
+  formatBaseTime,
+  formatIncrement,
+} from "../utils/time";
 
 describe("formatMatchTime", () => {
   it("formats 0ms as 0:00", () => {
@@ -81,6 +88,58 @@ describe("formatTimeFormat", () => {
 
   it("formats 15min initial and 10s increment as 15+10", () => {
     expect(formatTimeFormat({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 })).toBe("15+10");
+  });
+});
+
+describe("formatBaseTime", () => {
+  it("formats 1min as 1 minute", () => {
+    expect(formatBaseTime({ initialMs: 60 * 1000, incrementMs: 0 })).toBe("1 minute");
+  });
+
+  it("formats 3min as 3 minutes", () => {
+    expect(formatBaseTime({ initialMs: 180 * 1000, incrementMs: 2000 })).toBe("3 minutes");
+  });
+
+  it("formats 15min as 15 minutes", () => {
+    expect(formatBaseTime({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 })).toBe(
+      "15 minutes"
+    );
+  });
+
+  it("formats 30s as 30 seconds", () => {
+    expect(formatBaseTime({ initialMs: 30 * 1000, incrementMs: 0 })).toBe("30 seconds");
+  });
+
+  it("formats 1s as 1 second", () => {
+    expect(formatBaseTime({ initialMs: 1000, incrementMs: 0 })).toBe("1 second");
+  });
+
+  it("formats 90s as 1m 30s", () => {
+    expect(formatBaseTime({ initialMs: 90 * 1000, incrementMs: 0 })).toBe("1m 30s");
+  });
+
+  it("formats 0ms as 0 seconds", () => {
+    expect(formatBaseTime({ initialMs: 0, incrementMs: 0 })).toBe("0 seconds");
+  });
+});
+
+describe("formatIncrement", () => {
+  it("formats 0s increment as None", () => {
+    expect(formatIncrement({ initialMs: 60 * 1000, incrementMs: 0 })).toBe("None");
+  });
+
+  it("formats 1s increment as 1 second", () => {
+    expect(formatIncrement({ initialMs: 60 * 1000, incrementMs: 1000 })).toBe("1 second");
+  });
+
+  it("formats 2s increment as 2 seconds", () => {
+    expect(formatIncrement({ initialMs: 180 * 1000, incrementMs: 2000 })).toBe("2 seconds");
+  });
+
+  it("formats 10s increment as 10 seconds", () => {
+    expect(formatIncrement({ initialMs: 15 * 60 * 1000, incrementMs: 10 * 1000 })).toBe(
+      "10 seconds"
+    );
   });
 });
 

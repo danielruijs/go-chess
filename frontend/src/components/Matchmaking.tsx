@@ -1,7 +1,9 @@
 import type { QueueData } from "../types/message";
 import type { MouseEventHandler } from "react";
-import { formatTimeFormat } from "../utils/time";
+import { formatBaseTime, formatIncrement, formatTimeFormat } from "../utils/time";
 import type { TimeFormat } from "../types/chess";
+import { IconButton, Tooltip } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 type MatchmakingComponentProps = {
   timeFormat: TimeFormat;
@@ -25,14 +27,55 @@ function MatchmakingComponent({
   const disabled = !displayName || !isConnected || inMatch;
   const actionText = inQueue ? "Click to leave queue" : "Click to join queue";
 
+  const baseTimeLabel = formatBaseTime(timeFormat);
+  const incrementLabel = formatIncrement(timeFormat);
+
+  const tooltipTitle = (
+    <div className="text-xs p-1 space-y-1">
+      <div className="font-semibold text-white mb-1.5">
+        Time Control ({formatTimeFormat(timeFormat)})
+      </div>
+
+      <div className="flex justify-between gap-3">
+        <span className="text-slate-300">Starting clock</span>
+        <span className="font-medium text-white">{baseTimeLabel} / player</span>
+      </div>
+
+      <div className="flex justify-between gap-3">
+        <span className="text-slate-300">Increment</span>
+        <span className="font-medium text-white">
+          {incrementLabel === "None" ? "None" : `${incrementLabel} / move`}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex justify-center items-center relative">
       {inQueue && (
-        <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 z-10">
+        <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 z-10">
           <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
           In Queue
         </div>
       )}
+
+      <div className="absolute top-2 right-2 z-10">
+        <Tooltip
+          title={tooltipTitle}
+          arrow
+          placement="top"
+          enterTouchDelay={0}
+          leaveTouchDelay={60000}
+        >
+          <IconButton
+            size="small"
+            aria-label="Time control info"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Tooltip>
+      </div>
 
       <div
         onClick={onToggleQueue}
