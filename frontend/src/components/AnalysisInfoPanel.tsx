@@ -39,7 +39,7 @@ function AnalysisInfoPanel({
   const resultString = getResultString(result);
 
   return (
-    <div className="p-2 border border-gray-600 h-72 w-48 flex flex-col box-border">
+    <div className="w-full md:w-48 h-48 md:h-72 p-2 border border-gray-600 rounded flex flex-col box-border">
       <MoveList
         groupedMoves={groupedMoves}
         currentPosition={currentPosition}
@@ -47,12 +47,12 @@ function AnalysisInfoPanel({
       />
 
       {resultString && (
-        <div className="text-center text-xs font-semibold py-1 text-blue-700 border-y border-gray-300">
+        <div className="text-center text-xs font-semibold py-0.5 sm:py-1 text-blue-700 border-y border-gray-300 shrink-0">
           {resultString}
         </div>
       )}
 
-      <div className="flex justify-center items-center gap-1 border-gray-300 pt-1">
+      <div className="flex flex-wrap justify-center items-center gap-0.5 sm:gap-1 border-gray-300 pt-1 shrink-0">
         <Tooltip title="First position">
           <span>
             <IconButton size="small" onClick={onFirst} disabled={isFirst}>

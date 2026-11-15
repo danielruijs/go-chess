@@ -22,16 +22,23 @@ function MatchInfoPanel({
   onOfferDraw,
 }: MatchInfoPanelProps) {
   return (
-    <div className="p-2 border border-gray-600 h-72 w-48 flex flex-col box-border">
-      <MoveList groupedMoves={groupedMoves} />
+    <div className="w-full md:w-48 h-48 md:h-72 p-2 border border-gray-600 rounded flex flex-col box-border">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <MoveList groupedMoves={groupedMoves} />
+      </div>
 
-      <div className="mt-2">
+      <div className="mt-2 shrink-0">
         {isDrawOfferPending ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-base font-semibold">Draw offered</div>
-            <div className="flex justify-center gap-2">
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-sm font-semibold">Draw offered</div>
+            <div className="flex justify-center gap-2 w-full">
               <Button
-                sx={{ width: "40px", height: "30px", fontSize: "22px" }}
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  height: "32px",
+                  fontSize: "18px",
+                }}
                 variant="contained"
                 disabled={!inMatch}
                 color="success"
@@ -40,7 +47,12 @@ function MatchInfoPanel({
                 ✓
               </Button>
               <Button
-                sx={{ width: "40px", height: "30px", fontSize: "22px" }}
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  height: "32px",
+                  fontSize: "18px",
+                }}
                 variant="contained"
                 disabled={!inMatch}
                 color="error"
@@ -51,20 +63,22 @@ function MatchInfoPanel({
             </div>
           </div>
         ) : (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 w-full">
             <Button
-              sx={{ width: "100px" }}
               variant="contained"
+              size="small"
               disabled={!inMatch}
               onClick={onResign}
+              sx={{ flex: 1 }}
             >
               Resign
             </Button>
             <Button
-              sx={{ width: "100px" }}
               variant="contained"
+              size="small"
               disabled={!inMatch || isDrawOfferSent}
               onClick={onOfferDraw}
+              sx={{ flex: 1 }}
             >
               {isDrawOfferSent ? "Offered" : "Draw"}
             </Button>
