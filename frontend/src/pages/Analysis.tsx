@@ -133,12 +133,19 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
     bottomPlayer === "white" ? currentPositionData.whiteTimeMs : currentPositionData.blackTimeMs;
 
   return (
-    <div className="flex-1 flex items-center">
-      <div className="flex gap-4 items-center justify-center w-full">
-        <div className="flex flex-col gap-1">
-          <PlayerInfo color={topPlayer} name={topPlayerName} materialDiff={materialDiff} />
+    <div className="flex-1 flex flex-col items-center justify-center p-2 w-full">
+      <div className="flex flex-col gap-1 w-full md:w-auto items-center">
+        {/* Top Player Info */}
+        <PlayerInfo
+          color={topPlayer}
+          name={topPlayerName}
+          materialDiff={materialDiff}
+          timeMs={topTimeMs}
+        />
 
-          <div className="flex gap-4">
+        {/* Board and Desktop Side Column */}
+        <div className="flex gap-4 items-stretch justify-center w-full">
+          <div className="chessboard-container flex items-center justify-center">
             <BoardComponent
               color={boardOrientation}
               board={currentPositionData.board}
@@ -147,26 +154,48 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
               sendMoveMessage={() => {}}
               onBackToMenu={() => navigate("/")}
             />
-
-            <div className="flex flex-col justify-between">
-              <MatchClock timeMs={topTimeMs} isActive={false} />
-              <AnalysisInfoPanel
-                groupedMoves={groupedMoves}
-                currentPosition={currentPosition}
-                totalPositions={matchData.positions.length}
-                result={result}
-                onSelectPosition={(positionIndex) => setCurrentPosition(positionIndex)}
-                onFirst={goFirst}
-                onPrev={goPrev}
-                onNext={goNext}
-                onLast={goLast}
-                onFlip={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
-              />
-              <MatchClock timeMs={bottomTimeMs} isActive={false} />
-            </div>
           </div>
 
-          <PlayerInfo color={bottomPlayer} name={bottomPlayerName} materialDiff={materialDiff} />
+          <div className="hidden md:flex flex-col justify-between w-48 shrink-0">
+            <MatchClock timeMs={topTimeMs} isActive={false} />
+            <AnalysisInfoPanel
+              groupedMoves={groupedMoves}
+              currentPosition={currentPosition}
+              totalPositions={matchData.positions.length}
+              result={result}
+              onSelectPosition={(positionIndex) => setCurrentPosition(positionIndex)}
+              onFirst={goFirst}
+              onPrev={goPrev}
+              onNext={goNext}
+              onLast={goLast}
+              onFlip={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
+            />
+            <MatchClock timeMs={bottomTimeMs} isActive={false} />
+          </div>
+        </div>
+
+        {/* Bottom Player Info */}
+        <PlayerInfo
+          color={bottomPlayer}
+          name={bottomPlayerName}
+          materialDiff={materialDiff}
+          timeMs={bottomTimeMs}
+        />
+
+        {/* Mobile Info Panel (below board) */}
+        <div className="md:hidden w-full mt-1">
+          <AnalysisInfoPanel
+            groupedMoves={groupedMoves}
+            currentPosition={currentPosition}
+            totalPositions={matchData.positions.length}
+            result={result}
+            onSelectPosition={(positionIndex) => setCurrentPosition(positionIndex)}
+            onFirst={goFirst}
+            onPrev={goPrev}
+            onNext={goNext}
+            onLast={goLast}
+            onFlip={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
+          />
         </div>
       </div>
     </div>

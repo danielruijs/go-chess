@@ -62,7 +62,7 @@ function BoardSquare({
     <div
       ref={ref}
       onClick={onClick}
-      className={`w-full h-full flex items-center justify-center relative box-border select-none }`}
+      className="w-full h-full flex items-center justify-center relative box-border select-none"
       style={{
         border: isSelected ? "3px solid #1976d2" : "1px solid #000000",
         cursor: "pointer",
@@ -72,7 +72,7 @@ function BoardSquare({
       }}
     >
       {children}
-      {isMoveTarget && <div className="absolute w-[25%] h-[25%] rounded-full bg-red-600" />}
+      {isMoveTarget && <div className="absolute w-1/4 h-1/4 rounded-full bg-red-600" />}
     </div>
   );
 }
@@ -182,9 +182,9 @@ function BoardComponent({
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col items-center w-full">
       <DragDropProvider onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="relative grid grid-cols-8 grid-rows-8 max-w-[80vh] shadow-xl">
+        <div className="relative grid grid-cols-8 grid-rows-8 w-full aspect-square shadow-xl rounded-sm overflow-hidden select-none touch-none">
           {Array.from({ length: 64 }).map((_, index) => {
             const square = displayIndexToSquare(index, color);
 
@@ -216,15 +216,15 @@ function BoardComponent({
           {resultString && (
             <div
               className={`
-                            absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                            z-10 p-5
-                            bg-gray-200 border-2 border-blue-600 rounded
-                            text-blue-600 text-lg font-bold text-center
-                            flex flex-col gap-3 items-center
-                        `}
+                absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                z-10 p-4 sm:p-5 max-w-[90%]
+                bg-gray-200 border-2 border-blue-600 rounded
+                text-blue-600 text-base sm:text-lg font-bold text-center
+                flex flex-col gap-3 items-center
+              `}
             >
               <div>{resultString}</div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {onAnalyze && (
                   <Button onClick={onAnalyze} variant="contained">
                     Analysis
@@ -245,10 +245,7 @@ function BoardComponent({
               <div
                 key={pieceType}
                 onClick={() => handlePromotion(pieceType)}
-                className={`
-                                    cursor-pointer border-2 border-blue-600 rounded bg-gray-100
-                                    w-[15vw] h-[15vw] max-w-[100px] max-h-[100px]
-                                `}
+                className="cursor-pointer border-2 border-blue-600 rounded bg-gray-100 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center p-1"
               >
                 <img
                   src={`/pieces/${promotionDialog?.color}-${pieceType}.png`}
