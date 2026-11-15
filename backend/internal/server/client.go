@@ -3,8 +3,15 @@ package server
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
+)
+
+const (
+	websocketWriteTimeout = 10 * time.Second
+	websocketPongTimeout  = 60 * time.Second
+	websocketPingInterval = 30 * time.Second
 )
 
 type Client struct {
@@ -38,6 +45,13 @@ func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
 }
 
 func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
+	// Set read deadline and extend it on every incoming pong keepalive frame.
+	c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
+	c.Conn.SetPongHandler(func(string) error {
+		c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
+		return nil
+	})
+
 	for {
 		var message WSMessage
 		err := c.Conn.ReadJSON(&message)
@@ -49,6 +63,7 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 			return
 		}
 
+		c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
 		c.metrics.recordWebsocketMessageReceived(message.Type)
 
 		handler, ok := messageHandlers[message.Type]
@@ -67,15 +82,28 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 }
 
 func (c *Client) SendMessages() {
+	// Send periodic pings to keep intermediate proxies from timing out idle connections.
+	pingTicker := time.NewTicker(websocketPingInterval)
+	defer pingTicker.Stop()
+
 	for {
 		select {
 		case message := <-c.sendChan:
+			c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
 				c.metrics.recordWebsocketMessageSendError(message.Type)
 				log.Println("Error sending message:", err)
-			} else {
-				c.metrics.recordWebsocketMessageSent(message.Type)
+				c.Close()
+				return
+			}
+			c.metrics.recordWebsocketMessageSent(message.Type)
+		case <-pingTicker.C:
+			c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
+			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Println("Error sending ping:", err)
+				c.Close()
+				return
 			}
 		case <-c.Done:
 			return
