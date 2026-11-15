@@ -29,8 +29,14 @@ import { useNotification } from "./NotificationContext";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL as string;
 
+const initialReconnectDelayMilliseconds = 1000;
+const maximumReconnectDelayMilliseconds = 10000;
+
 function WebSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectDelayRef = useRef(initialReconnectDelayMilliseconds);
+
   const [isConnected, setIsConnected] = useState(false);
   const [board, setBoard] = useState<Board | null>(null);
   const [legalMoves, setLegalMoves] = useState<Record<string, LegalMove[]> | null>(null);
@@ -52,6 +58,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
 
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   function respondToDrawOffer(accept: boolean) {
     const responseMessage: WSMessage = {
@@ -77,12 +84,22 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   }
 
   function sendMessage(message: WSMessage) {
-    socketRef.current?.send(JSON.stringify(message));
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(message));
+    }
   }
 
   const connect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
     if (socketRef.current) {
-      socketRef.current.close();
+      // Null the ref before closing so its close handler ignores this intentional disconnect.
+      const activeSocket = socketRef.current;
+      socketRef.current = null;
+      activeSocket.close();
     }
 
     const socket = new WebSocket(WS_URL);
@@ -92,12 +109,26 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
       if (socketRef.current !== socket) return;
       console.log("WebSocket connected");
       setIsConnected(true);
+
+      // Reset backoff delay on successful connection.
+      reconnectDelayRef.current = initialReconnectDelayMilliseconds;
     });
 
     socket.addEventListener("close", () => {
       if (socketRef.current !== socket) return;
       console.log("WebSocket disconnected");
       setIsConnected(false);
+
+      // Reconnect with exponential backoff on unexpected disconnection.
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = null;
+        connect();
+      }, reconnectDelayRef.current);
+
+      reconnectDelayRef.current = Math.min(
+        reconnectDelayRef.current * 2,
+        maximumReconnectDelayMilliseconds
+      );
     });
 
     socket.addEventListener("error", (e) => {
@@ -171,8 +202,16 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     connect();
 
     return () => {
-      socketRef.current?.close();
-      socketRef.current = null;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (socketRef.current) {
+        // Null the ref before closing to prevent unmount from triggering a reconnect attempt.
+        const activeSocket = socketRef.current;
+        socketRef.current = null;
+        activeSocket.close();
+      }
     };
   }, [connect, isLoading, playerInfo?.isAuthenticated]);
 
