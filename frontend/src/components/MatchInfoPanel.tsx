@@ -23,9 +23,7 @@ function MatchInfoPanel({
 }: MatchInfoPanelProps) {
   return (
     <div className="w-full md:w-48 h-48 md:h-72 p-2 border border-gray-600 rounded flex flex-col box-border">
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <MoveList groupedMoves={groupedMoves} />
-      </div>
+      <MoveList groupedMoves={groupedMoves} />
 
       <div className="mt-2 shrink-0">
         {isDrawOfferPending ? (

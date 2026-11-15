@@ -95,17 +95,15 @@ function Game() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-2 w-full">
-      <div className="flex flex-col gap-1 w-full max-w-[calc(100dvh-12rem)] md:max-w-none md:w-auto items-center">
+      <div className="flex flex-col gap-1 w-full md:w-auto items-center">
         {/* Opponent Info (Top) */}
-        <div className="w-full">
-          <PlayerInfo
-            color={playerColor === "white" ? "black" : "white"}
-            name={playerColor === "white" ? blackPlayerName : whitePlayerName}
-            materialDiff={materialDiff}
-            timeMs={opponentTimeRemainingMs}
-            isActive={playerColor !== activeColor}
-          />
-        </div>
+        <PlayerInfo
+          color={playerColor === "white" ? "black" : "white"}
+          name={playerColor === "white" ? blackPlayerName : whitePlayerName}
+          materialDiff={materialDiff}
+          timeMs={opponentTimeRemainingMs}
+          isActive={playerColor !== activeColor}
+        />
 
         {/* Board and Desktop Side Column */}
         <div className="flex gap-4 items-stretch justify-center w-full">
@@ -139,15 +137,13 @@ function Game() {
         </div>
 
         {/* Own Info (Bottom) */}
-        <div className="w-full">
-          <PlayerInfo
-            color={playerColor}
-            name={playerColor === "white" ? whitePlayerName : blackPlayerName}
-            materialDiff={materialDiff}
-            timeMs={ownTimeRemainingMs}
-            isActive={playerColor === activeColor}
-          />
-        </div>
+        <PlayerInfo
+          color={playerColor}
+          name={playerColor === "white" ? whitePlayerName : blackPlayerName}
+          materialDiff={materialDiff}
+          timeMs={ownTimeRemainingMs}
+          isActive={playerColor === activeColor}
+        />
 
         {/* Mobile Info Panel (below board) */}
         <div className="md:hidden w-full mt-1">

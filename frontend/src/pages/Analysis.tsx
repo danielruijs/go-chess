@@ -134,16 +134,14 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-2 w-full">
-      <div className="flex flex-col gap-1 w-full max-w-[calc(100dvh-12rem)] md:max-w-none md:w-auto items-center">
+      <div className="flex flex-col gap-1 w-full md:w-auto items-center">
         {/* Top Player Info */}
-        <div className="w-full">
-          <PlayerInfo
-            color={topPlayer}
-            name={topPlayerName}
-            materialDiff={materialDiff}
-            timeMs={topTimeMs}
-          />
-        </div>
+        <PlayerInfo
+          color={topPlayer}
+          name={topPlayerName}
+          materialDiff={materialDiff}
+          timeMs={topTimeMs}
+        />
 
         {/* Board and Desktop Side Column */}
         <div className="flex gap-4 items-stretch justify-center w-full">
@@ -177,14 +175,12 @@ function AnalysisView({ publicId }: { publicId: string | undefined }) {
         </div>
 
         {/* Bottom Player Info */}
-        <div className="w-full">
-          <PlayerInfo
-            color={bottomPlayer}
-            name={bottomPlayerName}
-            materialDiff={materialDiff}
-            timeMs={bottomTimeMs}
-          />
-        </div>
+        <PlayerInfo
+          color={bottomPlayer}
+          name={bottomPlayerName}
+          materialDiff={materialDiff}
+          timeMs={bottomTimeMs}
+        />
 
         {/* Mobile Info Panel (below board) */}
         <div className="md:hidden w-full mt-1">
