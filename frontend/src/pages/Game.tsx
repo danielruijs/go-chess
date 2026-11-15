@@ -12,6 +12,7 @@ import {
   type WSMessage,
 } from "../types/message.ts";
 import type { PieceType } from "../types/chess.ts";
+import LoadingState from "../components/LoadingState.tsx";
 import { useEffect, useMemo } from "react";
 import PlayerInfo from "../components/PlayerInfo.tsx";
 import useInterpolatedClock from "../hooks/useInterpolatedClock.ts";
@@ -56,10 +57,10 @@ function Game() {
   }, [pgn]);
 
   if (!playerColor || !whitePlayerName || !blackPlayerName || !clock) {
-    return "Starting match...";
+    return <LoadingState message="Starting match..." />;
   }
   if (!board) {
-    return "Loading board...";
+    return <LoadingState message="Loading board..." />;
   }
 
   function handleResign() {
@@ -93,15 +94,22 @@ function Game() {
     playerColor === "white" ? displayedClock.blackTimeMs : displayedClock.whiteTimeMs;
 
   return (
-    <div className="flex-1 flex items-center">
-      <div className="flex gap-4 items-center justify-center w-full">
-        <div className="flex flex-col gap-1">
+    <div className="flex-1 flex flex-col items-center justify-center p-2 w-full">
+      <div className="flex flex-col gap-1 w-full max-w-[calc(100dvh-12rem)] md:max-w-none md:w-auto items-center">
+        {/* Opponent Info (Top) */}
+        <div className="w-full">
           <PlayerInfo
             color={playerColor === "white" ? "black" : "white"}
             name={playerColor === "white" ? blackPlayerName : whitePlayerName}
             materialDiff={materialDiff}
+            timeMs={opponentTimeRemainingMs}
+            isActive={playerColor !== activeColor}
           />
-          <div className="flex gap-4">
+        </div>
+
+        {/* Board and Desktop Side Column */}
+        <div className="flex gap-4 items-stretch justify-center w-full">
+          <div className="chessboard-container flex items-center justify-center">
             <BoardComponent
               color={playerColor}
               board={board}
@@ -113,24 +121,44 @@ function Game() {
                 matchResult && urlPublicId ? () => navigate(`/analysis/${urlPublicId}`) : undefined
               }
             />
-            <div className="flex flex-col justify-between">
-              <MatchClock timeMs={opponentTimeRemainingMs} isActive={playerColor !== activeColor} />
-              <MatchInfoPanel
-                groupedMoves={groupedMoves}
-                isDrawOfferPending={isDrawOfferPending}
-                isDrawOfferSent={isDrawOfferSent}
-                inMatch={inMatch}
-                onRespondToDrawOffer={respondToDrawOffer}
-                onResign={handleResign}
-                onOfferDraw={handleOfferDraw}
-              />
-              <MatchClock timeMs={ownTimeRemainingMs} isActive={playerColor === activeColor} />
-            </div>
           </div>
+
+          <div className="hidden md:flex flex-col justify-between w-48 shrink-0">
+            <MatchClock timeMs={opponentTimeRemainingMs} isActive={playerColor !== activeColor} />
+            <MatchInfoPanel
+              groupedMoves={groupedMoves}
+              isDrawOfferPending={isDrawOfferPending}
+              isDrawOfferSent={isDrawOfferSent}
+              inMatch={inMatch}
+              onRespondToDrawOffer={respondToDrawOffer}
+              onResign={handleResign}
+              onOfferDraw={handleOfferDraw}
+            />
+            <MatchClock timeMs={ownTimeRemainingMs} isActive={playerColor === activeColor} />
+          </div>
+        </div>
+
+        {/* Own Info (Bottom) */}
+        <div className="w-full">
           <PlayerInfo
             color={playerColor}
             name={playerColor === "white" ? whitePlayerName : blackPlayerName}
             materialDiff={materialDiff}
+            timeMs={ownTimeRemainingMs}
+            isActive={playerColor === activeColor}
+          />
+        </div>
+
+        {/* Mobile Info Panel (below board) */}
+        <div className="md:hidden w-full mt-1">
+          <MatchInfoPanel
+            groupedMoves={groupedMoves}
+            isDrawOfferPending={isDrawOfferPending}
+            isDrawOfferSent={isDrawOfferSent}
+            inMatch={inMatch}
+            onRespondToDrawOffer={respondToDrawOffer}
+            onResign={handleResign}
+            onOfferDraw={handleOfferDraw}
           />
         </div>
       </div>
