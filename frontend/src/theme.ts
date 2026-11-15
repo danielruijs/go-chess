@@ -15,6 +15,15 @@ export const theme = createTheme({
           fontWeight: 600,
           borderRadius: 12,
         },
+        sizeSmall: ({ theme }) => ({
+          minWidth: 0,
+          fontSize: "0.875rem",
+          padding: "4px 8px",
+          [theme.breakpoints.down("sm")]: {
+            fontSize: "0.75rem",
+            padding: "2px 6px",
+          },
+        }),
       },
       variants: [
         {
@@ -27,6 +36,16 @@ export const theme = createTheme({
           },
         },
       ],
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        sizeSmall: ({ theme }) => ({
+          padding: 4,
+          [theme.breakpoints.down("sm")]: {
+            padding: 2,
+          },
+        }),
+      },
     },
     MuiTabs: {
       styleOverrides: {

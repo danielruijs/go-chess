@@ -10,3 +10,13 @@
 body {
   background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
 }
+
+.chessboard-container {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 80vh;
+
+  @media (min-width: 768px) {
+    width: min(calc(100vw - 16rem), calc(100dvh - 10rem));
+  }
+}
