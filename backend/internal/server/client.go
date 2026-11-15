@@ -46,9 +46,9 @@ func NewClient(conn *websocket.Conn, player *Player, metrics *metrics) *Client {
 
 func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 	// Set read deadline and extend it on every incoming pong keepalive frame.
-	c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
+	_ = c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
 	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
+		_ = c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
 		return nil
 	})
 
@@ -63,7 +63,7 @@ func (c *Client) ReceiveMessages(matchmaker *Matchmaker) {
 			return
 		}
 
-		c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
+		_ = c.Conn.SetReadDeadline(time.Now().Add(websocketPongTimeout))
 		c.metrics.recordWebsocketMessageReceived(message.Type)
 
 		handler, ok := messageHandlers[message.Type]
@@ -89,7 +89,7 @@ func (c *Client) SendMessages() {
 	for {
 		select {
 		case message := <-c.sendChan:
-			c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
+			_ = c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
 			err := c.Conn.WriteJSON(message)
 			if err != nil {
 				c.metrics.recordWebsocketMessageSendError(message.Type)
@@ -99,7 +99,7 @@ func (c *Client) SendMessages() {
 			}
 			c.metrics.recordWebsocketMessageSent(message.Type)
 		case <-pingTicker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
+			_ = c.Conn.SetWriteDeadline(time.Now().Add(websocketWriteTimeout))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Println("Error sending ping:", err)
 				c.Close()
